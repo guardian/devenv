@@ -17,7 +17,7 @@ and this user config file in your home directory at `~/.config/devenv/devenv.yam
 
 ```yaml
 dotfiles:
-  repository: https://github.com/adamnfish/dotfiles.git
+  repository: https://github.com/username/dotfiles.git
   targetPath: ~/.dotfiles
   installCommand: ./install.sh
 plugins:
@@ -139,7 +139,7 @@ The project uses GitHub Actions to build and publish native binaries for macOS A
 
 #### Creating a release
 
-1. Go to the [Actions tab](https://github.com/adamnfish/devenv/actions/workflows/release.yml) on GitHub
+1. Go to the [Actions tab](https://github.com/guardian/devenv/actions/workflows/release.yml) on GitHub
 
 2. Click "Run workflow" and select the branch to build from
 
@@ -155,7 +155,7 @@ The project uses GitHub Actions to build and publish native binaries for macOS A
     - Upload it to the draft release, replacing the unsigned binary
 
 5. **Manually verify and publish the release:**
-    - Go to the [Releases page](https://github.com/adamnfish/devenv/releases) on GitHub
+    - Go to the [Releases page](https://github.com/guardian/devenv/releases) on GitHub
     - Review the draft release
     - Test the binaries if needed
     - Click "Publish release" when ready
@@ -201,6 +201,6 @@ Users can install a release binary with the following command (replace `<latest-
 
 ```bash
 VERSION=<latest-release-version>
-curl -L -o ~/.local/bin/devenv https://github.com/adamnfish/devenv/releases/download/$VERSION/devenv-$VERSION-macos-arm64
+curl -L -o ~/.local/bin/devenv https://github.com/guardian/devenv/releases/download/$VERSION/devenv-$VERSION-macos-arm64
 chmod +x ~/.local/bin/devenv
 ```

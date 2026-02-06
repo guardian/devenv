@@ -17,7 +17,7 @@ import scala.util.{Failure, Success, Try}
   * See https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28
   */
 object Releases {
-  private val OWNER = "adamnfish"
+  private val OWNER = "guardian"
   private val REPO  = "devenv"
   private val API_URL =
     s"https://api.github.com/repos/$OWNER/$REPO/releases/latest"

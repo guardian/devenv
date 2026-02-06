@@ -19,7 +19,7 @@ class ReleasesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChec
         digest = "sha256:abc123"
       )
     ),
-    htmlUrl = "https://github.com/adamnfish/devenv/releases/tag/20250115-120000"
+    htmlUrl = "https://github.com/guardian/devenv/releases/tag/20250115-120000"
   )
 
   "Releases.checkForUpdate" - {
