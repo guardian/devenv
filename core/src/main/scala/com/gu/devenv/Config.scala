@@ -12,6 +12,7 @@ import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto.*
 
 import java.nio.file.Path
+import com.gu.devenv.ForwardPort.{SamePort, DifferentPorts}
 
 object Config {
   given Configuration = Configuration.default.withDefaults
@@ -92,7 +93,11 @@ object Config {
         "name"           -> config.name.asJson,
         "image"          -> config.image.asJson,
         "customizations" -> customizations.asJson,
-        "forwardPorts"   -> config.forwardPorts.asJson
+        "forwardPorts"   -> config.forwardPorts.asJson,
+        "runArgs"        -> config.forwardPorts.flatMap{
+          case SamePort(p) => List("-p", s"$p:$p")
+          case DifferentPorts(hp, cp) => List("-p", s"$hp:$cp")
+        }.asJson
       )
 
       // Add optional fields if they exist

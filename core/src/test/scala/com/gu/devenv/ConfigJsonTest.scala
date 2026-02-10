@@ -396,6 +396,59 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       }
     }
 
+    "runArgs field" - {
+      val genPort: Gen[Int]                      = Gen.choose(1, 65535)
+      val genSamePort: Gen[ForwardPort.SamePort] = genPort.map(ForwardPort.SamePort(_))
+      val genDifferentPorts: Gen[ForwardPort.DifferentPorts] = for {
+        hostPort      <- genPort
+        containerPort <- genPort
+      } yield ForwardPort.DifferentPorts(hostPort, containerPort)
+
+      val genForwardPort: Gen[ForwardPort]        = Gen.oneOf(genSamePort, genDifferentPorts)
+      val genForwardPorts: Gen[List[ForwardPort]] = Gen.listOf(genForwardPort)
+
+      "appears in JSON runArgs array" in {
+        forAll(genForwardPorts) { ports =>
+          val config = ProjectConfig(name = "test", forwardPorts = ports)
+          val json   = Config.configAsJson(config, Nil).get
+
+          val runArgs = json.hcursor.downField("runArgs").as[List[Json]]
+          runArgs shouldBe a[Right[_, _]]
+          runArgs.map(_.size) shouldBe Right(ports.size * 2)
+        }
+      }
+
+      "SamePort appears as switch + string in JSON" in {
+        val port   = ForwardPort.SamePort(8080)
+        val config = ProjectConfig(name = "test", forwardPorts = List(port))
+        val json   = Config.configAsJson(config, Nil).get
+
+        val runArgsSwitch = json.hcursor.downField("runArgs").downN(0).as[String]
+        runArgsSwitch shouldBe Right("-p")
+        val runArgsValue = json.hcursor.downField("runArgs").downN(1).as[String]
+        runArgsValue shouldBe Right("8080:8080")
+      }
+
+      "DifferentPorts appears as string in JSON" in {
+        val port   = ForwardPort.DifferentPorts(8000, 9000)
+        val config = ProjectConfig(name = "test", forwardPorts = List(port))
+        val json   = Config.configAsJson(config, Nil).get
+
+        val runArgsSwitch = json.hcursor.downField("runArgs").downN(0).as[String]
+        runArgsSwitch shouldBe Right("-p")
+        val runArgsValue = json.hcursor.downField("runArgs").downN(1).as[String]
+        runArgsValue shouldBe Right("8000:9000")
+      }
+
+      "is empty array when no ports specified" in {
+        val config = ProjectConfig(name = "test", forwardPorts = Nil)
+        val json   = Config.configAsJson(config, Nil).get
+
+        val runArgs = json.hcursor.downField("runArgs").as[List[Json]]
+        runArgs shouldBe Right(Nil)
+      }
+    }
+
     "capAdd field" - {
       val genCapAdd: Gen[List[String]] =
         Gen.nonEmptyListOf(Gen.alphaNumStr.suchThat(_.nonEmpty))
