@@ -48,12 +48,14 @@ detect_branch() {
   fi
 }
 
-if [ $# -lt 1 ] || [ $# -gt 3 ]; then
-  echo "Usage: $0 <release> [architecture] [branch]"
-  echo "Example: $0 1.0.0"
-  echo "Example: $0 1.0.0 macos-arm64"
-  echo "Example: $0 1.0.0 macos-arm64 main"
+if [ $# -gt 3 ]; then
+  echo "Usage: $0 [release] [architecture] [branch]"
+  echo "Example: $0"
+  echo "Example: $0 20260220-120000"
+  echo "Example: $0 20260220-120000 macos-arm64"
+  echo "Example: $0 20260220-120000 macos-arm64 main"
   echo ""
+  echo "If release is not provided, it defaults to the current timestamp."
   echo "If architecture is not provided, it will be auto-detected."
   echo "If branch is not provided, it will be auto-detected from git (or default to 'local')."
   echo "Detected architecture: $(detect_architecture)"
@@ -61,7 +63,7 @@ if [ $# -lt 1 ] || [ $# -gt 3 ]; then
   exit 1
 fi
 
-RELEASE=$1
+RELEASE=${1:-$(date +%Y%m%d-%H%M%S)}
 ARCHITECTURE=${2:-$(detect_architecture)}
 BRANCH=${3:-$(detect_branch)}
 
@@ -108,3 +110,5 @@ sbt "cli/GraalVMNativeImage/packageBin"
 
 BINARY_NAME="devenv-$RELEASE-$ARCHITECTURE"
 echo "Binary name in GitHub release: $BINARY_NAME"
+
+
