@@ -30,7 +30,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "adds features to empty config" in {
         forAll(genFeatures) { features =>
-          val baseConfig = ProjectConfig(name = "test")
+          val baseConfig   = ProjectConfig(name = "test")
           val contribution = ModuleContribution(features = features)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -45,7 +45,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "merges features with existing config (explicit features take precedence)" in {
         forAll(genFeatures, genFeatures) { (moduleFeatures, explicitFeatures) =>
-          val baseConfig = ProjectConfig(name = "test", features = explicitFeatures)
+          val baseConfig   = ProjectConfig(name = "test", features = explicitFeatures)
           val contribution = ModuleContribution(features = moduleFeatures)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -67,8 +67,8 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       val genMount: Gen[Mount] = Gen.oneOf(
         Gen.alphaNumStr.suchThat(_.nonEmpty).map(Mount.ShortMount(_)),
         for {
-          source <- Gen.alphaNumStr.suchThat(_.nonEmpty)
-          target <- Gen.alphaNumStr.suchThat(_.nonEmpty)
+          source    <- Gen.alphaNumStr.suchThat(_.nonEmpty)
+          target    <- Gen.alphaNumStr.suchThat(_.nonEmpty)
           mountType <- Gen.oneOf("volume", "bind", "tmpfs")
         } yield Mount.ExplicitMount(source, target, mountType)
       )
@@ -77,7 +77,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "adds mounts to empty config" in {
         forAll(genMounts) { mounts =>
-          val baseConfig = ProjectConfig(name = "test")
+          val baseConfig   = ProjectConfig(name = "test")
           val contribution = ModuleContribution(mounts = mounts)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -88,7 +88,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "prepends mounts to existing config" in {
         forAll(genMounts, genMounts) { (moduleMounts, existingMounts) =>
-          val baseConfig = ProjectConfig(name = "test", mounts = existingMounts)
+          val baseConfig   = ProjectConfig(name = "test", mounts = existingMounts)
           val contribution = ModuleContribution(mounts = moduleMounts)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -105,7 +105,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "adds vscode plugins to empty config" in {
         forAll(genVscodePlugins) { plugins =>
-          val baseConfig = ProjectConfig(name = "test")
+          val baseConfig   = ProjectConfig(name = "test")
           val contribution = ModuleContribution(plugins = Plugins(vscode = plugins, intellij = Nil))
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -117,8 +117,12 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       "prepends vscode plugins to existing config" in {
         forAll(genVscodePlugins, genVscodePlugins) { (modulePlugins, existingPlugins) =>
           val baseConfig =
-            ProjectConfig(name = "test", plugins = Plugins(vscode = existingPlugins, intellij = Nil))
-          val contribution = ModuleContribution(plugins = Plugins(vscode = modulePlugins, intellij = Nil))
+            ProjectConfig(
+              name = "test",
+              plugins = Plugins(vscode = existingPlugins, intellij = Nil)
+            )
+          val contribution =
+            ModuleContribution(plugins = Plugins(vscode = modulePlugins, intellij = Nil))
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
 
@@ -134,7 +138,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "adds intellij plugins to empty config" in {
         forAll(genIntellijPlugins) { plugins =>
-          val baseConfig = ProjectConfig(name = "test")
+          val baseConfig   = ProjectConfig(name = "test")
           val contribution = ModuleContribution(plugins = Plugins(vscode = Nil, intellij = plugins))
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -146,8 +150,12 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       "prepends intellij plugins to existing config" in {
         forAll(genIntellijPlugins, genIntellijPlugins) { (modulePlugins, existingPlugins) =>
           val baseConfig =
-            ProjectConfig(name = "test", plugins = Plugins(vscode = Nil, intellij = existingPlugins))
-          val contribution = ModuleContribution(plugins = Plugins(vscode = Nil, intellij = modulePlugins))
+            ProjectConfig(
+              name = "test",
+              plugins = Plugins(vscode = Nil, intellij = existingPlugins)
+            )
+          val contribution =
+            ModuleContribution(plugins = Plugins(vscode = Nil, intellij = modulePlugins))
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
 
@@ -167,7 +175,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "adds containerEnv to empty config" in {
         forAll(genEnvList) { envVars =>
-          val baseConfig = ProjectConfig(name = "test")
+          val baseConfig   = ProjectConfig(name = "test")
           val contribution = ModuleContribution(containerEnv = envVars)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -178,7 +186,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "prepends containerEnv to existing config" in {
         forAll(genEnvList, genEnvList) { (moduleEnv, existingEnv) =>
-          val baseConfig = ProjectConfig(name = "test", containerEnv = existingEnv)
+          val baseConfig   = ProjectConfig(name = "test", containerEnv = existingEnv)
           val contribution = ModuleContribution(containerEnv = moduleEnv)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -199,7 +207,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "adds remoteEnv to empty config" in {
         forAll(genEnvList) { envVars =>
-          val baseConfig = ProjectConfig(name = "test")
+          val baseConfig   = ProjectConfig(name = "test")
           val contribution = ModuleContribution(remoteEnv = envVars)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -210,7 +218,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "prepends remoteEnv to existing config" in {
         forAll(genEnvList, genEnvList) { (moduleEnv, existingEnv) =>
-          val baseConfig = ProjectConfig(name = "test", remoteEnv = existingEnv)
+          val baseConfig   = ProjectConfig(name = "test", remoteEnv = existingEnv)
           val contribution = ModuleContribution(remoteEnv = moduleEnv)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -223,7 +231,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
     "postCreateCommands field" - {
       val genCommand: Gen[Command] = for {
-        cmd    <- Gen.alphaNumStr.suchThat(_.nonEmpty)
+        cmd     <- Gen.alphaNumStr.suchThat(_.nonEmpty)
         workDir <- Gen.alphaNumStr.suchThat(_.nonEmpty)
       } yield Command(cmd, workDir)
 
@@ -231,7 +239,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "adds postCreateCommands to empty config" in {
         forAll(genCommands) { commands =>
-          val baseConfig = ProjectConfig(name = "test")
+          val baseConfig   = ProjectConfig(name = "test")
           val contribution = ModuleContribution(postCreateCommands = commands)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -242,7 +250,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "prepends postCreateCommands to existing config" in {
         forAll(genCommands, genCommands) { (moduleCommands, existingCommands) =>
-          val baseConfig = ProjectConfig(name = "test", postCreateCommand = existingCommands)
+          val baseConfig   = ProjectConfig(name = "test", postCreateCommand = existingCommands)
           val contribution = ModuleContribution(postCreateCommands = moduleCommands)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -259,7 +267,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "adds capAdd to empty config" in {
         forAll(genCapAdd) { capabilities =>
-          val baseConfig = ProjectConfig(name = "test")
+          val baseConfig   = ProjectConfig(name = "test")
           val contribution = ModuleContribution(capAdd = capabilities)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -270,7 +278,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "prepends capAdd to existing config" in {
         forAll(genCapAdd, genCapAdd) { (moduleCapAdd, existingCapAdd) =>
-          val baseConfig = ProjectConfig(name = "test", capAdd = existingCapAdd)
+          val baseConfig   = ProjectConfig(name = "test", capAdd = existingCapAdd)
           val contribution = ModuleContribution(capAdd = moduleCapAdd)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -287,7 +295,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "adds securityOpt to empty config" in {
         forAll(genSecurityOpt) { securityOptions =>
-          val baseConfig = ProjectConfig(name = "test")
+          val baseConfig   = ProjectConfig(name = "test")
           val contribution = ModuleContribution(securityOpt = securityOptions)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)
@@ -298,7 +306,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "prepends securityOpt to existing config" in {
         forAll(genSecurityOpt, genSecurityOpt) { (moduleSecurityOpt, existingSecurityOpt) =>
-          val baseConfig = ProjectConfig(name = "test", securityOpt = existingSecurityOpt)
+          val baseConfig   = ProjectConfig(name = "test", securityOpt = existingSecurityOpt)
           val contribution = ModuleContribution(securityOpt = moduleSecurityOpt)
 
           val result = Modules.applyModuleContribution(baseConfig, contribution)

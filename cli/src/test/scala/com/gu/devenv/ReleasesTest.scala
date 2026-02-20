@@ -54,7 +54,7 @@ class ReleasesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChec
 
           result match {
             case UpdateCheckResult.DevMode(_) => succeed
-            case other => fail(s"Expected DevMode but got: $other")
+            case other                        => fail(s"Expected DevMode but got: $other")
           }
         }
       }
@@ -69,7 +69,7 @@ class ReleasesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChec
 
         result match {
           case UpdateCheckResult.DevMode(_) => succeed
-          case other => fail(s"Expected DevMode but got: $other")
+          case other                        => fail(s"Expected DevMode but got: $other")
         }
       }
     }

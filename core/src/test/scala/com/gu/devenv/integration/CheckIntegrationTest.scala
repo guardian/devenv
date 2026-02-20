@@ -12,7 +12,7 @@ import java.nio.file.Files
 
 class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
   private val modules = builtInModules
-  
+
   "check" - {
     "checking an uninitialized directory" - {
       "should return NotInitialized result" in withTempDirs { (tempDir, userConfigDir) =>
