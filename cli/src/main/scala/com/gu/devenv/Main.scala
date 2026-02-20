@@ -171,7 +171,7 @@ object Main {
          |
          |$commandsTitle
          |  $initCmd      Initialize .devcontainer directory structure
-         |  $generateCmd  Generate devcontainer.json files from .devenv config
+         |  $generateCmd  Generate devcontainer.json files from devenv config
          |  $checkCmd     Ensure devcontainer.json files match current config
          |
          |  $versionCmd   Show devenv's version
