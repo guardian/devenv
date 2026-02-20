@@ -10,7 +10,7 @@ object Modules {
   // all registered modules are here
   // In the future we might provide ways to register custom modules but this is fine for now
   def builtInModules(moduleConfig: ModuleConfig): List[Module] =
-    List(mise(moduleConfig.mountKey), dockerInDocker, scalaLang, nodeLang)
+    List(mise(moduleConfig.mountKey), dockerInDocker, scalaLang, nodeLang, ivy, coursier)
 
   case class Module(
       name: String,
