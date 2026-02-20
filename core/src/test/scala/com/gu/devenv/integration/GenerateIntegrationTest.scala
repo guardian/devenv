@@ -17,8 +17,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
   "generate" - {
     "generating for an uninitialized directory" - {
       "should return NotInitialized result" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           val result = Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
@@ -27,8 +27,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should not create any files" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
@@ -39,8 +39,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
     "generating with placeholder project name" - {
       "should return ConfigNotCustomized result" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
 
@@ -51,8 +51,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should not create devcontainer.json files" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
 
@@ -66,8 +66,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
     "generating a basic project config" - {
       "should create both devcontainer.json files" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           // Initialize and customize
           Devenv.init(devcontainerDir, modules).success.value
@@ -89,8 +89,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should generate valid JSON devcontainer files" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(devcontainerDir.resolve("devenv.yaml"), basicProjectConfig)
@@ -106,8 +106,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should include project name in generated files" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(devcontainerDir.resolve("devenv.yaml"), basicProjectConfig)
@@ -123,8 +123,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should update existing devcontainer files on subsequent generation" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(devcontainerDir.resolve("devenv.yaml"), basicProjectConfig)
@@ -159,8 +159,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
     "generating a project config merged with a user config" - {
       "should merge user plugins into project plugins" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithPlugins)
@@ -179,8 +179,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should not include user plugins in shared devcontainer" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithPlugins)
@@ -199,8 +199,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should merge user dotfiles into user devcontainer" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(devcontainerDir.resolve("devenv.yaml"), basicProjectConfig)
@@ -216,8 +216,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should not include dotfiles in shared devcontainer" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(devcontainerDir.resolve("devenv.yaml"), basicProjectConfig)
@@ -234,8 +234,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
     "generating a project that includes modules" - {
       "should apply mise module features" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithMise)
@@ -254,8 +254,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should apply multiple modules" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(
@@ -272,8 +272,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should fail with unknown module" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithUnknownModule)
@@ -287,8 +287,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
     "generating a complex project with modules and user config" - {
       "should merge all configurations correctly" in {
-        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
           Files.writeString(devcontainerDir.resolve("devenv.yaml"), complexProjectConfig)
@@ -328,8 +328,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       * \"print generated devcontainer\""
       */
     "print generated devcontainer for debugging" ignore {
-      (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      (tempDir, tempDir, testModules).mapN { (rootDir, userConfigDir, modules) =>
+        val devcontainerDir = rootDir.resolve(".devcontainer")
 
         Devenv.init(devcontainerDir, modules).success.value
         Files.writeString(devcontainerDir.resolve("devenv.yaml"), complexProjectConfig)

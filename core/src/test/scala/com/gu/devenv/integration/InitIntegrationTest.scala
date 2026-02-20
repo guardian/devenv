@@ -15,8 +15,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
   "init" - {
     "initializing an empty (non-existent) directory" - {
       "should create all required directories and files" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           val result = Devenv.init(devcontainerDir, modules).success.value
 
@@ -35,8 +35,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should create .gitignore with user/ entry" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
 
@@ -47,8 +47,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should create devenv.yaml with placeholder name" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
 
@@ -61,8 +61,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
     "initializing an already initialized directory" - {
       "should report all items as already existing" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           // First initialization
           Devenv.init(devcontainerDir, modules).success.value
@@ -79,8 +79,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should not modify existing files" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
 
           // First initialization
           Devenv.init(devcontainerDir, modules).success.value
@@ -101,8 +101,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
     "initializing a directory with a .gitignore file that does not include user/ entry" - {
       "should update the .gitignore file with user/ entry" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
 
           // Create a .gitignore without user/ entry
@@ -122,8 +122,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should preserve existing .gitignore content when updating" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
 
           val gitignoreFile   = devcontainerDir.resolve(".gitignore")
@@ -142,8 +142,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
     "initializing a directory with a .gitignore file that already includes user/ entry" - {
       "should report gitignore as already existing with exclusion" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
 
           val gitignoreFile   = devcontainerDir.resolve(".gitignore")
@@ -157,8 +157,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should not modify the existing .gitignore file" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
 
           val gitignoreFile   = devcontainerDir.resolve(".gitignore")
@@ -172,8 +172,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       }
 
       "should recognize user/ entry with whitespace" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
 
           val gitignoreFile   = devcontainerDir.resolve(".gitignore")
@@ -189,8 +189,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
     "initializing a directory with partial initialization" - {
       "should create missing directories and files only" in {
-        (tempDir, testModules).mapN { (tempDir, modules) =>
-          val devcontainerDir = tempDir.resolve(".devcontainer")
+        (tempDir, testModules).mapN { (rootDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
           Files.createDirectories(devcontainerDir.resolve("user"))
 
