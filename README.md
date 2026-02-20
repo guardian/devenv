@@ -34,6 +34,17 @@ will generate two devcontainer.json files:
 
 You can then use your IDE (VSCode or IntelliJ) to launch into the `user` configuration for a fully personalized development environment, or the `shared` configuration for a standard project setup. The latter ensures that cloud-based IDEs like GitHub Codespaces can use the (checked-in) shared configuration to provide a simple and consistent development environment.
 
+## Installation
+
+Download the latest binary for your architecture from the [latest release](https://github.com/guardian/devenv/releases/latest) on GitHub and place it somewhere on your `PATH`. Each release includes its install commands, which will look like this:
+
+```bash
+curl -L --create-dirs -o ~/.local/bin/devenv <url-of-your-release-binary>
+chmod +x ~/.local/bin/devenv
+```
+
+> **Note:** `~/.local/bin` is not on `PATH` by default on all systems. If `devenv` isn't found after installation, add it to your shell config (e.g. `export PATH="$HOME/.local/bin:$PATH"` in `~/.zshrc` or `~/.bashrc`), or install to `/usr/local/bin` instead.
+
 ## Quickstart
 
 From the root of your project, run:
