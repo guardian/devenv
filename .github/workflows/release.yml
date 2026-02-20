@@ -5,8 +5,29 @@ name: Release
 # Steps:
 # 1. Generates a version based on the current date and time (appends -dev for non-default branches)
 # 2. Builds native binaries for macOS (ARM64) and Linux (AMD64)
-# 3. Creates a draft GitHub Release with the built binaries attached
-# 4. Marks the release as a prerelease if built from a non-default branch
+# 3. Signs and notarizes the macOS binary using an Apple Developer ID Application certificate
+# 4. Creates a draft GitHub Release with the built binaries attached
+# 5. Marks the release as a prerelease if built from a non-default branch
+#
+# -----------------------------------------------------------------------------
+# Required secrets for macOS signing and notarization
+# -----------------------------------------------------------------------------
+#
+# GU_APPLE_APP_CERTIFICATE
+#   Base64-encoded .p12 file containing a "Developer ID Application" certificate.
+#
+# GU_APPLE_APP_CERTIFICATE_PASSWORD
+#   The password for the .p12 certificate file
+#
+# GU_APPLE_TEAM_ID
+#   10-character Apple Developer Team ID.
+#
+# GU_APPLE_ID
+#   The Apple ID (email) associated with the Apple Developer account.
+#
+# GU_APPLE_ID_PASSWORD
+#   An app-specific password for the Apple ID (not your regular Apple password).
+
 on:
   # Manually trigger the workflow to create a draft release
   workflow_dispatch:
@@ -33,14 +54,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - runner: macos-15
+          - runner: macos-26
             architecture: macos-arm64
           - runner: ubuntu-latest
             architecture: linux-amd64
     runs-on: ${{ matrix.runner }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Java and sbt
       uses: guardian/setup-scala@v1
@@ -66,6 +87,98 @@ jobs:
         file cli/target/graalvm-native-image/devenv
         ./cli/target/graalvm-native-image/devenv --help || true
         cp cli/target/graalvm-native-image/devenv devenv-${{ needs.generate-version.outputs.version }}-${{ matrix.architecture }}
+
+    - name: Import Apple code signing certificate
+      if: matrix.architecture == 'macos-arm64'
+      env:
+        CERTIFICATE_BASE64: ${{ secrets.GU_APPLE_APP_CERTIFICATE }}
+        CERTIFICATE_PASSWORD: ${{ secrets.GU_APPLE_APP_CERTIFICATE_PASSWORD }}
+      run: |
+        # Create a temporary keychain
+        KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+        KEYCHAIN_PASSWORD="$(openssl rand -base64 32)"
+
+        security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+        security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+        # Import the certificate
+        CERT_PATH="$RUNNER_TEMP/certificate.p12"
+        echo "$CERTIFICATE_BASE64" | base64 --decode > "$CERT_PATH"
+
+        security import "$CERT_PATH" \
+          -P "$CERTIFICATE_PASSWORD" \
+          -A \
+          -t cert \
+          -f pkcs12 \
+          -k "$KEYCHAIN_PATH"
+
+        # Allow codesign to access the keychain
+        security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+        # Add the keychain to the search list
+        security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+        # Clean up the certificate file
+        rm "$CERT_PATH"
+
+        # Store keychain path for cleanup step
+        echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+        echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
+
+    - name: Sign the binary
+      if: matrix.architecture == 'macos-arm64'
+      run: |
+        # Find the signing identity from the imported certificate
+        SIGNING_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+
+        if [ -z "$SIGNING_IDENTITY" ]; then
+          echo "Error: No 'Developer ID Application' identity found"
+          echo "Please ensure GU_APPLE_APP_CERTIFICATE contains a Developer ID Application certificate"
+          exit 1
+        fi
+
+        echo "Using signing identity: $SIGNING_IDENTITY"
+
+        # Sign the binary with hardened runtime (required for notarization)
+        codesign --force --options runtime --sign "$SIGNING_IDENTITY" \
+          devenv-${{ needs.generate-version.outputs.version }}-${{ matrix.architecture }}
+
+        # Verify the signature
+        codesign --verify --verbose \
+          devenv-${{ needs.generate-version.outputs.version }}-${{ matrix.architecture }}
+
+    - name: Notarize the binary
+      if: matrix.architecture == 'macos-arm64'
+      env:
+        APPLE_ID: ${{ secrets.GU_APPLE_ID }}
+        APPLE_ID_PASSWORD: ${{ secrets.GU_APPLE_ID_PASSWORD }}
+        APPLE_TEAM_ID: ${{ secrets.GU_APPLE_TEAM_ID }}
+      run: |
+        BINARY="devenv-${{ needs.generate-version.outputs.version }}-${{ matrix.architecture }}"
+
+        # Create a ZIP file for notarization (notarytool requires a zip, pkg, or dmg)
+        ditto -c -k --keepParent "$BINARY" "${BINARY}.zip"
+
+        # Submit for notarization and wait for completion
+        xcrun notarytool submit "${BINARY}.zip" \
+          --apple-id "$APPLE_ID" \
+          --password "$APPLE_ID_PASSWORD" \
+          --team-id "$APPLE_TEAM_ID" \
+          --wait
+
+        # Note: stapling doesn't work on standalone binaries, only on .app bundles, dmg, and pkg files.
+        # The notarization is still valid - macOS will check online when the binary is first run.
+
+        # Clean up the zip
+        rm "${BINARY}.zip"
+
+    - name: Clean up keychain
+      if: matrix.architecture == 'macos-arm64' && always()
+      run: |
+        if [ -n "$KEYCHAIN_PATH" ] && [ -f "$KEYCHAIN_PATH" ]; then
+          security delete-keychain "$KEYCHAIN_PATH"
+        fi
 
     - name: Upload native binary
       uses: actions/upload-artifact@v4
