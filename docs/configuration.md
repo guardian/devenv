@@ -4,9 +4,9 @@ This document provides detailed specifications for the project and user configur
 
 ## Overview
 
-**Project config**: `.devcontainer/devenv.yaml` - Project-specific settings (image, ports, plugins, commands). Checked into version control.
+**Project config**: `.devcontainer/devenv.yaml` - Project-specific settings (image, ports, IDE plugins, commands). Checked into version control.
 
-**User config**: `~/.config/devenv/devenv.yaml` - Personal preferences (dotfiles, additional plugins). Merged with project config for the user-specific devcontainer.
+**User config**: `~/.config/devenv/devenv.yaml` - Personal preferences (dotfiles, additional IDE plugins). Merged with project config for the user-specific devcontainer.
 
 Two devcontainer files are generated:
 - `.devcontainer/user/devcontainer.json` - Merged config with your personal settings
@@ -124,6 +124,7 @@ To enable docker-in-docker or other modules, uncomment them:
 modules:
   - mise
   - scala
+  # - node
   - docker-in-docker  # Now enabled
 ```
 
