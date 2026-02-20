@@ -91,7 +91,7 @@ devenv <command>
 
 Commands:
   init      Initialize .devcontainer directory structure
-  generate  Generate devcontainer.json files from .devenv config
+  generate  Generate devcontainer.json files from devenv config
   check     Ensure devcontainer.json files match current config
 
   version   Show devenv's version
