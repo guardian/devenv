@@ -3,26 +3,18 @@ package com.gu.devenv.modules
 import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
 import com.gu.devenv.{Command, Mount, Plugins}
 
-/** Creates a dedicated space for the ivy cache within the development container.
+/** Creates a dedicated space for the ivy2 within the development container.
   *
-  * /home/vscode/.ivy2 is a standard cache location for java dependencies.
+  * /home/vscode/.ivy2 is a standard cache location for (typically) plugin dependencies.
   *
   */
-private val ivy = getIvy()
-
-/** Test-oriented method allowing for a specified volume name.
-  * @param volumeName
-  *   The name used by docker for the ivy cache volume.
-  * @return
-  */
-private[modules] def getIvy(volumeName: String = "docker-ivy-data-volume") =
+private[modules] def ivy(mountKey: String) =
   Module(
     name = "ivy",
     summary = "Create a volume for the ivy cache",
     enabledByDefault = false,
     contribution = ModuleContribution(
-      /* These commands set up ivy inside the container after creation.
-       * Also logs some useful info (including the output from `ivy doctor`) to the terminal to help with debugging.
+      /* These commands set up the ivy cache inside the container after creation.
        */
       postCreateCommands = List(
         Command(
@@ -41,7 +33,7 @@ private[modules] def getIvy(volumeName: String = "docker-ivy-data-volume") =
        */
       mounts = List(
         Mount.ExplicitMount(
-          source = volumeName,
+          source = s"$mountKey-ivy-data-volume",
           target = "/home/vscode/.ivy2",
           `type` = "volume"
         )
