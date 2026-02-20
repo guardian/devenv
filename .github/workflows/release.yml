@@ -56,8 +56,10 @@ jobs:
         include:
           - runner: macos-26
             architecture: macos-arm64
-          - runner: ubuntu-latest
+          - runner: ubuntu-24.04
             architecture: linux-amd64
+          - runner: ubuntu-24.04-arm
+            architecture: linux-arm64
     runs-on: ${{ matrix.runner }}
     steps:
     - name: Checkout code
@@ -209,6 +211,12 @@ jobs:
         name: devenv-linux-amd64
         path: .
 
+    - name: Download Linux ARM64 binary
+      uses: actions/download-artifact@v4
+      with:
+        name: devenv-linux-arm64
+        path: .
+
     - name: Create GitHub Release
       uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
       with:
@@ -217,6 +225,7 @@ jobs:
         files: |
           devenv-${{ needs.generate-version.outputs.version }}-macos-arm64
           devenv-${{ needs.generate-version.outputs.version }}-linux-amd64
+          devenv-${{ needs.generate-version.outputs.version }}-linux-arm64
         body: |
           ## devenv (Development Build)
           
@@ -237,6 +246,12 @@ jobs:
           **Linux (x86_64/AMD64):**
           ```bash
           curl -L -o ~/.local/bin/devenv https://github.com/${{ github.repository }}/releases/download/${{ needs.generate-version.outputs.version }}/devenv-${{ needs.generate-version.outputs.version }}-linux-amd64
+          chmod +x ~/.local/bin/devenv
+          ```
+          
+          **Linux (ARM64):**
+          ```bash
+          curl -L -o ~/.local/bin/devenv https://github.com/${{ github.repository }}/releases/download/${{ needs.generate-version.outputs.version }}/devenv-${{ needs.generate-version.outputs.version }}-linux-arm64
           chmod +x ~/.local/bin/devenv
           ```
         draft: true
