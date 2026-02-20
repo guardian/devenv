@@ -8,14 +8,7 @@ import com.gu.devenv.{Command, Mount, Plugins}
   *  /.jbdevcontainer/coursier is a standard cache location for java dependencies.
   *
   */
-private val coursier = getCoursier()
-
-/** Test-oriented method allowing for a specified volume name.
-  * @param volumeName
-  *   The name used by docker for the coursier cache volume.
-  * @return
-  */
-private[modules] def getCoursier(volumeName: String = "docker-coursier-data-volume") =
+private[modules] def coursier(mountKey: String) =
   Module(
     name = "coursier",
     summary = "Create a volume for the coursier cache",
@@ -41,7 +34,7 @@ private[modules] def getCoursier(volumeName: String = "docker-coursier-data-volu
        */
       mounts = List(
         Mount.ExplicitMount(
-          source = volumeName,
+          source = s"$mountKey-coursier-data-volume",
           target = "/.jbdevcontainer/coursier",
           `type` = "volume"
         )

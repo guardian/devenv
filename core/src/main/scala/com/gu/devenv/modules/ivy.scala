@@ -8,14 +8,7 @@ import com.gu.devenv.{Command, Mount, Plugins}
   * /home/vscode/.ivy2 is a standard cache location for java dependencies.
   *
   */
-private val ivy = getIvy()
-
-/** Test-oriented method allowing for a specified volume name.
-  * @param volumeName
-  *   The name used by docker for the ivy cache volume.
-  * @return
-  */
-private[modules] def getIvy(volumeName: String = "docker-ivy-data-volume") =
+private[modules] def ivy(mountKey: String) =
   Module(
     name = "ivy",
     summary = "Create a volume for the ivy cache",
@@ -41,7 +34,7 @@ private[modules] def getIvy(volumeName: String = "docker-ivy-data-volume") =
        */
       mounts = List(
         Mount.ExplicitMount(
-          source = volumeName,
+          source = s"$mountKey-ivy-data-volume",
           target = "/home/vscode/.ivy2",
           `type` = "volume"
         )
