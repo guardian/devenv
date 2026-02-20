@@ -14,7 +14,7 @@ import com.gu.devenv.{Command, Env, Mount, Plugins}
   * the complexity in a module. This allows teams to have a consistent development environment
   * without needing to manually install and configure `mise` each time.
   */
-private[modules] val mise =
+private[modules] def mise(mountKey: String) =
   Module(
     name = "mise",
     summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
@@ -60,8 +60,7 @@ private[modules] val mise =
        */
       mounts = List(
         Mount.ExplicitMount(
-          // TODO: parameterize volume name so we can run test cleanups in parallel and without destroying user volumes
-          source = "docker-mise-data-volume",
+          source = s"$mountKey-mise-data-volume",
           target = "/mnt/mise-data",
           `type` = "volume"
         )

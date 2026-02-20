@@ -1,10 +1,11 @@
 package com.gu.devenv
 
-import com.gu.devenv.modules.Modules.builtInModules
-
-import scala.util.{Failure, Success}
-import java.nio.file.Paths
+import com.gu.devenv.modules.Modules
+import com.gu.devenv.modules.Modules.ModuleConfig
 import fansi.{Bold, Color}
+
+import java.nio.file.Paths
+import scala.util.{Failure, Success}
 
 /** Natively compiled tool that wraps the Scala logic in a CLI program.
   */
@@ -35,6 +36,10 @@ object Main {
     }
   }
 
+  private val modules = Modules.builtInModules(
+    ModuleConfig(mountKey = "devenv")
+  )
+
   /** Sets up a .devcontainer directory with nested subdirectories.
     *
     * Uses the project's devenv configuration file to generate:
@@ -48,8 +53,6 @@ object Main {
     */
   def init(): ExitCode = {
     val devcontainerDir = Paths.get(".devcontainer")
-    // these could be loaded dynamically in the future
-    val modules = builtInModules
 
     Devenv.init(devcontainerDir, modules) match {
       case Success(result) =>
@@ -73,8 +76,6 @@ object Main {
     val devcontainerDir = Paths.get(".devcontainer")
     val userConfigPath =
       Paths.get(System.getProperty("user.home"), ".config", "devenv")
-    // these could be loaded dynamically in the future
-    val modules = builtInModules
 
     Devenv.generate(devcontainerDir, userConfigPath, modules) match {
       case Success(result) =>
@@ -98,8 +99,6 @@ object Main {
     val devcontainerDir = Paths.get(".devcontainer")
     val userConfigPath =
       Paths.get(System.getProperty("user.home"), ".config", "devenv")
-    // these could be loaded dynamically in the future
-    val modules = builtInModules
 
     Devenv.check(devcontainerDir, userConfigPath, modules) match {
       case Success(result) =>

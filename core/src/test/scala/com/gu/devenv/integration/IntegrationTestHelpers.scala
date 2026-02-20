@@ -1,27 +1,23 @@
 package com.gu.devenv.integration
 
+import com.gu.devenv.modules.Modules.{builtInModules, Module, ModuleConfig}
+
 import java.nio.file.{Files, Path}
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 object IntegrationTestHelpers {
-  // Helper functions for temporary directory management
 
-  def withTempDir[A](test: Path => A): A = {
-    val tempDir = Files.createTempDirectory("devenv-init-test")
-    try
-      test(tempDir)
-    finally
-      deleteRecursively(tempDir)
+  /** A temporary directory that is cleaned up after the test. */
+  val tempDir: TestResource[Path] = TestResource { use =>
+    val dir = Files.createTempDirectory("devenv-test")
+    try use(dir)
+    finally deleteRecursively(dir)
   }
 
-  def withTempDirs[A](test: (Path, Path) => A): A = {
-    val projectTempDir    = Files.createTempDirectory("devenv-generate-test")
-    val userConfigTempDir = Files.createTempDirectory("devenv-user-config-test")
-    try test(projectTempDir, userConfigTempDir)
-    finally {
-      deleteRecursively(projectTempDir)
-      deleteRecursively(userConfigTempDir)
-    }
+  /** A set of built-in modules with a unique mount key to avoid conflicts between tests. */
+  val testModules: TestResource[List[Module]] = TestResource { use =>
+    val mountKey = s"devenv-test-mount-${java.util.UUID.randomUUID()}"
+    use(builtInModules(ModuleConfig(mountKey = mountKey)))
   }
 
   private def deleteRecursively(path: Path): Unit = {
