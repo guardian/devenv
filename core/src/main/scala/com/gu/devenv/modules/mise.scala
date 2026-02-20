@@ -60,7 +60,6 @@ private[modules] def mise(mountKey: String) =
        */
       mounts = List(
         Mount.ExplicitMount(
-          // TODO: parameterize volume name so we can run test cleanups in parallel and without destroying user volumes
           source = s"$mountKey-mise-data-volume",
           target = "/mnt/mise-data",
           `type` = "volume"
