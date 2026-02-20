@@ -258,7 +258,10 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           val devcontainerDir = tempDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
-          Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithMultipleModules)
+          Files.writeString(
+            devcontainerDir.resolve("devenv.yaml"),
+            projectConfigWithMultipleModules
+          )
 
           Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 

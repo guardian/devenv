@@ -1,6 +1,6 @@
 package com.gu.devenv.integration
 
-import com.gu.devenv.modules.Modules.{Module, ModuleConfig, builtInModules}
+import com.gu.devenv.modules.Modules.{builtInModules, Module, ModuleConfig}
 
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
