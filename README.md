@@ -133,10 +133,6 @@ The project also includes generation tests that validate the real program output
 
 The project uses GitHub Actions to build and publish native binaries for macOS ARM64 and Linux AMD64 as date-based development releases.
 
-> [!WARNING]
-> The GitHub actions workflow does not properly sign the macOS binaries, so the workflow artifact is currently not usable.
-> Building the macOS binary locally on a Macbook works correctly for now. See the "Building locally" section below.
-
 #### Creating a release
 
 1. Go to the [Actions tab](https://github.com/guardian/devenv/actions/workflows/release.yml) on GitHub
@@ -145,16 +141,12 @@ The project uses GitHub Actions to build and publish native binaries for macOS A
 
 3. GitHub Actions will automatically:
     - Build native binaries for macOS ARM64 and Linux AMD64
+    - Sign and notarise the macOS binary with a Developer ID Application certificate
     - Create a **draft** GitHub Release with date-based versioning (e.g., `20251103-143022`)
     - Name the binaries as `devenv-{date-version}-{platform}` (e.g., `devenv-20251103-143022-macos-arm64`)
     - Mark the release as a prerelease
 
-4. **Build and upload a properly signed binary locally:**
-    - See "Building locally" section below
-    - Build the binary with the same version as the draft release
-    - Upload it to the draft release, replacing the unsigned binary
-
-5. **Manually verify and publish the release:**
+4. **Manually verify and publish the release:**
     - Go to the [Releases page](https://github.com/guardian/devenv/releases) on GitHub
     - Review the draft release
     - Test the binaries if needed
@@ -162,21 +154,27 @@ The project uses GitHub Actions to build and publish native binaries for macOS A
 
 #### Building locally
 
-To build a properly signed native binary locally, use the `release.sh` script. This is useful for manually building a macOS binary locally with proper code signing, so it can be uploaded to the GitHub release.
+To build a native binary locally, use the `build-native-binary.sh` script. This is useful for testing the native build on your own machine outside of CI.
 
 ```bash
-./scripts/release.sh 20251103-143022
+./scripts/build-native-binary.sh
+```
+
+The release version defaults to the current timestamp, but can be specified explicitly if needed:
+
+```bash
+./scripts/build-native-binary.sh 20251103-143022
 ```
 
 The script will:
-- Set the `DEVENV_RELEASE` environment variable to the specified version
+- Set the `DEVENV_RELEASE` environment variable to the specified version (or current timestamp if omitted)
 - Append `-dev` to the version if building from a branch other than `main`
 - Set the `DEVENV_ARCHITECTURE` environment variable (auto-detected or specified)
 - Set the `DEVENV_BRANCH` environment variable (auto-detected from git or specified)
 - Display the build configuration and prompt for confirmation
 - Build a native binary with GraalVM Native Image
 
-The resulting binary will be at `cli/target/graalvm-native-image/devenv` and can be renamed and uploaded to the GitHub release.
+The resulting binary will be at `cli/target/graalvm-native-image/devenv`.
 
 Architectures the script can detect:
 - `macos-arm64` (Apple Silicon)
