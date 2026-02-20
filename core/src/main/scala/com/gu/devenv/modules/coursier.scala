@@ -5,24 +5,16 @@ import com.gu.devenv.{Command, Mount, Plugins}
 
 /** Creates a dedicated space for the coursier cache within the development container.
   *
-  *  /.jbdevcontainer/coursier is a standard cache location for java dependencies.
+  *  /.jbdevcontainer/coursier is a standard cache location for jar dependencies of jvm projects.
   *
   */
-private val coursier = getCoursier()
-
-/** Test-oriented method allowing for a specified volume name.
-  * @param volumeName
-  *   The name used by docker for the coursier cache volume.
-  * @return
-  */
-private[modules] def getCoursier(volumeName: String = "docker-coursier-data-volume") =
+private[modules] def coursier(mountKey: String) =
   Module(
     name = "coursier",
     summary = "Create a volume for the coursier cache",
     enabledByDefault = false,
     contribution = ModuleContribution(
-      /* These commands set up coursier inside the container after creation.
-       * Also logs some useful info (including the output from `coursier doctor`) to the terminal to help with debugging.
+      /* These commands set up the coursier cache inside the container after creation.
        */
       postCreateCommands = List(
         Command(
@@ -41,7 +33,7 @@ private[modules] def getCoursier(volumeName: String = "docker-coursier-data-volu
        */
       mounts = List(
         Mount.ExplicitMount(
-          source = volumeName,
+          source = s"$mountKey-coursier-data-volume",
           target = "/.jbdevcontainer/coursier",
           `type` = "volume"
         )
