@@ -9,8 +9,8 @@ import com.gu.devenv.{Command, Env, Mount, Plugins, ProjectConfig}
 object Modules {
   // all registered modules are here
   // In the future we might provide ways to register custom modules but this is fine for now
-  val builtInModules: List[Module] =
-    List(mise, dockerInDocker, scalaLang, nodeLang)
+  def builtInModules(moduleConfig: ModuleConfig): List[Module] =
+    List(mise(moduleConfig.mountKey), dockerInDocker, scalaLang, nodeLang)
 
   case class Module(
       name: String,
@@ -27,6 +27,10 @@ object Modules {
       postCreateCommands: List[Command] = Nil,
       capAdd: List[String] = Nil,
       securityOpt: List[String] = Nil
+  )
+
+  case class ModuleConfig(
+      mountKey: String // allows test modules to use unique mount names
   )
 
   /** Apply modules to a project config, merging their contributions. Explicit config takes

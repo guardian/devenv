@@ -1,8 +1,8 @@
 package com.gu.devenv.integration
 
+import cats.syntax.all.*
 import com.gu.devenv.Devenv
 import com.gu.devenv.GenerateResult
-import com.gu.devenv.modules.Modules.builtInModules
 import com.gu.devenv.Filesystem.FileSystemStatus
 import com.gu.devenv.integration.IntegrationTestHelpers._
 import io.circe.parser._
@@ -13,104 +13,117 @@ import org.scalatest.matchers.should.Matchers
 import java.nio.file.Files
 
 class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
-  private val modules: List[com.gu.devenv.modules.Modules.Module] = builtInModules
 
   "generate" - {
     "generating for an uninitialized directory" - {
-      "should return NotInitialized result" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should return NotInitialized result" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        val result = Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          val result = Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-        result shouldBe GenerateResult.NotInitialized
+          result shouldBe GenerateResult.NotInitialized
+        }
       }
 
-      "should not create any files" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should not create any files" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-        Files.exists(devcontainerDir) shouldBe false
+          Files.exists(devcontainerDir) shouldBe false
+        }
       }
     }
 
     "generating with placeholder project name" - {
-      "should return ConfigNotCustomized result" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should return ConfigNotCustomized result" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        // Initialize first
-        Devenv.init(devcontainerDir, modules).success.value
+          Devenv.init(devcontainerDir, modules).success.value
 
-        val result = Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          val result = Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-        result shouldBe GenerateResult.ConfigNotCustomized
+          result shouldBe GenerateResult.ConfigNotCustomized
+        }
       }
 
-      "should not create devcontainer.json files" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should not create devcontainer.json files" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        Devenv.init(devcontainerDir, modules).success.value
-        Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          Devenv.init(devcontainerDir, modules).success.value
 
-        Files.exists(devcontainerDir.resolve("user/devcontainer.json")) shouldBe false
-        Files.exists(devcontainerDir.resolve("shared/devcontainer.json")) shouldBe false
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+
+          Files.exists(devcontainerDir.resolve("user/devcontainer.json")) shouldBe false
+          Files.exists(devcontainerDir.resolve("shared/devcontainer.json")) shouldBe false
+        }
       }
     }
 
     "generating a basic project config" - {
-      "should create both devcontainer.json files" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should create both devcontainer.json files" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        // Initialize and customize
-        Devenv.init(devcontainerDir, modules).success.value
-        val devenvFile = devcontainerDir.resolve("devenv.yaml")
-        Files.writeString(devenvFile, basicProjectConfig)
+          // Initialize and customize
+          Devenv.init(devcontainerDir, modules).success.value
+          val devenvFile = devcontainerDir.resolve("devenv.yaml")
+          Files.writeString(devenvFile, basicProjectConfig)
 
-        val result = Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          val result = Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-        result match {
-          case GenerateResult.Success(userStatus, sharedStatus) =>
-            userStatus shouldBe FileSystemStatus.Created
-            sharedStatus shouldBe FileSystemStatus.Created
-          case _ => fail("Expected Success result")
+          result match {
+            case GenerateResult.Success(userStatus, sharedStatus) =>
+              userStatus shouldBe FileSystemStatus.Created
+              sharedStatus shouldBe FileSystemStatus.Created
+            case _ => fail("Expected Success result")
+          }
+
+          Files.exists(devcontainerDir.resolve("user/devcontainer.json")) shouldBe true
+          Files.exists(devcontainerDir.resolve("shared/devcontainer.json")) shouldBe true
         }
-
-        Files.exists(devcontainerDir.resolve("user/devcontainer.json")) shouldBe true
-        Files.exists(devcontainerDir.resolve("shared/devcontainer.json")) shouldBe true
       }
 
-      "should generate valid JSON devcontainer files" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should generate valid JSON devcontainer files" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        Devenv.init(devcontainerDir, modules).success.value
-        Files.writeString(devcontainerDir.resolve("devenv.yaml"), basicProjectConfig)
+          Devenv.init(devcontainerDir, modules).success.value
+          Files.writeString(devcontainerDir.resolve("devenv.yaml"), basicProjectConfig)
 
-        Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-        val userJson   = Files.readString(devcontainerDir.resolve("user/devcontainer.json"))
-        val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
+          val userJson   = Files.readString(devcontainerDir.resolve("user/devcontainer.json"))
+          val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
 
-        parse(userJson).isRight shouldBe true
-        parse(sharedJson).isRight shouldBe true
+          parse(userJson).isRight shouldBe true
+          parse(sharedJson).isRight shouldBe true
+        }
       }
 
-      "should include project name in generated files" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should include project name in generated files" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        Devenv.init(devcontainerDir, modules).success.value
-        Files.writeString(devcontainerDir.resolve("devenv.yaml"), basicProjectConfig)
+          Devenv.init(devcontainerDir, modules).success.value
+          Files.writeString(devcontainerDir.resolve("devenv.yaml"), basicProjectConfig)
 
-        Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-        val userJson   = Files.readString(devcontainerDir.resolve("user/devcontainer.json"))
-        val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
+          val userJson   = Files.readString(devcontainerDir.resolve("user/devcontainer.json"))
+          val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
 
-        userJson should include("\"My Test Project\"")
-        sharedJson should include("\"My Test Project\"")
+          userJson should include("\"My Test Project\"")
+          sharedJson should include("\"My Test Project\"")
+        }
       }
 
-      "should update existing devcontainer files on subsequent generation" in withTempDirs {
-        (tempDir, userConfigDir) =>
+      "should update existing devcontainer files on subsequent generation" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
           val devcontainerDir = tempDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
@@ -140,30 +153,33 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           secondUserJson should include("Updated Project Name")
           secondUserJson should not include "My Test Project"
           firstUserJson should not equal secondUserJson
+        }
       }
     }
 
     "generating a project config merged with a user config" - {
-      "should merge user plugins into project plugins" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should merge user plugins into project plugins" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        Devenv.init(devcontainerDir, modules).success.value
-        Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithPlugins)
-        Files.writeString(userConfigDir.resolve("devenv.yaml"), userConfigWithPlugins)
+          Devenv.init(devcontainerDir, modules).success.value
+          Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithPlugins)
+          Files.writeString(userConfigDir.resolve("devenv.yaml"), userConfigWithPlugins)
 
-        Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-        val userJson = Files.readString(devcontainerDir.resolve("user/devcontainer.json"))
+          val userJson = Files.readString(devcontainerDir.resolve("user/devcontainer.json"))
 
-        // User devcontainer should have both project and user plugins
-        userJson should include("project-plugin-1")
-        userJson should include("project-plugin-2")
-        userJson should include("user-plugin-1")
-        userJson should include("user-plugin-2")
+          // User devcontainer should have both project and user plugins
+          userJson should include("project-plugin-1")
+          userJson should include("project-plugin-2")
+          userJson should include("user-plugin-1")
+          userJson should include("user-plugin-2")
+        }
       }
 
-      "should not include user plugins in shared devcontainer" in withTempDirs {
-        (tempDir, userConfigDir) =>
+      "should not include user plugins in shared devcontainer" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
           val devcontainerDir = tempDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
@@ -179,10 +195,11 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           sharedJson should include("project-plugin-2")
           sharedJson should not include "user-plugin-1"
           sharedJson should not include "user-plugin-2"
+        }
       }
 
-      "should merge user dotfiles into user devcontainer" in withTempDirs {
-        (tempDir, userConfigDir) =>
+      "should merge user dotfiles into user devcontainer" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
           val devcontainerDir = tempDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
@@ -195,10 +212,11 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           userJson should include("dotfiles")
           userJson should include("github.com/myuser/dotfiles")
+        }
       }
 
-      "should not include dotfiles in shared devcontainer" in withTempDirs {
-        (tempDir, userConfigDir) =>
+      "should not include dotfiles in shared devcontainer" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
           val devcontainerDir = tempDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
@@ -210,85 +228,94 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
 
           sharedJson should not include "dotfiles"
+        }
       }
     }
 
     "generating a project that includes modules" - {
-      "should apply mise module features" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should apply mise module features" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        Devenv.init(devcontainerDir, modules).success.value
-        Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithMise)
+          Devenv.init(devcontainerDir, modules).success.value
+          Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithMise)
 
-        Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-        val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
+          val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
 
-        sharedJson should include("hverlin.mise-vscode")
-        sharedJson should include("com.github.l34130.mise")
-        sharedJson should include("MISE_DATA_DIR")
-        sharedJson should include("/mnt/mise-data")
-        sharedJson should include("${containerEnv:PATH}:/mnt/mise-data/shims")
-        sharedJson should include("mise install")
+          sharedJson should include("hverlin.mise-vscode")
+          sharedJson should include("com.github.l34130.mise")
+          sharedJson should include("MISE_DATA_DIR")
+          sharedJson should include("/mnt/mise-data")
+          sharedJson should include("${containerEnv:PATH}:/mnt/mise-data/shims")
+          sharedJson should include("mise install")
+        }
       }
 
-      "should apply multiple modules" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should apply multiple modules" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        Devenv.init(devcontainerDir, modules).success.value
-        Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithMultipleModules)
+          Devenv.init(devcontainerDir, modules).success.value
+          Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithMultipleModules)
 
-        Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-        val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
+          val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
 
-        sharedJson should include("mise install")
+          sharedJson should include("mise install")
+        }
       }
 
-      "should fail with unknown module" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should fail with unknown module" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        Devenv.init(devcontainerDir, modules).success.value
-        Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithUnknownModule)
+          Devenv.init(devcontainerDir, modules).success.value
+          Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithUnknownModule)
 
-        val result = Devenv.generate(devcontainerDir, userConfigDir, modules)
+          val result = Devenv.generate(devcontainerDir, userConfigDir, modules)
 
-        result.isFailure shouldBe true
+          result.isFailure shouldBe true
+        }
       }
     }
 
     "generating a complex project with modules and user config" - {
-      "should merge all configurations correctly" in withTempDirs { (tempDir, userConfigDir) =>
-        val devcontainerDir = tempDir.resolve(".devcontainer")
+      "should merge all configurations correctly" in {
+        (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
+          val devcontainerDir = tempDir.resolve(".devcontainer")
 
-        Devenv.init(devcontainerDir, modules).success.value
-        Files.writeString(devcontainerDir.resolve("devenv.yaml"), complexProjectConfig)
-        Files.writeString(userConfigDir.resolve("devenv.yaml"), userConfigWithPlugins)
+          Devenv.init(devcontainerDir, modules).success.value
+          Files.writeString(devcontainerDir.resolve("devenv.yaml"), complexProjectConfig)
+          Files.writeString(userConfigDir.resolve("devenv.yaml"), userConfigWithPlugins)
 
-        Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-        val userJson   = Files.readString(devcontainerDir.resolve("user/devcontainer.json"))
-        val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
+          val userJson   = Files.readString(devcontainerDir.resolve("user/devcontainer.json"))
+          val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
 
-        // Both should have mise module mounts
-        userJson should include("docker-mise-data-volume")
-        sharedJson should include("docker-mise-data-volume")
+          // Both should have mise module mounts (volume name includes the test mount key)
+          userJson should include("mise-data-volume")
+          sharedJson should include("mise-data-volume")
 
-        // Both should have project plugins
-        userJson should include("project-plugin-1")
-        sharedJson should include("project-plugin-1")
+          // Both should have project plugins
+          userJson should include("project-plugin-1")
+          sharedJson should include("project-plugin-1")
 
-        // Only user should have user plugins
-        userJson should include("user-plugin-1")
-        sharedJson should not include "user-plugin-1"
+          // Only user should have user plugins
+          userJson should include("user-plugin-1")
+          sharedJson should not include "user-plugin-1"
 
-        // Both should have project config
-        userJson should include("Complex Project")
-        sharedJson should include("Complex Project")
+          // Both should have project config
+          userJson should include("Complex Project")
+          sharedJson should include("Complex Project")
 
-        // User should have merged mise plugins from module and user plugins
-        userJson should include("hverlin.mise-vscode")
-        userJson should include("com.github.l34130.mise")
+          // User should have merged mise plugins from module and user plugins
+          userJson should include("hverlin.mise-vscode")
+          userJson should include("com.github.l34130.mise")
+        }
       }
     }
 
@@ -298,7 +325,7 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       * \"print generated devcontainer\""
       */
     "print generated devcontainer for debugging" ignore {
-      withTempDirs { (tempDir, userConfigDir) =>
+      (tempDir, tempDir, testModules).mapN { (tempDir, userConfigDir, modules) =>
         val devcontainerDir = tempDir.resolve(".devcontainer")
 
         Devenv.init(devcontainerDir, modules).success.value

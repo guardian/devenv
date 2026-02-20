@@ -1,7 +1,9 @@
 package com.gu.devenv.docker.testutils
 
-import com.gu.devenv.{Devenv, GenerateResult}
 import com.gu.devenv.docker.verifiers.DockerVerifier
+import com.gu.devenv.modules.Modules
+import com.gu.devenv.modules.Modules.ModuleConfig
+import com.gu.devenv.{Devenv, GenerateResult}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -35,7 +37,9 @@ trait DevcontainerTestSupport extends BeforeAndAfterEach with BeforeAndAfterAll 
   protected lazy val fixturesDir: Path = Path.of("docker/fixtures")
 
   // use the built-in modules for these tests while that's all that is supported
-  private val modules = com.gu.devenv.modules.Modules.builtInModules
+  private val modules = Modules.builtInModules(
+    ModuleConfig(mountKey = "devenv-docker-test")
+  )
 
   // User config fixture directory with empty devenv.yaml
   protected lazy val userConfigFixtureDir: Path = fixturesDir.resolve("user-config/.config/devenv")
