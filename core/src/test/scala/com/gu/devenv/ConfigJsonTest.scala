@@ -304,7 +304,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         val json    = Config.configAsJson(config, Nil).get
 
         val commandJson = json.hcursor.downField("postCreateCommand").as[String]
-        commandJson shouldBe Right("(cd /app && npm install)")
+        commandJson shouldBe Right("(cd /app && npm install) | sudo tee /var/log/postCreateLog")
       }
 
       "is omitted when empty" in {

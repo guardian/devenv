@@ -81,8 +81,8 @@ object Config {
 
       val commands = JsonObject.fromIterable(
         List(
-          "postCreateCommand" -> combineCommands(config.postCreateCommand),
-          "postStartCommand"  -> combineCommands(config.postStartCommand)
+          "postCreateCommand" -> combineCommands(config.postCreateCommand, "/var/log/postCreateLog"),
+          "postStartCommand"  -> combineCommands(config.postStartCommand, "/var/log/postStartLog")
         ).collect { case (key, Some(value)) =>
           key -> Json.fromString(value)
         }
@@ -167,13 +167,14 @@ object Config {
     }
   }
 
-  private def combineCommands(commands: List[Command]): Option[String] =
+  private def combineCommands(commands: List[Command], logFile: String): Option[String] =
     if (commands.isEmpty) None
     else
       Some(
         commands
           .map(command => s"(cd ${command.workingDirectory} && ${command.cmd})")
           .mkString(" && ")
+        + s" | sudo tee $logFile"
       )
 
   private def envListToJson(envList: List[Env]): Json =
