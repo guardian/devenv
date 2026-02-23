@@ -32,25 +32,18 @@ private[modules] def mise(mountKey: String) =
               |echo -e "\033[1;34m[setup] ensure correct ownership of the shared mise data volume\033[0m" &&
               |sudo chown -R vscode:vscode /mnt/mise-data &&
               |
-              |echo -e "\033[1;34m[setup] checking for mise install directory\033[0m" &&
-              |if [[ ! -d $(dirname $MISE_INSTALL_PATH) ]]; then
-              |  echo -e "\033[1;34m[error] Directory of $MISE_INSTALL_PATH not found...\033[0m"
-              |  exit 1
-              |fi
+              |echo -e "\033[1;34m[setup] ensure mise install directory exists\033[0m" &&
+              |mkdir -p $(dirname $MISE_INSTALL_PATH) &&
               |
               |echo -e "\033[1;34m[setup] checking for mise already present\033[0m" &&
-              |if [[ ! -f $MISE_INSTALL_PATH ]]; then
-              |  echo -e "\033[1;34m[setup] Installing mise...\033[0m" &&
-              |  curl -fsSL https://mise.run/bash | sh
-              |else
-              |  echo -e "\033[1;34m[setup] mise is present\033[0m"
-              |fi &&
+              |(test -f $MISE_INSTALL_PATH ]] && echo -e "\033[1;34m[setup] mise is present\033[0m") ||
+              |(echo -e "\033[1;34m[setup] Installing mise...\033[0m" && curl -fsSL https://mise.run/bash | sh) &&
               |
               |echo -e "\033[1;34m[setup] Symlinking $MISE_INSTALL_PATH to /usr/local/bin/mise...\033[0m" &&
               |sudo ln -sf $MISE_INSTALL_PATH /usr/local/bin/mise &&
               |
-              |echo 'eval $(mise activate bash)' >> /home/vscode/.bashrc
-              |source /home/vscode/.bashrc
+              |echo 'eval $(mise activate bash)' | tee /home/vscode/.bashrc >/dev/null &&
+              |eval $(mise activate bash) &&
               |
               |echo -e "\033[1;34m[setup] checking mise working correctly\033[0m" &&
               |mise --version &&
@@ -67,8 +60,9 @@ private[modules] def mise(mountKey: String) =
               |mise doctor &&
               |
               |echo -e "\033[1;32m[setup] mise setup complete at $MISE_INSTALL_PATH.\033[0m"
+              |
               |'
-              |""".stripMargin.mkString(""),
+              |""".stripMargin.split('\n').mkString(" "),
           workingDirectory = "."
         )
       ),
