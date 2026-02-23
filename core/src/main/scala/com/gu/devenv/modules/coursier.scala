@@ -5,8 +5,7 @@ import com.gu.devenv.{Command, Mount, Plugins}
 
 /** Creates a dedicated space for the coursier cache within the development container.
   *
-  *  /.jbdevcontainer/coursier is a standard cache location for jar dependencies of jvm projects.
-  *
+  * /.jbdevcontainer/coursier is a standard cache location for jar dependencies of jvm projects.
   */
 private[modules] def coursier(mountKey: String) =
   Module(
@@ -21,7 +20,7 @@ private[modules] def coursier(mountKey: String) =
           cmd = """bash -c 'set -e && """ +
             // ensure correct ownership of the shared coursier data volume
             "sudo chown -R vscode:vscode /.jbdevcontainer/coursier " +
-          """'""",
+            """'""",
           workingDirectory = "."
         )
       ),

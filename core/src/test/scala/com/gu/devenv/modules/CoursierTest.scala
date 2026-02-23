@@ -9,7 +9,7 @@ class CoursierTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChec
   "coursier module" - {
     "should use the provided ModuleConfig to parameterise the data mount's name" in {
       val mountKey = "test-mount-key"
-      val module = coursier(mountKey)
+      val module   = coursier(mountKey)
 
       module.contribution.mounts should have size 1
       module.contribution.mounts.head match {
@@ -26,7 +26,7 @@ class CoursierTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChec
   "builtInModules" - {
     "should use the provided module config to parameterise the coursier module's mount" in {
       val moduleConfig = Modules.ModuleConfig("test-mount-key")
-      val modules = Modules.builtInModules(moduleConfig)
+      val modules      = Modules.builtInModules(moduleConfig)
 
       modules should contain(coursier(moduleConfig.mountKey))
     }
