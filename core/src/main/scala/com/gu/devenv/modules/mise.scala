@@ -25,8 +25,7 @@ private[modules] def mise(mountKey: String) =
        */
       postCreateCommands = List(
         Command(
-          cmd =
-            """bash -c '
+          cmd = """bash -c '
               |echo -e "\033[1;34m[setup] Setting up mise.\033[0m" &&
               |export MISE_INSTALL_PATH=/mnt/mise-data/mise &&
               |
