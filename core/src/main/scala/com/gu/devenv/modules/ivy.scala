@@ -6,7 +6,6 @@ import com.gu.devenv.{Command, Mount, Plugins}
 /** Creates a dedicated space for the ivy2 within the development container.
   *
   * /home/vscode/.ivy2 is a standard cache location for (typically) plugin dependencies.
-  *
   */
 private[modules] def ivy(mountKey: String) =
   Module(
@@ -21,7 +20,7 @@ private[modules] def ivy(mountKey: String) =
           cmd = """bash -c 'set -e && """ +
             // ensure correct ownership of the shared ivy data volume
             "sudo chown -R vscode:vscode /home/vscode/.ivy2 " +
-          """'""",
+            """'""",
           workingDirectory = "."
         )
       ),

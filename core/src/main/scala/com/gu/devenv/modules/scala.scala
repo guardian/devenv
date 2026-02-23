@@ -26,7 +26,6 @@ private[modules] def getScalaLang(volumeName: String = "docker-sbt-data-volume")
         workingDirectory = "."
       )
     ),
-
     mounts = List(
       Mount.ExplicitMount(
         source = volumeName,
