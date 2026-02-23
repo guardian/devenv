@@ -2,16 +2,14 @@ package com.gu.devenv
 
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.Module
-import io.circe.Json
-import io.circe.syntax.*
-import io.circe.JsonObject
-
-import scala.util.Try
-import io.circe.yaml.scalayaml.parser
+import io.circe.{Json, JsonObject}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto.*
+import io.circe.syntax.*
+import io.circe.yaml.scalayaml.parser
 
 import java.nio.file.Path
+import scala.util.Try
 
 object Config {
   given Configuration = Configuration.default.withDefaults
@@ -94,7 +92,6 @@ object Config {
         "customizations" -> customizations.asJson,
         "forwardPorts"   -> config.forwardPorts.asJson,
         "runArgs"        -> List("--memory=16g", "--cpus=8", "--shm-size=512m").asJson
-
       )
 
       // Add optional fields if they exist
