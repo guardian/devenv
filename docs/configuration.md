@@ -35,6 +35,7 @@ The project config (`.devcontainer/devenv.yaml`) supports the following fields:
 | `updateRemoteUserUID` | Whether to update remote user's UID to match host                                               | `true`                                        |
 | `capAdd`              | Linux capabilities to add to the container (use with caution)                                   | `[]`                                          |
 | `securityOpt`         | Security options for the container (use with caution)                                           | `[]`                                          |
+| `runArgs`             | Extra switches for container generation                                                         | `[]`                                          |
 
 ### Example
 
@@ -65,10 +66,11 @@ postCreateCommand:
 
 The user config (`~/.config/devenv/devenv.yaml`) supports the following (optional) settings:
 
-| Field      | Description                                                                            |
-|------------|----------------------------------------------------------------------------------------|
-| `plugins`  | Personal IDE plugins (same structure as project config: `intellij` and `vscode` lists) |
-| `dotfiles` | Dotfiles repository configuration (see below)                                          |
+| Field           | Description                                                                            | Default |
+|-----------------|----------------------------------------------------------------------------------------|---------|
+| `plugins`       | Personal IDE plugins (same structure as project config: `intellij` and `vscode` lists) | []      |
+| `dotfiles`      | Dotfiles repository configuration (see below)                                          | []      |
+| `containerSize` | Flag controlling container generation: large or small                                  | large   |
 
 ### Dotfiles Configuration
 
@@ -140,3 +142,29 @@ dotfiles:
 
 The dotfiles setup runs after project/container setup to avoid interfering with shared configuration. The repository is cloned into the container at the specified path, and the `installCommand` is executed from there.
 
+## Container Size
+
+eg
+```yaml
+containerSize: small
+```
+
+Developer laptops are typically quite powerful, so a container size of `large` is defaulted.  This will
+result in additional runArgs switches:
+
+ | Switch          | Effect                  |
+ |-----------------|-------------------------|
+ | --memory=16g    | 16Gb of memory          |
+ | --cpus=8        | Eight cores             |
+ | --shm-size=512m | 512Mb of shared memory* |
+
+*More shared memory is useful for running playwright tests in chrome, for example.
+
+However, this is not suitable for use with github actions, as the GHA environment cannot support such a large
+container.  For this purpose, all tests which start a docker environment pull in a github user profile, which
+specifies a small container:
+
+| Switch      | Effect        |
+|-------------|---------------|
+| --memory=1g | 1Gb of memory |
+| --cpus=1    | One core      |
