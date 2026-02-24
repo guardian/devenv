@@ -48,7 +48,8 @@ object Config {
     }
 
   private val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1")
-  private val largeContainerRunArgs: List[String] = List("--memory=16g", "--cpus=8", "--shm-size=512m")
+  private val largeContainerRunArgs: List[String] =
+    List("--memory=16g", "--cpus=8", "--shm-size=512m")
   def mergeConfigs(
       projectConfig: ProjectConfig,
       maybeUserConfig: Option[UserConfig]
@@ -64,7 +65,7 @@ object Config {
 
       val runArgs = userConfig.containerSize match {
         case Some(Large) => largeContainerRunArgs
-        case _ => smallContainerRunArgs
+        case _           => smallContainerRunArgs
       }
 
       projectConfig.copy(
