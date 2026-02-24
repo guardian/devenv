@@ -1,10 +1,12 @@
 package com.gu.devenv
 
+import com.gu.devenv.ContainerSize.{large, small}
+import io.circe.Decoder.Result
 import io.circe.Json
 import org.scalacheck.Gen
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 /** Property-based tests for Config.configAsJson function.
   *
@@ -71,6 +73,30 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         val json   = Config.configAsJson(config, Nil).get
 
         json.hcursor.downField("features").as[Json] shouldBe a[Left[_, _]]
+      }
+    }
+
+    "runArgs" - {
+      for (containerSizeSetting: ContainerSize <- List(small, large))
+        s"$containerSizeSetting appears in JSON features object" in {
+          val config = ProjectConfig(name = "test", containerSize = Some(containerSizeSetting))
+          val json   = Config.configAsJson(config, Nil).get
+
+          val runArgsJson: Result[Json] = json.hcursor.downField("runArgs").as[Json]
+          runArgsJson shouldBe a[Right[_, _]]
+
+          val values = runArgsJson.flatMap(_.as[List[String]]).toOption.get
+          values shouldBe containerSizeSetting.toRunArgs
+        }
+
+      "is large when empty" in {
+        val config = ProjectConfig(name = "test", features = Map.empty)
+        val json   = Config.configAsJson(config, Nil).get
+
+        val runArgsJson = json.hcursor.downField("runArgs").as[Json]
+        runArgsJson shouldBe a[Right[_, _]]
+        val values = runArgsJson.flatMap(_.as[List[String]]).toOption.get
+        values shouldBe large.toRunArgs
       }
     }
 
