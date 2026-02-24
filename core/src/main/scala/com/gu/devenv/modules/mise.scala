@@ -42,9 +42,6 @@ private[modules] def mise(mountKey: String) =
               |echo -e "\033[1;34m[setup] Symlinking $MISE_INSTALL_PATH to /usr/local/bin/mise...\033[0m" &&
               |sudo ln -sf $MISE_INSTALL_PATH /usr/local/bin/mise &&
               |
-              |echo 'eval $(mise activate bash)' | tee /home/vscode/.bashrc >/dev/null &&
-              |eval $(mise activate bash) &&
-              |
               |echo -e "\033[1;34m[setup] checking mise working correctly\033[0m" &&
               |mise --version &&
               |
