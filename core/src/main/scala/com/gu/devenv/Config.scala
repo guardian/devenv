@@ -101,7 +101,8 @@ object Config {
         "name"           -> config.name.asJson,
         "image"          -> config.image.asJson,
         "customizations" -> customizations.asJson,
-        "forwardPorts"   -> config.forwardPorts.asJson
+        "forwardPorts"   -> config.forwardPorts.asJson,
+        "runArgs"        -> config.runArgs.asJson
       )
 
       // Add optional fields if they exist
