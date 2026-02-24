@@ -2,9 +2,9 @@ package com.gu.devenv
 
 import com.gu.devenv.ContainerSize.Small
 import io.circe.Json
-import org.scalatest.{OptionValues, TryValues}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.{OptionValues, TryValues}
 
 import scala.util.Success
 
@@ -161,7 +161,7 @@ class ConfigTest
         "updateRemoteUserUID" as projectConfig.updateRemoteUserUID
       )
 
-      merged.runArgs shouldBe( List("--memory=1g", "--cpus=1"))
+      merged.runArgs shouldBe (List("--memory=1g", "--cpus=1"))
     }
 
     "returns unchanged project config when user config is None" in {
