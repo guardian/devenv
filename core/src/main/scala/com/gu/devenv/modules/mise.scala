@@ -27,7 +27,6 @@ private[modules] def mise(mountKey: String) =
         Command(
           cmd = """bash -c '
               |echo -e "\033[1;34m[setup] Setting up mise.\033[0m" &&
-              |export MISE_INSTALL_PATH=/mnt/mise-data/mise &&
               |
               |echo -e "\033[1;34m[setup] ensure correct ownership of the shared mise data volume\033[0m" &&
               |sudo chown -R vscode:vscode /mnt/mise-data &&
