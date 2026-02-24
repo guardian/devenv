@@ -20,6 +20,7 @@ case class ProjectConfig(
     postCreateCommand: List[Command] = Nil,
     postStartCommand: List[Command] = Nil,
     features: Map[String, Json] = Map.empty,
+    containerSize: Option[ContainerSize] = None,
     remoteUser: String = "vscode",
     updateRemoteUserUID: Boolean = true,
     capAdd: List[String] = Nil,
@@ -37,6 +38,21 @@ object UserConfig {
 enum ForwardPort {
   case SamePort(port: Int)
   case DifferentPorts(hostPort: Int, containerPort: Int)
+}
+
+object ContainerSize {
+  given Decoder[ContainerSize] = Decoder.decodeString.emap {
+    case "small" => Right(ContainerSize.small)
+    case "large" => Right(ContainerSize.large)
+    case s => Left(s"Unknown container size: $s")
+  }
+}
+enum ContainerSize {
+  case small, large
+  def toRunArgs: List[String] = this match {
+    case `small` => List("--memory=1g", "--cpus=1", "--shm-size=512m")
+    case `large` => List("--memory=16g", "--cpus=8", "--shm-size=512m")
+  }
 }
 
 object ForwardPort {

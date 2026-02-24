@@ -95,14 +95,18 @@ object Config {
         "name"           -> config.name.asJson,
         "image"          -> config.image.asJson,
         "customizations" -> customizations.asJson,
-        "forwardPorts"   -> config.forwardPorts.asJson,
-        "runArgs"        -> List("--memory=1g", "--cpus=1", "--shm-size=512m").asJson
+        "forwardPorts"   -> config.forwardPorts.asJson
       )
+
+      // Default to large container.
+      // This must be overridden for test cases as the GitHub actions environment will not support a "large" container.
+      val withContainerSize =
+        baseConfig.add("runArgs", config.containerSize.getOrElse(ContainerSize.`large`).toRunArgs.asJson)
 
       // Add optional fields if they exist
       val withFeatures = if (config.features.nonEmpty) {
-        baseConfig.add("features", config.features.asJson)
-      } else baseConfig
+        withContainerSize.add("features", config.features.asJson)
+      } else withContainerSize
 
       val withMounts = if (config.mounts.nonEmpty) {
         withFeatures.add("mounts", config.mounts.asJson)
