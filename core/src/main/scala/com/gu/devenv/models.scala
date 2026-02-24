@@ -1,9 +1,9 @@
 package com.gu.devenv
 
-import io.circe.{Decoder, DecodingFailure, Encoder, Json}
 import cats.*
 import cats.syntax.all.*
 import com.gu.devenv.Filesystem.{FileSystemStatus, GitignoreStatus}
+import io.circe.{Decoder, DecodingFailure, Encoder, Json}
 
 import java.nio.file.Path
 import scala.util.Try
@@ -42,17 +42,13 @@ enum ForwardPort {
 
 object ContainerSize {
   given Decoder[ContainerSize] = Decoder.decodeString.emap {
-    case "small" => Right(ContainerSize.small)
-    case "large" => Right(ContainerSize.large)
-    case s => Left(s"Unknown container size: $s")
+    case "small" => Right(ContainerSize.Small)
+    case "large" => Right(ContainerSize.Large)
+    case s       => Left(s"Unknown container size: $s")
   }
 }
 enum ContainerSize {
-  case small, large
-  def toRunArgs: List[String] = this match {
-    case `small` => List("--memory=1g", "--cpus=1", "--shm-size=512m")
-    case `large` => List("--memory=16g", "--cpus=8", "--shm-size=512m")
-  }
+  case Small, Large
 }
 
 object ForwardPort {

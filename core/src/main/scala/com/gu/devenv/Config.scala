@@ -1,5 +1,6 @@
 package com.gu.devenv
 
+import com.gu.devenv.ContainerSize.{Large, Small}
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.Module
 import io.circe.generic.extras.Configuration
@@ -96,7 +97,13 @@ object Config {
       // Default to large container.
       // This must be overridden for test cases as the GitHub actions environment will not support a "large" container.
       val withContainerSize =
-        baseConfig.add("runArgs", config.containerSize.getOrElse(ContainerSize.`large`).toRunArgs.asJson)
+        baseConfig.add(
+          "runArgs",
+          (config.containerSize.getOrElse(ContainerSize.Large) match {
+            case Small => smallContainerRunArgs
+            case Large => largeContainerRunArgs
+          }).asJson
+        )
 
       // Add optional fields if they exist
       val withFeatures = if (config.features.nonEmpty) {
@@ -213,4 +220,8 @@ object Config {
     )
     List(cloneCommand, installCommand)
   }
+
+  val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1", "--shm-size=512m")
+  val largeContainerRunArgs: List[String] = List("--memory=16g", "--cpus=8", "--shm-size=512m")
+
 }
