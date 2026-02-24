@@ -1,0 +1,3 @@
+#Container size must be overridden for test cases as the GitHub actions environment will not support a "large" container.
+containerSize: small
+

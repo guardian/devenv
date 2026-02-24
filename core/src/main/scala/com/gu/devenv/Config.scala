@@ -1,6 +1,6 @@
 package com.gu.devenv
 
-import com.gu.devenv.ContainerSize.{Large, Small}
+import com.gu.devenv.ContainerSize.Large
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.Module
 import io.circe.generic.extras.Configuration
@@ -47,6 +47,8 @@ object Config {
       } yield userConfig
     }
 
+  private val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1")
+  private val largeContainerRunArgs: List[String] = List("--memory=16g", "--cpus=8", "--shm-size=512m")
   def mergeConfigs(
       projectConfig: ProjectConfig,
       maybeUserConfig: Option[UserConfig]
@@ -55,14 +57,21 @@ object Config {
       // fetch the user's configured items so they can be added to the project config
       val mergedPlugins =
         applyPlugins(projectConfig.plugins, userConfig.plugins)
+
       val dotfilesCommands = userConfig.dotfiles
         .map(applyDotfiles)
         .getOrElse(Nil)
 
+      val runArgs = userConfig.containerSize match {
+        case Some(Large) => largeContainerRunArgs
+        case _ => smallContainerRunArgs
+      }
+
       projectConfig.copy(
         plugins = mergedPlugins,
         postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand,
-        postStartCommand = projectConfig.postStartCommand
+        postStartCommand = projectConfig.postStartCommand,
+        runArgs = runArgs ++ projectConfig.runArgs
       )
     }
 
@@ -94,21 +103,10 @@ object Config {
         "forwardPorts"   -> config.forwardPorts.asJson
       )
 
-      // Default to large container.
-      // This must be overridden for test cases as the GitHub actions environment will not support a "large" container.
-      val withContainerSize =
-        baseConfig.add(
-          "runArgs",
-          (config.containerSize.getOrElse(ContainerSize.Large) match {
-            case Small => smallContainerRunArgs
-            case Large => largeContainerRunArgs
-          }).asJson
-        )
-
       // Add optional fields if they exist
       val withFeatures = if (config.features.nonEmpty) {
-        withContainerSize.add("features", config.features.asJson)
-      } else withContainerSize
+        baseConfig.add("features", config.features.asJson)
+      } else baseConfig
 
       val withMounts = if (config.mounts.nonEmpty) {
         withFeatures.add("mounts", config.mounts.asJson)
@@ -220,8 +218,5 @@ object Config {
     )
     List(cloneCommand, installCommand)
   }
-
-  val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1", "--shm-size=512m")
-  val largeContainerRunArgs: List[String] = List("--memory=16g", "--cpus=8", "--shm-size=512m")
 
 }
