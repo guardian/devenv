@@ -1,5 +1,6 @@
 package com.gu.devenv
 
+import com.gu.devenv.ContainerSize.Small
 import io.circe.Json
 import org.scalatest.{OptionValues, TryValues}
 import org.scalatest.freespec.AnyFreeSpec
@@ -89,6 +90,9 @@ class ConfigTest
             "~",
             "install.sh"
           )
+        ),
+        "containerSize" as Some(
+          Small
         )
       )
     }
@@ -156,6 +160,8 @@ class ConfigTest
         "remoteUser" as projectConfig.remoteUser,
         "updateRemoteUserUID" as projectConfig.updateRemoteUserUID
       )
+
+      merged.runArgs shouldBe( List("--memory=1g", "--cpus=1"))
     }
 
     "returns unchanged project config when user config is None" in {

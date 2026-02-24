@@ -74,13 +74,14 @@ trait DevcontainerTestSupport extends BeforeAndAfterEach with BeforeAndAfterAll 
   }
 
   /** Copy a fixture to a temporary directory and return the path */
-  protected def setupWorkspace(fixtureName: String): Path = {
-    val fixtureDir = fixturesDir.resolve(fixtureName)
-    require(Files.isDirectory(fixtureDir), s"Fixture not found: $fixtureDir")
+  protected def setupWorkspace(fixtureNames: String*): Path = {
+    val tempDir = Files.createTempDirectory(s"devenv-docker-${fixtureNames(0)}-")
+    for (fixtureName <- fixtureNames) {
+      val fixtureDir = fixturesDir.resolve(fixtureName)
+      require(Files.isDirectory(fixtureDir), s"Fixture not found: $fixtureDir")
 
-    val tempDir = Files.createTempDirectory(s"devenv-docker-$fixtureName-")
-    copyDirectory(fixtureDir, tempDir)
-
+      copyDirectory(fixtureDir, tempDir)
+    }
     currentWorkspace = Some(tempDir)
     tempDir
   }

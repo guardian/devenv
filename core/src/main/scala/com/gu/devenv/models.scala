@@ -20,19 +20,20 @@ case class ProjectConfig(
     postCreateCommand: List[Command] = Nil,
     postStartCommand: List[Command] = Nil,
     features: Map[String, Json] = Map.empty,
-    containerSize: Option[ContainerSize] = None,
     remoteUser: String = "vscode",
     updateRemoteUserUID: Boolean = true,
     capAdd: List[String] = Nil,
-    securityOpt: List[String] = Nil
+    securityOpt: List[String] = Nil,
+    runArgs: List[String] = Nil
 )
 
 case class UserConfig(
-    plugins: Option[Plugins],
-    dotfiles: Option[Dotfiles]
+    plugins: Option[Plugins] = None,
+    dotfiles: Option[Dotfiles] = None,
+    containerSize: Option[ContainerSize] = None,
 )
 object UserConfig {
-  val empty = UserConfig(None, None)
+  val empty = UserConfig()
 }
 
 enum ForwardPort {

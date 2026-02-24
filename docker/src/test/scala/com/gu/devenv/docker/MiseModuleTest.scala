@@ -31,7 +31,7 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
     }
 
     "should install mise and make tools available" taggedAs ContainerTest in {
-      val workspace = setupWorkspace("mise")
+      val workspace = setupWorkspace("mise", "github-actions-user-config")
 
       startContainer(workspace) match {
         case Left(error) =>
@@ -47,7 +47,7 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
     }
 
     "should have mise shims on the PATH" taggedAs ContainerTest in {
-      val workspace = setupWorkspace("mise")
+      val workspace = setupWorkspace("mise", "github-actions-user-config")
 
       startContainer(workspace) match {
         case Left(error) =>
@@ -60,7 +60,7 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
     }
 
     "should have MISE_DATA_DIR set correctly" taggedAs ContainerTest in {
-      val workspace = setupWorkspace("mise")
+      val workspace = setupWorkspace("mise", "github-actions-user-config")
 
       startContainer(workspace) match {
         case Left(error) =>
@@ -74,7 +74,7 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
 
     // replace `ignore` with `in` to enable this test for debugging purposes
     "debug" taggedAs ContainerTest ignore {
-      val workspace = setupWorkspace("mise")
+      val workspace = setupWorkspace("mise", "github-actions-user-config")
 
       startContainer(workspace) match {
         case Left(error) =>

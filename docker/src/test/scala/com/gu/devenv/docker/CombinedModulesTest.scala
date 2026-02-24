@@ -31,7 +31,7 @@ class CombinedModulesTest extends AnyFreeSpec with Matchers with DevcontainerTes
     }
 
     "should work with mise and docker-in-docker together" taggedAs ContainerTest in {
-      val workspace = setupWorkspace("combined")
+      val workspace = setupWorkspace("combined", "github-actions-user-config")
 
       startContainer(workspace) match {
         case Left(error) =>

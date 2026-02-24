@@ -32,7 +32,7 @@ class DockerInDockerModuleTest extends AnyFreeSpec with Matchers with Devcontain
     }
 
     "should have a working Docker installation" taggedAs ContainerTest in {
-      val workspace = setupWorkspace("docker-in-docker")
+      val workspace = setupWorkspace("docker-in-docker", "github-actions-user-config")
 
       startContainer(workspace) match {
         case Left(error) =>
