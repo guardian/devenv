@@ -91,7 +91,7 @@ object Config {
         "image"          -> config.image.asJson,
         "customizations" -> customizations.asJson,
         "forwardPorts"   -> config.forwardPorts.asJson,
-        "runArgs"        -> List("--memory=16g", "--cpus=8", "--shm-size=512m").asJson
+        "runArgs"        -> List("--memory=1g", "--cpus=1", "--shm-size=512m").asJson
       )
 
       // Add optional fields if they exist
