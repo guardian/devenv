@@ -32,7 +32,7 @@ private[modules] def mise(mountKey: String) =
               |sudo chown -R vscode:vscode /mnt/mise-data &&
               |
               |echo -e "\033[1;34m[setup] checking for mise already present\033[0m" &&
-              |(test -f $MISE_INSTALL_PATH ]] && echo -e "\033[1;34m[setup] mise is present\033[0m") ||
+              |(test -f $MISE_INSTALL_PATH && echo -e "\033[1;34m[setup] mise is present\033[0m") ||
               |(echo -e "\033[1;34m[setup] Installing mise...\033[0m" && curl -fsSL https://mise.run/bash | sh) &&
               |
               |echo -e "\033[1;34m[setup] Symlinking $MISE_INSTALL_PATH to /usr/local/bin/mise...\033[0m" &&
