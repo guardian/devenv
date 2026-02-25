@@ -162,7 +162,24 @@ class ConfigTest
         // Note this is a list inferred from the "small" container size configuration item in the yaml
         "runArgs" as Config.smallContainerRunArgs
       )
+    }
 
+    "merges user config with large container into project config correctly" in {
+      Config.mergeConfigs(
+        ProjectConfig("test"),
+        Some(UserConfig(containerSize = Some(ContainerSize.Large)))
+      ) should have(
+        "runArgs" as Config.largeContainerRunArgs
+      )
+    }
+
+    "merges user config with defaulted container into project config correctly" in {
+      Config.mergeConfigs(
+        ProjectConfig("test"),
+        Some(UserConfig(containerSize = None))
+      ) should have(
+        "runArgs" as Config.largeContainerRunArgs
+      )
     }
 
     "returns unchanged project config when user config is None" in {

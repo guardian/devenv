@@ -48,7 +48,7 @@ object Config {
     }
 
   private[devenv] val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1")
-  private val largeContainerRunArgs: List[String] =
+  private[devenv] val largeContainerRunArgs: List[String] =
     List("--memory=16g", "--cpus=8", "--shm-size=512m")
   def mergeConfigs(
       projectConfig: ProjectConfig,
