@@ -1,3 +1,4 @@
-# Empty user config for e2e tests
+# Container size must be overridden for test cases as the GitHub actions environment will not support a "large" container.
+# We require that tests pass with the lightest weight container anyway.
+containerSize: small
 
-{}
