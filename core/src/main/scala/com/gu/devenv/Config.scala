@@ -2,11 +2,11 @@ package com.gu.devenv
 
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.Module
-import io.circe.{Json, JsonObject}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto.*
 import io.circe.syntax.*
 import io.circe.yaml.scalayaml.parser
+import io.circe.{Json, JsonObject}
 
 import java.nio.file.Path
 import scala.util.Try
@@ -81,9 +81,12 @@ object Config {
         List(
           "postCreateCommand" -> combineCommands(
             config.postCreateCommand,
-            "/var/log/postCreateLog"
+            s"/var/log/$postCreateLogName"
           ),
-          "postStartCommand" -> combineCommands(config.postStartCommand, "/var/log/postStartLog")
+          "postStartCommand" -> combineCommands(
+            config.postStartCommand,
+            s"/var/log/$postStartLogName"
+          )
         ).collect { case (key, Some(value)) =>
           key -> Json.fromString(value)
         }
@@ -212,4 +215,8 @@ object Config {
     )
     List(cloneCommand, installCommand)
   }
+
+  private[devenv] val postStartLogName  = "post-start.log"
+  private[devenv] val postCreateLogName = "post-create.log"
+
 }

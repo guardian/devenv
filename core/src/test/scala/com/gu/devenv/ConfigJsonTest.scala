@@ -2,9 +2,9 @@ package com.gu.devenv
 
 import io.circe.Json
 import org.scalacheck.Gen
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 /** Property-based tests for Config.configAsJson function.
   *
@@ -304,7 +304,18 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         val json    = Config.configAsJson(config, Nil).get
 
         val commandJson = json.hcursor.downField("postCreateCommand").as[String]
-        commandJson shouldBe Right("(cd /app && npm install) | sudo tee /var/log/postCreateLog")
+        commandJson shouldBe a[Right[_, _]]
+        commandJson.map(_ should include("(cd /app && npm install)"))
+      }
+
+      "pipe the output to a useful log file" in {
+        val command = Command("npm install", "/app")
+        val config  = ProjectConfig(name = "test", postCreateCommand = List(command))
+        val json    = Config.configAsJson(config, Nil).get
+
+        val commandJson = json.hcursor.downField("postCreateCommand").as[String]
+        commandJson shouldBe a[Right[_, _]]
+        commandJson.map(_ should include(Config.postCreateLogName))
       }
 
       "is omitted when empty" in {
