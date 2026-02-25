@@ -158,10 +158,11 @@ class ConfigTest
         "postStartCommand" as projectConfig.postStartCommand,
         "features" as projectConfig.features,
         "remoteUser" as projectConfig.remoteUser,
-        "updateRemoteUserUID" as projectConfig.updateRemoteUserUID
+        "updateRemoteUserUID" as projectConfig.updateRemoteUserUID,
+        // Note this is a list inferred from the "small" container size configuration item in the yaml
+        "runArgs" as Config.smallContainerRunArgs
       )
 
-      merged.runArgs shouldBe (List("--memory=1g", "--cpus=1"))
     }
 
     "returns unchanged project config when user config is None" in {

@@ -41,7 +41,7 @@ trait DevcontainerTestSupport extends BeforeAndAfterEach with BeforeAndAfterAll 
     ModuleConfig(mountKey = "devenv-docker-test")
   )
 
-  // User config fixture directory with empty devenv.yaml
+  // User config fixture directory with almost empty devenv.yaml
   protected lazy val userConfigFixtureDir: Path = fixturesDir.resolve("user-config/.config/devenv")
 
   protected var currentWorkspace: Option[Path]            = None
@@ -73,15 +73,20 @@ trait DevcontainerTestSupport extends BeforeAndAfterEach with BeforeAndAfterAll 
     }
   }
 
-  /** Copy a fixture to a temporary directory and return the path */
-  protected def setupWorkspace(fixtureNames: String*): Path = {
-    val tempDir = Files.createTempDirectory(s"devenv-docker-${fixtureNames(0)}-")
-    for (fixtureName <- fixtureNames) {
-      val fixtureDir = fixturesDir.resolve(fixtureName)
-      require(Files.isDirectory(fixtureDir), s"Fixture not found: $fixtureDir")
+  /** Copy a fixture to a temporary directory with the user config and return the path */
+  protected def setupWorkspaceWithSmallContainer(fixtureName: String): Path = {
+    val tempDir = Files.createTempDirectory(s"devenv-docker-$fixtureName-")
 
-      copyDirectory(fixtureDir, tempDir)
-    }
+    // Copy in requested config
+    val configFixtureDir = fixturesDir.resolve(fixtureName)
+    require(Files.isDirectory(configFixtureDir), s"Config fixture not found: $configFixtureDir")
+    copyDirectory(configFixtureDir, tempDir)
+
+    // Copy in user config to fix container size
+    val userFixtureDir = fixturesDir.resolve("user-config")
+    require(Files.isDirectory(userFixtureDir), s"User fixture not found: $userFixtureDir")
+    copyDirectory(userFixtureDir, tempDir)
+
     currentWorkspace = Some(tempDir)
     tempDir
   }
