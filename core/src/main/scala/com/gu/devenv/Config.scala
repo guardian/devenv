@@ -1,6 +1,6 @@
 package com.gu.devenv
 
-import com.gu.devenv.ContainerSize.Large
+import com.gu.devenv.ContainerSize.Small
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.Module
 import io.circe.generic.extras.Configuration
@@ -63,9 +63,10 @@ object Config {
         .map(applyDotfiles)
         .getOrElse(Nil)
 
+      // Large by default.  Devs have beefy laptops
       val runArgs = userConfig.containerSize match {
-        case Some(Large) => largeContainerRunArgs
-        case _           => smallContainerRunArgs
+        case Some(Small) => smallContainerRunArgs
+        case _           => largeContainerRunArgs
       }
 
       projectConfig.copy(
