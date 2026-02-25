@@ -50,6 +50,7 @@ private[modules] def mise(mountKey: String) =
               |(mise install || echo -e "\033[1;33m[setup] mise install failed. You may need to run mise install manually inside the container.\033[0m") &&
               |
               |echo -e "\033[1;34m[setup] final checks\033[0m" &&
+              |export PATH="/mnt/mise-data/shims:$PATH" &&
               |mise doctor &&
               |
               |echo -e "\033[1;32m[setup] mise setup complete at $MISE_INSTALL_PATH.\033[0m"
