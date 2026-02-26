@@ -2,9 +2,9 @@ package com.gu.devenv
 
 import io.circe.Json
 import org.scalacheck.Gen
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 /** Property-based tests for Config.configAsJson function.
   *

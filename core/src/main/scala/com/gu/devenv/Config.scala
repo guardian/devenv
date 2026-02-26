@@ -1,17 +1,16 @@
 package com.gu.devenv
 
+import com.gu.devenv.ContainerSize.Small
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.Module
-import io.circe.Json
-import io.circe.syntax.*
-import io.circe.JsonObject
-
-import scala.util.Try
-import io.circe.yaml.scalayaml.parser
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto.*
+import io.circe.syntax.*
+import io.circe.yaml.scalayaml.parser
+import io.circe.{Json, JsonObject}
 
 import java.nio.file.Path
+import scala.util.Try
 
 object Config {
   given Configuration = Configuration.default.withDefaults
@@ -48,6 +47,9 @@ object Config {
       } yield userConfig
     }
 
+  private[devenv] val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1")
+  private[devenv] val largeContainerRunArgs: List[String] =
+    List("--memory=16g", "--cpus=8", "--shm-size=512m")
   def mergeConfigs(
       projectConfig: ProjectConfig,
       maybeUserConfig: Option[UserConfig]
@@ -56,14 +58,22 @@ object Config {
       // fetch the user's configured items so they can be added to the project config
       val mergedPlugins =
         applyPlugins(projectConfig.plugins, userConfig.plugins)
+
       val dotfilesCommands = userConfig.dotfiles
         .map(applyDotfiles)
         .getOrElse(Nil)
 
+      // Large by default.  Devs have beefy laptops
+      val runArgs = userConfig.containerSize match {
+        case Some(Small) => smallContainerRunArgs
+        case _           => largeContainerRunArgs
+      }
+
       projectConfig.copy(
         plugins = mergedPlugins,
         postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand,
-        postStartCommand = projectConfig.postStartCommand
+        postStartCommand = projectConfig.postStartCommand,
+        runArgs = runArgs ++ projectConfig.runArgs
       )
     }
 
@@ -92,7 +102,8 @@ object Config {
         "name"           -> config.name.asJson,
         "image"          -> config.image.asJson,
         "customizations" -> customizations.asJson,
-        "forwardPorts"   -> config.forwardPorts.asJson
+        "forwardPorts"   -> config.forwardPorts.asJson,
+        "runArgs"        -> config.runArgs.asJson
       )
 
       // Add optional fields if they exist
@@ -210,4 +221,5 @@ object Config {
     )
     List(cloneCommand, installCommand)
   }
+
 }
