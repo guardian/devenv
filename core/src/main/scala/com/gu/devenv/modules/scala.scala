@@ -9,7 +9,7 @@ import com.gu.devenv.{Command, Mount, Plugins}
   */
 private[modules] def scalaLang(mountKey: String) = {
   val coursierCacheLocation = "/home/vscode/.cache/coursier/v1"
-  val ivy2CacheLocation     = "/home/vscode/.ivy2"
+  val ivy2CacheLocation     = "/home/vscode/.ivy2/cache"
   Module(
     name = "scala",
     summary = "Add IDE plugins for Scala development",
