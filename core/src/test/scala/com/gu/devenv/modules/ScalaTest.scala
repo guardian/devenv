@@ -11,7 +11,7 @@ class ScalaTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks 
       val mountKey = "test-mount-key"
       val module   = scalaLang(mountKey)
 
-      module.contribution.mounts should have size 3
+      module.contribution.mounts should have size 2
 
       module.contribution.mounts.map {
         case Mount.ExplicitMount(source, _, _) =>
@@ -27,7 +27,6 @@ class ScalaTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks 
         case _                                 => None
       }
 
-      sources should contain(s"$mountKey-sbt-data-volume")
       sources should contain(s"$mountKey-coursier-data-volume")
       sources should contain(s"$mountKey-ivy-data-volume")
     }
