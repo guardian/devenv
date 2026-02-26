@@ -7,8 +7,7 @@ import com.gu.devenv.{Command, Mount, Plugins}
   *
   * This module adds the Scala language plugin for both VS Code and IntelliJ IDEA.
   */
-private[modules] val scalaLang = getScalaLang();
-private[modules] def getScalaLang(volumeName: String = "docker-sbt-data-volume") = Module(
+private[modules] def scalaLang(mountKey: String) = Module(
   name = "scala",
   summary = "Add IDE plugins for Scala development",
   enabledByDefault = false,
@@ -19,17 +18,40 @@ private[modules] def getScalaLang(volumeName: String = "docker-sbt-data-volume")
     ),
     postCreateCommands = List(
       Command(
-        cmd = """bash -c 'set -e && """ +
-          // ensure correct ownership of the shared ivy data volume
-          "sudo chown -R vscode:vscode /home/vscode/.sbt " +
-          """'""",
+        cmd = """bash -c '
+            |set -e &&
+            |echo -e "\033[1;34m[setup] Setting up .sbt ...\033[0m" &&
+            |sudo chown -R vscode:vscode /home/vscode/.sbt &&
+            |
+            |echo -e "\033[1;34m[setup] Setting up .ivy2 ...\033[0m" &&
+            |sudo chown -R vscode:vscode /home/vscode/.ivy2 &&
+            |
+            |echo -e "\033[1;34m[setup] Setting up coursier ...\033[0m" &&
+            |sudo chown -R vscode:vscode /.jbdevcontainer/coursier
+            |
+            |'
+            |""".stripMargin.split('\n').mkString(" "),
         workingDirectory = "."
       )
     ),
+    /* All mounts bring security trade-offs as the volume is shared between all containers using this module.  */
     mounts = List(
+      /* This mount persists the sbt cache across container recreations. */
       Mount.ExplicitMount(
-        source = volumeName,
+        source = s"$mountKey-sbt-data-volume",
         target = "/home/vscode/.sbt",
+        `type` = "volume"
+      ),
+      /* This mount persists the coursier cache across container recreations. */
+      Mount.ExplicitMount(
+        source = s"$mountKey-coursier-data-volume",
+        target = "/.jbdevcontainer/coursier",
+        `type` = "volume"
+      ),
+      /* This mount persists the ivy2 cache across container recreations. */
+      Mount.ExplicitMount(
+        source = s"$mountKey-ivy-data-volume",
+        target = "/home/vscode/.ivy2",
         `type` = "volume"
       )
     )
