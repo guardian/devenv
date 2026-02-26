@@ -20,15 +20,11 @@ private[modules] def scalaLang(mountKey: String) = Module(
       Command(
         cmd = """bash -c '
             |set -e &&
-            |echo -e "\033[1;34m[setup] Setting up .sbt ...\033[0m" &&
-            |sudo chown -R vscode:vscode /home/vscode/.sbt &&
-            |
             |echo -e "\033[1;34m[setup] Setting up .ivy2 ...\033[0m" &&
             |sudo chown -R vscode:vscode /home/vscode/.ivy2 &&
             |
             |echo -e "\033[1;34m[setup] Setting up coursier ...\033[0m" &&
             |sudo chown -R vscode:vscode /.jbdevcontainer/coursier
-            |
             |'
             |""".stripMargin.split('\n').mkString(" "),
         workingDirectory = "."
@@ -36,12 +32,6 @@ private[modules] def scalaLang(mountKey: String) = Module(
     ),
     /* All mounts bring security trade-offs as the volume is shared between all containers using this module.  */
     mounts = List(
-      /* This mount persists the sbt cache across container recreations. */
-      Mount.ExplicitMount(
-        source = s"$mountKey-sbt-data-volume",
-        target = "/home/vscode/.sbt",
-        `type` = "volume"
-      ),
       /* This mount persists the coursier cache across container recreations. */
       Mount.ExplicitMount(
         source = s"$mountKey-coursier-data-volume",
