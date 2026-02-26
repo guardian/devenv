@@ -2,16 +2,14 @@ package com.gu.devenv
 
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.Module
-import io.circe.Json
-import io.circe.syntax.*
-import io.circe.JsonObject
-
-import scala.util.Try
-import io.circe.yaml.scalayaml.parser
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto.*
+import io.circe.syntax.*
+import io.circe.yaml.scalayaml.parser
+import io.circe.{Json, JsonObject}
 
 import java.nio.file.Path
+import scala.util.Try
 
 object Config {
   given Configuration = Configuration.default.withDefaults
@@ -81,8 +79,14 @@ object Config {
 
       val commands = JsonObject.fromIterable(
         List(
-          "postCreateCommand" -> combineCommands(config.postCreateCommand),
-          "postStartCommand"  -> combineCommands(config.postStartCommand)
+          "postCreateCommand" -> combineCommands(
+            config.postCreateCommand,
+            s"/var/log/$postCreateLogName"
+          ),
+          "postStartCommand" -> combineCommands(
+            config.postStartCommand,
+            s"/var/log/$postStartLogName"
+          )
         ).collect { case (key, Some(value)) =>
           key -> Json.fromString(value)
         }
@@ -167,13 +171,14 @@ object Config {
     }
   }
 
-  private def combineCommands(commands: List[Command]): Option[String] =
+  private def combineCommands(commands: List[Command], logFile: String): Option[String] =
     if (commands.isEmpty) None
     else
       Some(
         commands
           .map(command => s"(cd ${command.workingDirectory} && ${command.cmd})")
           .mkString(" && ")
+          + s" | sudo tee $logFile"
       )
 
   private def envListToJson(envList: List[Env]): Json =
@@ -210,4 +215,8 @@ object Config {
     )
     List(cloneCommand, installCommand)
   }
+
+  private[devenv] val postStartLogName  = "post-start.log"
+  private[devenv] val postCreateLogName = "post-create.log"
+
 }
