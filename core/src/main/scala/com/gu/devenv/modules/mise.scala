@@ -42,7 +42,7 @@ private[modules] def mise(mountKey: String) =
               |mise --version &&
               |
               |echo -e "\033[1;34m[setup] updating mise if needed\033[0m" &&
-              |(mise self-update || echo "Skipping mise self-update - you may be offline") &&
+              |(mise self-update --yes || echo "Skipping mise self-update - you may be offline") &&
               |
               |echo -e "\033[1;34m[setup] trusting (See: https://mise.jdx.dev/cli/trust.html)\033[0m" &&
               |(mise trust --yes || true) &&
