@@ -308,10 +308,12 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         commandJson.map(_ should include("(cd /app && npm install)"))
       }
 
-      "pipe the output to a useful log file" in {
-        val command = Command("npm install", "/app")
-        val config  = ProjectConfig(name = "test", postCreateCommand = List(command))
-        val json    = Config.configAsJson(config, Nil).get
+      "pipes command output to a useful file" in {
+        val config = ProjectConfig(
+          name = "test",
+          postCreateCommand = List(Command("ls", "/create"))
+        )
+        val json = Config.configAsJson(config, Nil).get
 
         val commandJson = json.hcursor.downField("postCreateCommand").as[String]
         commandJson shouldBe a[Right[_, _]]
@@ -322,7 +324,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         val config = ProjectConfig(name = "test", postCreateCommand = Nil)
         val json   = Config.configAsJson(config, Nil).get
 
-        json.hcursor.downField("postCreateCommand").as[String] shouldBe a[Left[_, _]]
+        json.hcursor.downField("postCreateCommand").focus shouldBe empty
       }
     }
 
@@ -350,11 +352,45 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         }
       }
 
+      "combines multiple commands with && separator" in {
+        val commands = List(
+          Command("echo hello", "/workspace"),
+          Command("echo world", "/tmp")
+        )
+        val config = ProjectConfig(name = "test", postStartCommand = commands)
+        val json   = Config.configAsJson(config, Nil).get
+
+        val commandJson = json.hcursor.downField("postStartCommand").as[String]
+        commandJson.map(_.contains("&&")) shouldBe Right(true)
+      }
+
+      "wraps each command in cd and parentheses" in {
+        val command = Command("npm install", "/app")
+        val config  = ProjectConfig(name = "test", postStartCommand = List(command))
+        val json    = Config.configAsJson(config, Nil).get
+
+        val commandJson = json.hcursor.downField("postStartCommand").as[String]
+        commandJson shouldBe a[Right[_, _]]
+        commandJson.map(_ should include("(cd /app && npm install)"))
+      }
+
+      "pipes command output to a useful file" in {
+        val config = ProjectConfig(
+          name = "test",
+          postStartCommand = List(Command("ls", "/start"))
+        )
+        val json = Config.configAsJson(config, Nil).get
+
+        val commandJson = json.hcursor.downField("postStartCommand").as[String]
+        commandJson shouldBe a[Right[_, _]]
+        commandJson.map(_ should endWith(s"sudo tee /var/log/${Config.postStartLogName}"))
+      }
+
       "is omitted when empty" in {
         val config = ProjectConfig(name = "test", postStartCommand = Nil)
         val json   = Config.configAsJson(config, Nil).get
 
-        json.hcursor.downField("postStartCommand").as[String] shouldBe a[Left[_, _]]
+        json.hcursor.downField("postStartCommand").focus shouldBe empty
       }
     }
 
