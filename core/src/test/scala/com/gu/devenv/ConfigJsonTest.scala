@@ -315,7 +315,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
         val commandJson = json.hcursor.downField("postCreateCommand").as[String]
         commandJson shouldBe a[Right[_, _]]
-        commandJson.map(_ should include(Config.postCreateLogName))
+        commandJson.map(_ should endWith(s"sudo tee /var/log/${Config.postCreateLogName}"))
       }
 
       "is omitted when empty" in {
