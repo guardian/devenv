@@ -55,7 +55,7 @@ devenv init
 
 This will create a `.devcontainer/devenv.yaml` file with some default settings. Set the project name and any other project options in this file.
 
-You can also create a user config file at `~/.config/devenv/devenv.yaml` to set your personal preferences (dotfiles, additional plugins, etc). These settings will be merged with the project config to create a user-specific devcontainer.json customised to your personal preferences.
+You can also create a user config file at `~/.config/devenv/devenv.yaml` to set your personal preferences (dotfiles, additional IDE plugins, etc).
 
 Then run:
 
@@ -64,12 +64,14 @@ devenv generate
 ```
 
 This will generate two devcontainer.json files:
-- `.devcontainer/shared/devcontainer.json` - Project-wide settings
-- `.devcontainer/user/devcontainer.json` - Merged project and user settings
+- `.devcontainer/shared/devcontainer.json` - Project-wide settings (checked-in)
+- `.devcontainer/user/devcontainer.json` - Merged project and user settings (not checked-in)
+
+You can use these to launch devcontainers in your IDE.
 
 ## Build
 
-### JVM Build (Development)
+### JVM Build
 
 ```bash
 # Build and run locally
@@ -77,9 +79,15 @@ sbt cli/stage
 cli/target/universal/stage/bin/devenv
 ```
 
-### Native Image Build (Production)
+### Native Image Build
 
-Build a standalone native executable with GraalVM Native Image. The GraalVM dependency is included in `.tool-versions` so that it can be managed by `mise`.
+Build a standalone native executable with GraalVM Native Image. The GraalVM dependency is included in `.tool-versions` so that it can be managed by `mise`. The `build-native-binary.sh` script sets up environment variables for version management and runs the native image build:
+
+```bash
+./scripts/build-native-binary.sh
+```
+
+You can also run the native image build directly with sbt, but this will not configure the versioning environment variables that are used to set the version and architecture in the resulting binary:
 
 ```bash
 sbt "cli/GraalVMNativeImage/packageBin"
@@ -89,22 +97,35 @@ The resulting binary will be at `cli/target/graalvm-native-image/devenv`.
 
 ## Usage
 
-```bash
-# Initialize .devcontainer directory structure
-devenv init
-
-# Generate devcontainer.json files from config
-devenv generate
-
-# Check if devcontainer.json files match current config
-devenv check
 ```
+devenv <command>
+
+Commands:
+  init      Initialize .devcontainer directory structure
+  generate  Generate devcontainer.json files from devenv config
+  check     Ensure devcontainer.json files match current config
+
+  version   Show devenv's version
+  update    Check for updates to devenv's CLI
+
+  help      Shows the help text
+```
+
+Typical workflow:
+
+1. Run `devenv init` from the root of a repository to create the initial config file for your project
+2. Edit the generated `.devcontainer/devenv.yaml` to set your project settings (see below for configuration details)
+3. Optionally create a user config at `~/.config/devenv/devenv.yaml` to set your personal preferences (dotfiles, additional IDE plugins)
+4. Run `devenv generate` to create the devcontainer.json files based on your config
+5. Open the project in your IDE (VSCode or IntelliJ) and select the appropriate devcontainer configuration (`user` for your personalised environment, `shared` for the standard project setup)
+
+You can also run `devenv check` to verify that the generated devcontainer.json files are up to date with your current config. This is useful locally and in CI, to make sure your project's devcontainer configuration is up to date.
 
 ## Configuration
 
-**Project config**: `.devcontainer/devenv.yaml` - Project-specific settings (image, ports, plugins, commands). Checked into version control.
+**Project config**: `.devcontainer/devenv.yaml` - Project-specific settings (name, ports, IDE plugins, commands, etc). Checked into version control.
 
-**User config**: `~/.config/devenv/devenv.yaml` - Personal preferences (dotfiles, additional plugins). Merged with project config for the user-specific devcontainer.
+**User config**: `~/.config/devenv/devenv.yaml` - Personal preferences (dotfiles, additional IDE plugins). Merged with project config for the user-specific devcontainer.
 
 Two devcontainer files are generated:
 - `.devcontainer/user/devcontainer.json` - Merged config with your personal settings
@@ -134,7 +155,7 @@ Docker tests validate modules by creating real Docker containers and verifying c
 
 #### Generation Tests
 
-The project also includes generation tests that validate the real program output. These package the CLI in dev/universal mode with `sbt stage`, run the program against isolated temp directories, and validate the JSON output and file structure to ensure the CLI behaves correctly in real-world scenarios.
+The project also includes generation tests that validate the real program output. These package the CLI in dev/universal mode with `sbt cli/stage`, run the program against isolated temp directories, and validate the JSON output and file structure to ensure the CLI behaves correctly in real-world scenarios.
 
 ```bash
 ./generation-tests/run-tests.sh
@@ -142,7 +163,7 @@ The project also includes generation tests that validate the real program output
 
 ### Release
 
-The project uses GitHub Actions to build and publish native binaries for macOS ARM64 and Linux AMD64 as date-based development releases.
+The project uses a GitHub action to build and publish date-based releases that contain native binaries for macOS arm64 (m-series processors), Linux amd64 and Linux arm64.
 
 #### Creating a release
 
@@ -160,6 +181,7 @@ The project uses GitHub Actions to build and publish native binaries for macOS A
 4. **Manually verify and publish the release:**
     - Go to the [Releases page](https://github.com/guardian/devenv/releases) on GitHub
     - Review the draft release
+    - Add (generated) release notes
     - Test the binaries if needed
     - Click "Publish release" when ready
 
@@ -195,8 +217,7 @@ Architectures the script can detect:
 
 #### Version management
 
-- Releases use date-based versioning: `YYYYMMDD-HHMMSS` (e.g., `20251103-143022`)
-- All releases are marked as prereleases to indicate development status
+Releases use date-based versioning: `YYYYMMDD-HHMMSS` (e.g., `20251103-143022`)
 
 **Note:** The release workflow is triggered manually - it will not run automatically on pushes or merges to give full control over when to "cut" a release.
 
@@ -206,10 +227,10 @@ The version is embedded in the native binary at build time, so users can check t
 devenv version
 ```
 
-Users can install a release binary with the following command (replace `<latest-release-version>` with the actual version string):
+They can also check for updates with:
 
 ```bash
-VERSION=<latest-release-version>
-curl -L -o ~/.local/bin/devenv https://github.com/guardian/devenv/releases/download/$VERSION/devenv-$VERSION-macos-arm64
-chmod +x ~/.local/bin/devenv
+devenv update
 ```
+
+The update command checks the GitHub releases for a newer version and prompts the user to download it if available.
