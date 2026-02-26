@@ -13,10 +13,8 @@ object Modules {
     List(
       mise(moduleConfig.mountKey),
       dockerInDocker,
-      scalaLang,
+      scalaLang(moduleConfig.mountKey),
       nodeLang,
-      ivy(moduleConfig.mountKey),
-      coursier(moduleConfig.mountKey)
     )
 
   case class Module(
