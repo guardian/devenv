@@ -14,7 +14,7 @@ object Modules {
       mise(moduleConfig.mountKey),
       dockerInDocker,
       scalaLang(moduleConfig.mountKey),
-      nodeLang,
+      nodeLang
     )
 
   case class Module(
