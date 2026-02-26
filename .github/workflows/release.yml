@@ -239,21 +239,23 @@ jobs:
           
           **macOS (Apple Silicon):**
           ```bash
-          curl -L -o ~/.local/bin/devenv https://github.com/${{ github.repository }}/releases/download/${{ needs.generate-version.outputs.version }}/devenv-${{ needs.generate-version.outputs.version }}-macos-arm64
+          curl -L --create-dirs -o ~/.local/bin/devenv https://github.com/${{ github.repository }}/releases/download/${{ needs.generate-version.outputs.version }}/devenv-${{ needs.generate-version.outputs.version }}-macos-arm64
           chmod +x ~/.local/bin/devenv
           ```
           
           **Linux (x86_64/AMD64):**
           ```bash
-          curl -L -o ~/.local/bin/devenv https://github.com/${{ github.repository }}/releases/download/${{ needs.generate-version.outputs.version }}/devenv-${{ needs.generate-version.outputs.version }}-linux-amd64
+          curl -L --create-dirs -o ~/.local/bin/devenv https://github.com/${{ github.repository }}/releases/download/${{ needs.generate-version.outputs.version }}/devenv-${{ needs.generate-version.outputs.version }}-linux-amd64
           chmod +x ~/.local/bin/devenv
           ```
           
           **Linux (ARM64):**
           ```bash
-          curl -L -o ~/.local/bin/devenv https://github.com/${{ github.repository }}/releases/download/${{ needs.generate-version.outputs.version }}/devenv-${{ needs.generate-version.outputs.version }}-linux-arm64
+          curl -L --create-dirs -o ~/.local/bin/devenv https://github.com/${{ github.repository }}/releases/download/${{ needs.generate-version.outputs.version }}/devenv-${{ needs.generate-version.outputs.version }}-linux-arm64
           chmod +x ~/.local/bin/devenv
           ```
+          
+          > **Note:** `~/.local/bin` may not be on your `PATH` by default. If `devenv` isn't found after installation, add `export PATH="$HOME/.local/bin:$PATH"` to your `~/.zshrc` or `~/.bashrc`, or install to `/usr/local/bin` instead.
         draft: true
         # Mark as prerelease for non-default branch builds (e.g., dev branches)
         prerelease: ${{ github.ref_name != github.event.repository.default_branch }}
