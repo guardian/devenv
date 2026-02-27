@@ -8,8 +8,16 @@ import com.gu.devenv.{Command, Mount, Plugins}
   * This module adds the Scala language plugin for both VS Code and IntelliJ IDEA.
   */
 private[modules] def scalaLang(mountKey: String) = {
-  val coursierCacheLocation = "/home/vscode/.cache/coursier/v1"
-  val ivy2CacheLocation     = "/home/vscode/.ivy2/cache"
+  // These are the locations which needs chown'ing
+  val coursierCacheLocationRoot = "/home/vscode/.cache"
+  val ivy2CacheLocationRoot     = "/home/vscode/.ivy2"
+
+  // But _these_ are the locations we actually need to populate!
+  // If we just cache the root locations, then we run the risk of sharing lockfiles
+  // across containers, with unpredictable results.
+  val coursierCacheLocation = s"$coursierCacheLocationRoot/coursier/v1"
+  val ivy2CacheLocation     = s"$ivy2CacheLocationRoot/cache"
+
   Module(
     name = "scala",
     summary = "Add IDE plugins for Scala development",
@@ -24,10 +32,10 @@ private[modules] def scalaLang(mountKey: String) = {
           cmd = s"""bash -c '
             |set -e &&
             |echo -e "\\033[1;34m[setup] Setting up .ivy2 ...\\033[0m" &&
-            |sudo chown -R vscode:vscode $ivy2CacheLocation &&
+            |sudo chown -R vscode:vscode $ivy2CacheLocationRoot &&
             |
             |echo -e "\\033[1;34m[setup] Setting up coursier ...\\033[0m" &&
-            |sudo chown -R vscode:vscode $coursierCacheLocation
+            |sudo chown -R vscode:vscode $coursierCacheLocationRoot
             |
             |'""".stripMargin.split('\n').mkString(" "),
           workingDirectory = "."
