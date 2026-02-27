@@ -7,7 +7,7 @@ import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto.*
 import io.circe.syntax.*
 import io.circe.yaml.scalayaml.parser
-import io.circe.{Json, JsonObject}
+import io.circe.{Encoder, Json, JsonObject}
 
 import java.nio.file.Path
 import scala.util.Try
@@ -102,8 +102,7 @@ object Config {
         "name"           -> config.name.asJson,
         "image"          -> config.image.asJson,
         "customizations" -> customizations.asJson,
-        "forwardPorts"   -> config.forwardPorts.asJson,
-        "runArgs"        -> config.runArgs.asJson
+        "forwardPorts"   -> config.forwardPorts.asJson
       )
 
       // Add optional fields if they exist
@@ -131,7 +130,11 @@ object Config {
         withCapAdd.add("securityOpt", config.securityOpt.asJson)
       } else withCapAdd
 
-      commands.deepMerge(withSecurityOpt).asJson
+      val withRunArgs = if (config.runArgs.nonEmpty) {
+        withSecurityOpt.add("runArgs", config.runArgs.asJson)
+      } else withSecurityOpt
+
+      commands.deepMerge(withRunArgs).asJson
     }
 
   def generateConfigs(

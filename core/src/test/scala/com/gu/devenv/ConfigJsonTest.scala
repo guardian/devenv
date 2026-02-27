@@ -418,6 +418,28 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       }
     }
 
+    "runArgs field" - {
+      val genRunArgs: Gen[List[String]] =
+        Gen.nonEmptyListOf(Gen.alphaNumStr.suchThat(_.nonEmpty))
+
+      "appears in JSON runArgs array" in {
+        forAll(genRunArgs) { runArgs =>
+          val config = ProjectConfig(name = "test", runArgs = runArgs)
+          val json = Config.configAsJson(config, Nil).get
+
+          val runArgsJson = json.hcursor.downField("runArgs").as[List[String]]
+          runArgsJson shouldBe Right(runArgs)
+        }
+      }
+
+      "is not quite omitted when empty" in {
+        val config = ProjectConfig(name = "test", runArgs = Nil)
+        val json   = Config.configAsJson(config, Nil).get
+
+        json.hcursor.downField("runArgs").focus.isEmpty shouldBe true
+      }
+    }
+
     "securityOpt field" - {
       val genSecurityOpt: Gen[List[String]] =
         Gen.nonEmptyListOf(Gen.alphaNumStr.suchThat(_.nonEmpty))
