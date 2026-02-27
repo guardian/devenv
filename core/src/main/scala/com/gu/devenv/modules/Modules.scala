@@ -1,16 +1,21 @@
 package com.gu.devenv.modules
 
+import cats.implicits.*
+import com.gu.devenv.*
 import io.circe.Json
 
 import scala.util.{Failure, Success, Try}
-import cats.implicits.*
-import com.gu.devenv.{Command, Env, Mount, Plugins, ProjectConfig}
 
 object Modules {
   // all registered modules are here
   // In the future we might provide ways to register custom modules but this is fine for now
   def builtInModules(moduleConfig: ModuleConfig): List[Module] =
-    List(mise(moduleConfig.mountKey), dockerInDocker, scalaLang, nodeLang)
+    List(
+      mise(moduleConfig.mountKey),
+      dockerInDocker,
+      scalaLang(moduleConfig.mountKey),
+      nodeLang
+    )
 
   case class Module(
       name: String,
