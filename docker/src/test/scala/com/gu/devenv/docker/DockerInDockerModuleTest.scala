@@ -15,13 +15,13 @@ class DockerInDockerModuleTest extends AnyFreeSpec with Matchers with Devcontain
 
   "docker-in-docker module" - {
     "can set up workspace from fixture" in {
-      val workspace = setupWorkspace("docker-in-docker")
+      val workspace = setupWorkspaceWithSmallContainer("docker-in-docker")
       Files.isDirectory(workspace) shouldBe true
       Files.exists(workspace.resolve(".devcontainer/devenv.yaml")) shouldBe true
     }
 
     "devenv generation works" in {
-      val workspace = setupWorkspace("docker-in-docker")
+      val workspace = setupWorkspaceWithSmallContainer("docker-in-docker")
       runDevenvGenerate(workspace) match {
         case Left(error) =>
           fail(s"Generation failed: $error")
@@ -32,7 +32,7 @@ class DockerInDockerModuleTest extends AnyFreeSpec with Matchers with Devcontain
     }
 
     "should have a working Docker installation" taggedAs ContainerTest in {
-      val workspace = setupWorkspace("docker-in-docker")
+      val workspace = setupWorkspaceWithSmallContainer("docker-in-docker")
 
       startContainer(workspace) match {
         case Left(error) =>
@@ -47,7 +47,7 @@ class DockerInDockerModuleTest extends AnyFreeSpec with Matchers with Devcontain
     }
 
     "should be able to run docker containers" taggedAs ContainerTest in {
-      val workspace = setupWorkspace("docker-in-docker")
+      val workspace = setupWorkspaceWithSmallContainer("docker-in-docker")
 
       startContainer(workspace) match {
         case Left(error) =>

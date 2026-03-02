@@ -1,9 +1,9 @@
 package com.gu.devenv
 
-import io.circe.{Decoder, DecodingFailure, Encoder, Json}
 import cats.*
 import cats.syntax.all.*
 import com.gu.devenv.Filesystem.{FileSystemStatus, GitignoreStatus}
+import io.circe.{Decoder, DecodingFailure, Encoder, Json}
 
 import java.nio.file.Path
 import scala.util.Try
@@ -23,20 +23,33 @@ case class ProjectConfig(
     remoteUser: String = "vscode",
     updateRemoteUserUID: Boolean = true,
     capAdd: List[String] = Nil,
-    securityOpt: List[String] = Nil
+    securityOpt: List[String] = Nil,
+    runArgs: List[String] = Nil
 )
 
 case class UserConfig(
-    plugins: Option[Plugins],
-    dotfiles: Option[Dotfiles]
+    plugins: Option[Plugins] = None,
+    dotfiles: Option[Dotfiles] = None,
+    containerSize: Option[ContainerSize] = None
 )
 object UserConfig {
-  val empty = UserConfig(None, None)
+  val empty = UserConfig()
 }
 
 enum ForwardPort {
   case SamePort(port: Int)
   case DifferentPorts(hostPort: Int, containerPort: Int)
+}
+
+object ContainerSize {
+  given Decoder[ContainerSize] = Decoder.decodeString.emap {
+    case "small" => Right(ContainerSize.Small)
+    case "large" => Right(ContainerSize.Large)
+    case s       => Left(s"Unknown container size: $s")
+  }
+}
+enum ContainerSize {
+  case Small, Large
 }
 
 object ForwardPort {

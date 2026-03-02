@@ -1,5 +1,6 @@
 package com.gu.devenv
 
+import com.gu.devenv.ContainerSize.Small
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.Module
 import io.circe.generic.extras.Configuration
@@ -46,6 +47,9 @@ object Config {
       } yield userConfig
     }
 
+  private[devenv] val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1")
+  private[devenv] val largeContainerRunArgs: List[String] =
+    List("--memory=16g", "--cpus=8", "--shm-size=512m")
   def mergeConfigs(
       projectConfig: ProjectConfig,
       maybeUserConfig: Option[UserConfig]
@@ -54,14 +58,22 @@ object Config {
       // fetch the user's configured items so they can be added to the project config
       val mergedPlugins =
         applyPlugins(projectConfig.plugins, userConfig.plugins)
+
       val dotfilesCommands = userConfig.dotfiles
         .map(applyDotfiles)
         .getOrElse(Nil)
 
+      // Large by default.  Devs have beefy laptops
+      val runArgs = userConfig.containerSize match {
+        case Some(Small) => smallContainerRunArgs
+        case _           => largeContainerRunArgs
+      }
+
       projectConfig.copy(
         plugins = mergedPlugins,
         postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand,
-        postStartCommand = projectConfig.postStartCommand
+        postStartCommand = projectConfig.postStartCommand,
+        runArgs = runArgs ++ projectConfig.runArgs
       )
     }
 
@@ -124,7 +136,11 @@ object Config {
         withCapAdd.add("securityOpt", config.securityOpt.asJson)
       } else withCapAdd
 
-      commands.deepMerge(withSecurityOpt).asJson
+      val withRunArgs = if (config.runArgs.nonEmpty) {
+        withSecurityOpt.add("runArgs", config.runArgs.asJson)
+      } else withSecurityOpt
+
+      commands.deepMerge(withRunArgs).asJson
     }
 
   def generateConfigs(

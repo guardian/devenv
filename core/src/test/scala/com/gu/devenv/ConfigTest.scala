@@ -1,9 +1,10 @@
 package com.gu.devenv
 
+import com.gu.devenv.ContainerSize.Small
 import io.circe.Json
-import org.scalatest.{OptionValues, TryValues}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.{OptionValues, TryValues}
 
 import scala.util.Success
 
@@ -89,6 +90,9 @@ class ConfigTest
             "~",
             "install.sh"
           )
+        ),
+        "containerSize" as Some(
+          Small
         )
       )
     }
@@ -154,7 +158,27 @@ class ConfigTest
         "postStartCommand" as projectConfig.postStartCommand,
         "features" as projectConfig.features,
         "remoteUser" as projectConfig.remoteUser,
-        "updateRemoteUserUID" as projectConfig.updateRemoteUserUID
+        "updateRemoteUserUID" as projectConfig.updateRemoteUserUID,
+        // Note this is a list inferred from the "small" container size configuration item in the yaml
+        "runArgs" as Config.smallContainerRunArgs
+      )
+    }
+
+    "merges user config with large container into project config correctly" in {
+      Config.mergeConfigs(
+        ProjectConfig("test"),
+        Some(UserConfig(containerSize = Some(ContainerSize.Large)))
+      ) should have(
+        "runArgs" as Config.largeContainerRunArgs
+      )
+    }
+
+    "merges user config with defaulted container into project config correctly" in {
+      Config.mergeConfigs(
+        ProjectConfig("test"),
+        Some(UserConfig(containerSize = None))
+      ) should have(
+        "runArgs" as Config.largeContainerRunArgs
       )
     }
 
