@@ -472,7 +472,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       "appears in JSON runArgs array" in {
         forAll(genRunArgs) { runArgs =>
           val config = ProjectConfig(name = "test", runArgs = runArgs)
-          val json = Config.configAsJson(config, Nil).get
+          val json   = Config.configAsJson(config, Nil).get
 
           val runArgsJson = json.hcursor.downField("runArgs").as[List[String]]
           runArgsJson shouldBe Right(runArgs)
