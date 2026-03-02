@@ -161,9 +161,10 @@ result in additional runArgs switches:
 
 *More shared memory is useful for running playwright tests in chrome, for example.
 
-However, this is not suitable for use with github actions, as the GHA environment cannot support such a large container.  For this purpose, all tests which start a docker environment pull in a github user profile, which specifies a small container:
+However, this is not suitable for use with github actions, as the GHA environment cannot support such a large container.  For this purpose, all tests which start a docker environment pull in a github user profile, which specifies a small container (although we keep the shared memory):
 
-| Switch      | Effect        |
-|-------------|---------------|
-| --memory=1g | 1Gb of memory |
-| --cpus=1    | One core      |
+| Switch          | Effect                  |
+|-----------------|-------------------------|
+| --memory=1g     | 1Gb of memory           |
+| --cpus=1        | One core                |
+| --shm-size=512m | 512Mb of shared memory* |
