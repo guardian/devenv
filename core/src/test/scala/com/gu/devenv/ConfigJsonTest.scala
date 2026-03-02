@@ -232,10 +232,10 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         value <- Gen.alphaNumStr
       } yield Env(name, value)
 
-      val genEnvList: Gen[List[Env]] = Gen.nonEmptyListOf(genEnv)
+      val genEnvUniqueList: Gen[List[Env]] = Gen.nonEmptyListOf(genEnv).map(_.distinctBy(_.name))
 
       "appears in JSON remoteEnv object" in {
-        forAll(genEnvList) { envVars =>
+        forAll(genEnvUniqueList) { envVars =>
           val config = ProjectConfig(name = "test", remoteEnv = envVars)
           val json   = Config.configAsJson(config, Nil).get
 
