@@ -479,7 +479,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         }
       }
 
-      "is not quite omitted when empty" in {
+      "is omitted when empty" in {
         val config = ProjectConfig(name = "test", runArgs = Nil)
         val json   = Config.configAsJson(config, Nil).get
 
