@@ -106,7 +106,7 @@ Modules are pre-configured bundles of features, plugins, and commands that can b
   - Image storage is ephemeral (lost on container rebuild)
   - Containers run inside the devcontainer, not directly on host network
   - Use `docker run -p 8080:8080` then access via devcontainer's forwarded ports
-- **`scala`** - Adds IDE plugins for Scala development (Scala plugin for both VS Code and IntelliJ). Disabled by default.
+- **`scala`** - Adds IDE plugins for Scala development (Scala plugin for both VS Code and IntelliJ) _and_ mounts docker volumes to provide persistent ivy and coursier caches. Disabled by default.
 - **`node`** - Adds IDE plugins for Node.js development (IntelliJ only; VS Code has built-in support). Disabled by default.
 
 ### Example
