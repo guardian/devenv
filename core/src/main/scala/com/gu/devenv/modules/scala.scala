@@ -8,7 +8,7 @@ import com.gu.devenv.{Command, Mount, Plugins}
   * This module adds the Scala language plugin for both VS Code and IntelliJ IDEA.
   */
 private[modules] def scalaLang(mountKey: String) = {
-  // These are the locations which needs chown'ing
+  // These are the locations which needs chown'ing (directories are created up to the mount point, but owned by root.
   val coursierCacheLocationRoot = "/home/vscode/.cache"
   val ivy2CacheLocationRoot     = "/home/vscode/.ivy2"
 
@@ -20,7 +20,7 @@ private[modules] def scalaLang(mountKey: String) = {
 
   Module(
     name = "scala",
-    summary = "Add IDE plugins for Scala development",
+    summary = "Add IDE plugins and jar caching for Scala development",
     enabledByDefault = false,
     contribution = ModuleContribution(
       plugins = Plugins(

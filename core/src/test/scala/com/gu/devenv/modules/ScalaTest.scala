@@ -18,7 +18,7 @@ class ScalaTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks 
           source should include regex s"$mountKey-.*-data-volume"
         case Mount.ShortMount(mount) =>
           fail(
-            s"Expected an ExplicitMount, but got ShortMount($mount). The ivy module should use an ExplicitMount for clarity."
+            s"Expected an ExplicitMount, but got ShortMount($mount). The scala module should use an ExplicitMount for all caches for clarity."
           )
       }
 
@@ -33,7 +33,7 @@ class ScalaTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks 
   }
 
   "builtInModules" - {
-    "should use the provided module config to parameterise the ivy module's mount" in {
+    "should use the provided module config to parameterise the cache's mount" in {
       val moduleConfig = Modules.ModuleConfig("test-mount-key")
       val modules      = Modules.builtInModules(moduleConfig)
 
