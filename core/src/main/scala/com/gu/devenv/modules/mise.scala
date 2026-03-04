@@ -3,6 +3,11 @@ package com.gu.devenv.modules
 import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
 import com.gu.devenv.{Command, Env, Mount, Plugins}
 
+import java.nio.charset.StandardCharsets.UTF_8
+import java.util.Base64
+import scala.io.Source
+import scala.util.Using
+
 /** Enables the mise tool within the development container.
   *
   * Mise is a tool for managing development environments, allowing developers to easily install and
@@ -20,43 +25,9 @@ private[modules] def mise(mountKey: String) =
     summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
     enabledByDefault = true,
     contribution = ModuleContribution(
-      /* These commands set up mise inside the container after creation.
-       * Also logs some useful info (including the output from `mise doctor`) to the terminal to help with debugging.
-       */
       postCreateCommands = List(
         Command(
-          cmd = """bash -c '
-              |echo -e "\033[1;34m[setup] Setting up mise.\033[0m" &&
-              |
-              |echo -e "\033[1;34m[setup] ensure correct ownership of the shared mise data volume\033[0m" &&
-              |sudo chown -R vscode:vscode /mnt/mise-data &&
-              |
-              |echo -e "\033[1;34m[setup] checking for mise already present\033[0m" &&
-              |(test -f $MISE_INSTALL_PATH && echo -e "\033[1;34m[setup] mise is present\033[0m") ||
-              |(echo -e "\033[1;34m[setup] Installing mise...\033[0m" && curl -fsSL https://mise.run/bash | sh) &&
-              |
-              |echo -e "\033[1;34m[setup] Symlinking $MISE_INSTALL_PATH to /usr/local/bin/mise...\033[0m" &&
-              |sudo ln -sf $MISE_INSTALL_PATH /usr/local/bin/mise &&
-              |
-              |echo -e "\033[1;34m[setup] checking mise working correctly\033[0m" &&
-              |mise --version &&
-              |
-              |echo -e "\033[1;34m[setup] updating mise if needed\033[0m" &&
-              |(mise self-update --yes || echo "Skipping mise self-update - you may be offline") &&
-              |
-              |echo -e "\033[1;34m[setup] trusting (See: https://mise.jdx.dev/cli/trust.html)\033[0m" &&
-              |(mise trust --yes || true) &&
-              |
-              |(mise install || echo -e "\033[1;33m[setup] mise install failed. You may need to run mise install manually inside the container.\033[0m") &&
-              |
-              |echo -e "\033[1;34m[setup] final checks\033[0m" &&
-              |export PATH="/mnt/mise-data/shims:$PATH" &&
-              |mise doctor &&
-              |
-              |echo -e "\033[1;32m[setup] mise setup complete at $MISE_INSTALL_PATH.\033[0m"
-              |
-              |'
-              |""".stripMargin.split('\n').mkString(" "),
+          cmd = s"echo '${base64Encoded("mise.bash")}' | base64 -d | bash",
           workingDirectory = "."
         )
       ),
@@ -89,3 +60,13 @@ private[modules] def mise(mountKey: String) =
       )
     )
   )
+
+/** Loads a script from resource directory core/src/main/resources/com/gu/devenv/modules, encodes it
+  * in base64 and returns the encoded string.
+  */
+private def base64Encoded(script: String): String = {
+  val resource = s"com/gu/devenv/modules/$script"
+  Using(Source.fromResource(resource)) { source =>
+    Base64.getEncoder.encodeToString(source.mkString.getBytes(UTF_8))
+  }.fold(err => throw new RuntimeException(s"Could not load resource $resource", err), identity)
+}
