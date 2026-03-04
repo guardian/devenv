@@ -26,11 +26,10 @@ jobs:
       with:
         node-version: 24
 
-    - name: Test and package
-      run: sbt scalafmtCheckAll test cli/universal:packageBin
-
-    # the devcontainer.json file needs to be kept in sync with the devenv configuration
+      # the devcontainer.json file needs to be kept in sync with the devenv configuration
     - name: Check devenv config files
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         # download and install the latest devenv release
         OS=$(echo "${{ runner.os }}" | tr '[:upper:]' '[:lower:]')
@@ -40,6 +39,9 @@ jobs:
 
         # check config files
         devenv check
+
+    - name: Test and package
+      run: sbt scalafmtCheckAll test cli/universal:packageBin
 
     - name: Find package file
       id: find-package
