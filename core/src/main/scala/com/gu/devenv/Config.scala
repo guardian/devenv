@@ -160,12 +160,13 @@ object Config {
       actualUserJson: String,
       expectedSharedJson: String,
       actualSharedJson: String,
-      devcontainerDir: Path
+      devcontainerDir: Path,
+      userConfigExists: Boolean
   ): CheckResult = {
     val userDevcontainerPath   = s"${devcontainerDir.getFileName}/user/devcontainer.json"
     val sharedDevcontainerPath = s"${devcontainerDir.getFileName}/shared/devcontainer.json"
 
-    val userMismatch = if (expectedUserJson != actualUserJson) {
+    val userMismatch = if (userConfigExists && expectedUserJson != actualUserJson) {
       Some(FileDiff(userDevcontainerPath, expected = expectedUserJson, actual = actualUserJson))
     } else None
 

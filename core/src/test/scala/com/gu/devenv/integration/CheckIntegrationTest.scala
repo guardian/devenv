@@ -201,6 +201,44 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           }
         }
       }
+
+      /** This test supports the behaviour of running "devenv check" in CI.
+        *
+        * In a CI environment there will be no user config and no user corresponding user-specific
+        * devcontainer file. We want to allow this and not fail the check. We can do this
+        * "generally" by accepting that without a user config, there's no obligation for a user
+        * devcontainer file to exist.
+        */
+      "allows a missing user devcontainer file if no user config exists" in {
+        (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
+
+          Devenv.init(devcontainerDir, modules).success.value
+          val devenvFile = devcontainerDir.resolve("devenv.yaml")
+          Files.writeString(devenvFile, basicProjectConfig)
+          val userConfigFile = userConfigDir.resolve("devenv.yaml")
+          // Generate files as normal
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+
+          // delete user config and user devcontainer file
+          Files.deleteIfExists(userConfigFile)
+          val userFile = devcontainerDir.resolve("user/devcontainer.json")
+          Files.deleteIfExists(userFile)
+
+          val result = Devenv.check(devcontainerDir, userConfigDir, modules).success.value
+
+          result match {
+            case CheckResult.Match(_, _) =>
+              succeed
+            case CheckResult.Mismatch(userMismatch, sharedMismatch, _, _) =>
+              fail(
+                s"Expected Match result but got Mismatch when user devcontainer file is missing and no user config exists (user mismatch: ${userMismatch.isDefined}, shared mismatch: ${sharedMismatch.isDefined})"
+              )
+            case CheckResult.NotInitialized =>
+              fail("Expected Match result but got NotInitialized")
+          }
+        }
+      }
     }
 
     "checking when only shared file is out of date" - {
