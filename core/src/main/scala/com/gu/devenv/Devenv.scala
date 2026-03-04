@@ -132,7 +132,8 @@ object Devenv {
       actualUserJson,
       expectedSharedJson,
       actualSharedJson,
-      devcontainerDir
+      devcontainerDir,
+      maybeUserConfig.isDefined
     )
   }
 }
