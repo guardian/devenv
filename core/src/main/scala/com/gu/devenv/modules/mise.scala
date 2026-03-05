@@ -63,6 +63,10 @@ private[modules] def mise(mountKey: String) =
 
 /** Loads a script from resource directory core/src/main/resources/com/gu/devenv/modules, encodes it
   * in base64 and returns the encoded string.
+  *
+  * This allows us to include a shell script in our project resources and execute it in the
+  * container without needing to worry about escaping special characters or formatting issues that
+  * can arise when embedding a script directly in the postCreateCommand.
   */
 private def base64Encoded(script: String): String = {
   val resource = s"com/gu/devenv/modules/$script"
