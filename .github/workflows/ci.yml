@@ -26,6 +26,20 @@ jobs:
       with:
         node-version: 24
 
+      # the devcontainer.json file needs to be kept in sync with the devenv configuration
+    - name: Check devenv config
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # download and install the latest devenv release
+        OS=$(echo "${{ runner.os }}" | tr '[:upper:]' '[:lower:]')
+        ARCH=$(echo "${{ runner.arch }}" | tr '[:upper:]' '[:lower:]' | sed 's/x64/amd64/')
+        gh release download --repo guardian/devenv --pattern "devenv-*-${OS}-${ARCH}" --output /usr/local/bin/devenv
+        chmod +x /usr/local/bin/devenv
+
+        # check config files
+        devenv check
+
     - name: Test and package
       run: sbt scalafmtCheckAll test cli/universal:packageBin
 
