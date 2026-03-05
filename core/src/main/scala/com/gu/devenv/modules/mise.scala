@@ -68,8 +68,8 @@ private[modules] def mise(mountKey: String) =
   * container without needing to worry about escaping special characters or formatting issues that
   * can arise when embedding a script directly in the postCreateCommand.
   */
-private def base64Encoded(script: String): String = {
-  val resource = s"com/gu/devenv/modules/$script"
+private def base64Encoded(scriptName: String): String = {
+  val resource = s"com/gu/devenv/modules/$scriptName"
   Using(Source.fromResource(resource)) { source =>
     Base64.getEncoder.encodeToString(source.mkString.getBytes(UTF_8))
   }.fold(err => throw new RuntimeException(s"Could not load resource $resource", err), identity)
