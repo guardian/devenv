@@ -383,7 +383,19 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
         val commandJson = json.hcursor.downField("postStartCommand").as[String]
         commandJson shouldBe a[Right[_, _]]
-        commandJson.map(_ should endWith(s"sudo tee /var/log/${Config.postStartLogName}"))
+        commandJson.map(_ should endWith(s"| sudo tee /var/log/${Config.postStartLogName}"))
+      }
+
+      "all commands are wrapped in brackets before the tee" in {
+        val config = ProjectConfig(
+          name = "test",
+          postStartCommand = List(Command("ls 1", "."), Command("ls 2", "."))
+        )
+        val json = Config.configAsJson(config, Nil).get
+
+        val commandJson = json.hcursor.downField("postStartCommand").as[String]
+        commandJson shouldBe a[Right[_, _]]
+        commandJson.map(_ should startWith("((cd . && ls 1) && (cd . && ls 2)) |"))
       }
 
       "is omitted when empty" in {

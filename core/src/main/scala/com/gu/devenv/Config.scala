@@ -192,10 +192,11 @@ object Config {
     if (commands.isEmpty) None
     else
       Some(
-        commands
-          .map(command => s"(cd ${command.workingDirectory} && ${command.cmd})")
-          .mkString(" && ")
-          + s" | sudo tee $logFile"
+        "(" +
+          commands
+            .map(command => s"(cd ${command.workingDirectory} && ${command.cmd})")
+            .mkString(" && ")
+          + s") | sudo tee $logFile"
       )
 
   private def envListToJson(envList: List[Env]): Json =
