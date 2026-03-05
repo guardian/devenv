@@ -13,7 +13,7 @@ import cats.Apply
   * }
   * }}}
   */
-case class TestResource[A](run: (A => Unit) => Unit)
+case class TestResource[A](run: (A => Any) => Any)
 object TestResource {
   given Apply[TestResource] = new Apply[TestResource] {
     def map[A, B](fa: TestResource[A])(f: A => B): TestResource[B] =
