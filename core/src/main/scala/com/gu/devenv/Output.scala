@@ -136,16 +136,36 @@ object Output {
 
   // Check message builders (called by checkResultMessage)
 
-  private def buildCheckMatchMessage(userPath: String, sharedPath: String): String = {
+  private def buildCheckMatchMessage(maybeUserPath: Option[String], sharedPath: String): String = {
     val header  = Bold.On(Color.Green("✓ Configuration is up-to-date"))
     val divider = Color.Green("━" * 60)
 
+    val (userFileLine, status) = maybeUserPath match {
+      case Some(userFilePath) =>
+        (
+          s"  ✓ ${Color.Cyan(userFilePath)}",
+          Color.Green("All devcontainer files match the current configuration.")
+        )
+      case None =>
+        val line = s"  ⊘ ${Color.LightGray("user configuration skipped")}"
+        val status =
+          s"""|${Color.Green("devcontainer files match the current configuration.")}
+              |
+              |${Color.LightGray("Note:")}
+              |  The user devcontainer file is missing but was not checked
+              |  because there is no user configuration.
+              |
+              |  This is normal in CI checks, and locally if you have not
+              |  added any personal configuration options.""".stripMargin
+        (line, status)
+    }
+
     s"""$header
        |$divider
-       |${Color.Green("All devcontainer files match the current configuration.")}
+       |$status
        |
        |Files checked:
-       |  ✓ ${Color.Cyan(userPath)}
+       |$userFileLine
        |  ✓ ${Color.Cyan(sharedPath)}""".stripMargin
   }
 

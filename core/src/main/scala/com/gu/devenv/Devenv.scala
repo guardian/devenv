@@ -86,7 +86,9 @@ object Devenv {
     * configuration.
     *
     * This may be useful in CI/CD pipelines to ensure that the committed devcontainer files are
-    * up-to-date with the project's configuration.
+    * up-to-date with the project's configuration. To support the use case of CI checks running in
+    * environments without user configuration, we allow the user-specific devcontainer file (which
+    * is not checked in) to be absent if there is no user configuration.
     *
     * Uses the provided paths to locate the .devcontainer directory and the user's configuration
     * file.
@@ -119,10 +121,9 @@ object Devenv {
           modules
         )
         .liftF
-      actualUserJson <- Filesystem
+      actualUserJson = Filesystem
         .readFile(devEnvPaths.userDevcontainerFile)
-        .recover { case _ => "" }
-        .liftF
+        .toOption
       actualSharedJson <- Filesystem
         .readFile(devEnvPaths.sharedDevcontainerFile)
         .recover { case _ => "" }
