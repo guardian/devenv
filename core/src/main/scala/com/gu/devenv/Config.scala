@@ -155,9 +155,14 @@ object Config {
     } yield (userJson.spaces2, sharedJson.spaces2)
   }
 
+  /** Compares the expected devcontainer.json content with the actual discovered content.
+    *
+    * If user configuration is present, the user devcontainer file must match the expected content.
+    * Otherwise, we allow a missing (or empty) user devcontainer file.
+    */
   def compareDevcontainerFiles(
       expectedUserJson: String,
-      actualUserJson: String,
+      actualUserJson: Option[String], // None if the file is missing
       expectedSharedJson: String,
       actualSharedJson: String,
       devcontainerDir: Path,
@@ -166,25 +171,37 @@ object Config {
     val userDevcontainerPath   = s"${devcontainerDir.getFileName}/user/devcontainer.json"
     val sharedDevcontainerPath = s"${devcontainerDir.getFileName}/shared/devcontainer.json"
 
-    val userMismatch = if (userConfigExists && expectedUserJson != actualUserJson) {
-      Some(FileDiff(userDevcontainerPath, expected = expectedUserJson, actual = actualUserJson))
-    } else None
+    /** we allow the user devcontainer file to be missing if there is no user configuration and the
+      * actual user devcontainer file is empty or missing
+      */
+    val userConfigNeedsChecking = userConfigExists || actualUserJson.nonEmpty
 
-    val sharedMismatch = if (expectedSharedJson != actualSharedJson) {
-      Some(
-        FileDiff(sharedDevcontainerPath, expected = expectedSharedJson, actual = actualSharedJson)
+    val userMismatch = Option.when(
+      userConfigNeedsChecking && !actualUserJson.contains(expectedUserJson)
+    ) {
+      FileDiff(userDevcontainerPath, expected = expectedUserJson, actual = actualUserJson)
+    }
+    val sharedMismatch = Option.when(expectedSharedJson != actualSharedJson) {
+      FileDiff(
+        sharedDevcontainerPath,
+        expected = expectedSharedJson,
+        actual = Some(actualSharedJson)
       )
-    } else None
+    }
 
-    if (userMismatch.isEmpty && sharedMismatch.isEmpty) {
-      CheckResult.Match(userDevcontainerPath, sharedDevcontainerPath)
-    } else {
-      CheckResult.Mismatch(
-        userMismatch,
-        sharedMismatch,
-        userDevcontainerPath,
-        sharedDevcontainerPath
-      )
+    (userMismatch, sharedMismatch) match {
+      case (None, None) =>
+        CheckResult.Match(
+          userPath = Option.when(actualUserJson.isDefined)(userDevcontainerPath),
+          sharedPath = sharedDevcontainerPath
+        )
+      case _ =>
+        CheckResult.Mismatch(
+          userMismatch,
+          sharedMismatch,
+          userDevcontainerPath,
+          sharedDevcontainerPath
+        )
     }
   }
 
