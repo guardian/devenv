@@ -3,7 +3,7 @@ package com.gu.devenv
 import cats.*
 import com.gu.devenv.Filesystem.PLACEHOLDER_PROJECT_NAME
 
-import java.nio.file.Path
+import java.nio.file.{NoSuchFileException, Path}
 import scala.util.Try
 import scala.language.implicitConversions
 import Utils.*
@@ -121,9 +121,11 @@ object Devenv {
           modules
         )
         .liftF
-      actualUserJson = Filesystem
+      actualUserJson <- Filesystem
         .readFile(devEnvPaths.userDevcontainerFile)
-        .toOption
+        .map(Some(_))
+        .recover { case _: NoSuchFileException => None }
+        .liftF
       actualSharedJson <- Filesystem
         .readFile(devEnvPaths.sharedDevcontainerFile)
         .recover { case _ => "" }

@@ -174,7 +174,7 @@ object Config {
     /** we allow the user devcontainer file to be missing if there is no user configuration and the
       * actual user devcontainer file is empty or missing
       */
-    val userConfigNeedsChecking = userConfigExists || actualUserJson.nonEmpty
+    val userConfigNeedsChecking = userConfigExists || actualUserJson.exists(_.trim.nonEmpty)
 
     val userMismatch = Option.when(
       userConfigNeedsChecking && !actualUserJson.contains(expectedUserJson)
