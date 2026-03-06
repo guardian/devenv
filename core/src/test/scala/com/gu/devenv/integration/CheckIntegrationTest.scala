@@ -218,13 +218,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           Devenv.init(devcontainerDir, modules).success.value
           val devenvFile = devcontainerDir.resolve("devenv.yaml")
           Files.writeString(devenvFile, basicProjectConfig)
-          val userConfigFile = userConfigDir.resolve("devenv.yaml")
-          Files.writeString(userConfigFile, userConfigWithPlugins)
           // Generate files as normal
           Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-          // delete user config and user devcontainer file
-          Files.deleteIfExists(userConfigFile)
+          // delete generated user devcontainer file
           val userFile = devcontainerDir.resolve("user/devcontainer.json")
           Files.deleteIfExists(userFile)
 
