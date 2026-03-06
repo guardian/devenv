@@ -163,7 +163,9 @@ if [ -f ".devcontainer/user/devcontainer.json" ]; then
     fi
 
     # Check for module contributions
-    if grep -q "mise install" ".devcontainer/user/devcontainer.json"; then
+    # The mise module embeds its setup script as a base64-encoded blob, so we check for the
+    # VS Code extension it contributes (hverlin.mise-vscode) rather than the script contents.
+    if grep -q "hverlin.mise-vscode" ".devcontainer/user/devcontainer.json"; then
         pass "mise module included in user config"
     else
         fail "mise module missing from user config" ""
