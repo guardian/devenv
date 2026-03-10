@@ -17,7 +17,10 @@ object IntegrationTestHelpers {
   /** A set of built-in modules with a unique mount key to avoid conflicts between tests. */
   val testModules: TestResource[List[Module]] = TestResource { use =>
     val mountKey = s"devenv-test-mount-${java.util.UUID.randomUUID()}"
-    use(builtInModules(ModuleConfig(mountKey = mountKey)))
+    use(builtInModules(ModuleConfig(mountKey = mountKey)).fold(
+      err => throw new RuntimeException("Failed to create built-in modules for test", err),
+      identity
+    ))
   }
 
   private def deleteRecursively(path: Path): Unit = {

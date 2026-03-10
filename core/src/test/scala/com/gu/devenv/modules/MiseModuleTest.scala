@@ -1,15 +1,16 @@
 package com.gu.devenv.modules
 
 import com.gu.devenv.Mount
+import org.scalatest.TryValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class MiseModuleTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
+class MiseModuleTest extends AnyFreeSpec with Matchers with TryValues with ScalaCheckPropertyChecks {
   "mise module" - {
     "should use the provided ModuleConfig to parameterise the data mount's name" in {
       val mountKey = "test-mount-key"
-      val module   = mise(mountKey)
+      val module   = mise(mountKey).success.value
 
       module.contribution.mounts should have size 1
       module.contribution.mounts.head match {
@@ -26,9 +27,9 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
   "builtInModules" - {
     "should use the provided module config to parameterise the mise module's mount" in {
       val moduleConfig = Modules.ModuleConfig("test-mount-key")
-      val modules      = Modules.builtInModules(moduleConfig)
+      val modules      = Modules.builtInModules(moduleConfig).success.value
 
-      modules should contain(mise(moduleConfig.mountKey))
+      modules should contain(mise(moduleConfig.mountKey).success.value)
     }
   }
 }

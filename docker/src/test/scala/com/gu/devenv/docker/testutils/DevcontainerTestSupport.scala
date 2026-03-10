@@ -4,7 +4,7 @@ import com.gu.devenv.docker.verifiers.DockerVerifier
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.ModuleConfig
 import com.gu.devenv.{Devenv, GenerateResult}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag, TryValues}
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 
@@ -30,16 +30,20 @@ object ContainerTest extends Tag("com.gu.devenv.docker.ContainerTest")
   * Also checks that Docker is available and working before the test suite starts. This prevents
   * noisy duplicate error messages.
   */
-trait DevcontainerTestSupport extends BeforeAndAfterEach with BeforeAndAfterAll { self: Suite =>
+trait DevcontainerTestSupport extends TryValues with BeforeAndAfterEach with BeforeAndAfterAll {
+  self: Suite =>
   // The root test fixtures directory, read directly from the source tree.
   // This avoids sbt's resource filtering which excludes hidden files (like .tool-versions).
   // The path is relative to the project root where sbt runs.
   protected lazy val fixturesDir: Path = Path.of("docker/fixtures")
 
   // use the built-in modules for these tests while that's all that is supported
-  private val modules = Modules.builtInModules(
-    ModuleConfig(mountKey = "devenv-docker-test")
-  )
+  private val modules = Modules
+    .builtInModules(
+      ModuleConfig(mountKey = "devenv-docker-test")
+    )
+    .success
+    .value
 
   // User config fixture directory with almost empty devenv.yaml
   protected lazy val userConfigFixtureDir: Path = fixturesDir.resolve("user-config/.config/devenv")

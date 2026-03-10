@@ -36,9 +36,7 @@ object Main {
     }
   }
 
-  private val modules = Modules.builtInModules(
-    ModuleConfig(mountKey = "devenv")
-  )
+  private val moduleConfig = ModuleConfig(mountKey = "devenv")
 
   /** Sets up a .devcontainer directory with nested subdirectories.
     *
@@ -54,7 +52,7 @@ object Main {
   def init(): ExitCode = {
     val devcontainerDir = Paths.get(".devcontainer")
 
-    Devenv.init(devcontainerDir, modules) match {
+    Modules.builtInModules(moduleConfig).flatMap(Devenv.init(devcontainerDir, _)) match {
       case Success(result) =>
         println(Output.initResultMessage(result))
         ExitCode.Success
@@ -77,7 +75,9 @@ object Main {
     val userConfigPath =
       Paths.get(System.getProperty("user.home"), ".config", "devenv")
 
-    Devenv.generate(devcontainerDir, userConfigPath, modules) match {
+    Modules
+      .builtInModules(moduleConfig)
+      .flatMap(Devenv.generate(devcontainerDir, userConfigPath, _)) match {
       case Success(result) =>
         println(Output.generateResultMessage(result))
         if (result.successful) ExitCode.Success
@@ -100,7 +100,9 @@ object Main {
     val userConfigPath =
       Paths.get(System.getProperty("user.home"), ".config", "devenv")
 
-    Devenv.check(devcontainerDir, userConfigPath, modules) match {
+    Modules
+      .builtInModules(moduleConfig)
+      .flatMap(Devenv.check(devcontainerDir, userConfigPath, _)) match {
       case Success(result) =>
         println(Output.checkResultMessage(result))
         if (result.successful) ExitCode.Success

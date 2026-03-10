@@ -1,11 +1,12 @@
 package com.gu.devenv.modules
 
 import com.gu.devenv.Mount
+import org.scalatest.TryValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class ScalaModuleTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
+class ScalaModuleTest extends AnyFreeSpec with Matchers with TryValues with ScalaCheckPropertyChecks {
   "scala module" - {
     "should use the provided ModuleConfig to parameterise all the data mount's name" in {
       val mountKey = "test-mount-key"
@@ -35,7 +36,7 @@ class ScalaModuleTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyC
   "builtInModules" - {
     "should use the provided module config to parameterise the cache's mount" in {
       val moduleConfig = Modules.ModuleConfig("test-mount-key")
-      val modules      = Modules.builtInModules(moduleConfig)
+      val modules      = Modules.builtInModules(moduleConfig).success.value
 
       modules should contain(scalaLang(moduleConfig.mountKey))
     }
