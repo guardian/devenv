@@ -38,7 +38,7 @@ trait DevcontainerTestSupport extends TryValues with BeforeAndAfterEach with Bef
   protected lazy val fixturesDir: Path = Path.of("docker/fixtures")
 
   // use the built-in modules for these tests while that's all that is supported
-  private val modules = Modules
+  private def modules = Modules
     .builtInModules(
       ModuleConfig(mountKey = "devenv-docker-test")
     )
