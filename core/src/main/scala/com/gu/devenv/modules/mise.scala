@@ -20,7 +20,7 @@ import scala.util.{Failure, Try, Using}
   * without needing to manually install and configure `mise` each time.
   */
 private[modules] def mise(mountKey: String): Try[Module] =
-  base64Encoded("mise.bash").map { encodedScript =>
+  base64Encoded("mise.sh").map { encodedScript =>
     Module(
       name = "mise",
       summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
