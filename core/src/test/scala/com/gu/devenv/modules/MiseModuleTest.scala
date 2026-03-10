@@ -6,7 +6,11 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class MiseModuleTest extends AnyFreeSpec with Matchers with TryValues with ScalaCheckPropertyChecks {
+class MiseModuleTest
+    extends AnyFreeSpec
+    with Matchers
+    with TryValues
+    with ScalaCheckPropertyChecks {
   "mise module" - {
     "should use the provided ModuleConfig to parameterise the data mount's name" in {
       val mountKey = "test-mount-key"

@@ -6,7 +6,11 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class ScalaModuleTest extends AnyFreeSpec with Matchers with TryValues with ScalaCheckPropertyChecks {
+class ScalaModuleTest
+    extends AnyFreeSpec
+    with Matchers
+    with TryValues
+    with ScalaCheckPropertyChecks {
   "scala module" - {
     "should use the provided ModuleConfig to parameterise all the data mount's name" in {
       val mountKey = "test-mount-key"
