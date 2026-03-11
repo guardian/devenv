@@ -22,5 +22,5 @@ devenv generate
 open -na 'Intellij idea' --args . --line 1 .devcontainer/user/devcontainer.json
 ```
 
-In the IDE, trust the (minimal) project and click the cube in the gutter of .devcontainer/user/devcontainer.json. 
+In the IDE, trust the (minimal) project and click the cube ![gutter-icon.png](gutter-icon.png) in the gutter of .devcontainer/user/devcontainer.json. 
 Follow the onscreen instructions as before.

@@ -12,9 +12,9 @@ NB This puts the code on the real hard drive, which **may be considered undesira
 
 1. Clone the repo
 2. Apply additions/alterations to devenv.yaml and regenerate devcontainer files (ie devenv generate)
-3. Open your preferred devcontainer file in VSCode.    
+3. Open your project in VSCode.    
 4. A toast popup (below right) will invite you to reopen in a container.  
-5. You must choose the container explicitly at this point.  
+5. A subtle dropdown on the header bar will invite you to choose the devcontainer.json file explicitly.  Choose.
 6. The container will be created and will mount the existing checkout.  
 7. Close and restart of these instructions will detect the existing container and re-use it, which could be a gotcha.
 
