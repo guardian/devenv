@@ -17,7 +17,7 @@ NB This puts the code on the real hard drive, which **may be considered undesira
 4. Click ![gutter-icon.png](gutter-icon.png) from the gutter of the desired config and re-open as container.  You will be asked if you want mount or clone the source.
 5. "Create Dev container and Clone Sources"
 
-InterlliJ will now create a dev container from the local source, but fetch the actual application source from git. At this point you can delete the original checkout.
+IntelliJ will now create a dev container from the local source, but fetch the actual application source from git. At this point you can delete the original checkout.
 
 Note that the option "Create Dev container and Mount Sources" is also available.  This will use the local src and local container config.  This may be useful if iterating on the devcontainer itself, but is not generally recommended as the objective is to avoid having source on the "real" machine.
 
