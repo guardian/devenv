@@ -9,13 +9,15 @@ import scala.util.{Failure, Success, Try}
 object Modules {
   // all registered modules are here
   // In the future we might provide ways to register custom modules but this is fine for now
-  def builtInModules(moduleConfig: ModuleConfig): List[Module] =
-    List(
-      mise(moduleConfig.mountKey),
-      dockerInDocker,
-      scalaLang(moduleConfig.mountKey),
-      nodeLang
-    )
+  def builtInModules(moduleConfig: ModuleConfig): Try[List[Module]] =
+    mise(moduleConfig.mountKey).map { miseModule =>
+      List(
+        miseModule,
+        dockerInDocker,
+        scalaLang(moduleConfig.mountKey),
+        nodeLang
+      )
+    }
 
   case class Module(
       name: String,
