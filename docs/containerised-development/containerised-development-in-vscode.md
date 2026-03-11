@@ -1,5 +1,9 @@
 # Containerised Development in VS Code
 
+Visual Studio Code will detect a devcontainer.json file and prompt to reopen in container.
+
+Once open, you will see the following information in the header bar: ![vscode.png](vscode.png)
+
 ## Clone-outside-container
 
 This is the recommended approach.  It allows merge of user tooling.
