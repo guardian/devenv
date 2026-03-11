@@ -145,7 +145,7 @@ object Filesystem {
         |
         |# Optional: Mount directories from host to container
         |# mounts:
-        |#   - "source=$${localEnv: HOME}/.gu/example,target=/home/vscode/.gu/example,readonly,type=bind,consistency=cached"
+        |#   - "source=$${localEnv:HOME}/.gu/example,target=/home/vscode/.gu/example,readonly,type=bind,consistency=cached"
         |
         |# Optional: IDE plugins - shared project plugins like language support
         |# plugins:
