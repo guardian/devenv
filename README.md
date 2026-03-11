@@ -1,6 +1,6 @@
 # devenv
 
-A CLI tool for managing devcontainer configurations for your projects.
+A CLI tool for managing [devcontainer](./docs/containerised-development/containerised-development.md) configurations for your projects.
 
 Managing devcontainer.json files can be tedious and error-prone. The devcontainer specification is very detailed, exposing a lot of options to engineers. It also doesn't provide a way to separate team-wide project settings from personal user preferences, forcing developers to either commit their personal configs or manually maintain separate files. `devenv` solves both of these problems by providing a simple configuration format that lets you define both project-wide and user-specific settings in YAML format. It then generates the appropriate devcontainer.json files for you.
 
