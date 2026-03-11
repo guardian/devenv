@@ -61,12 +61,14 @@ Note: the default user for devcontainers is not vscode, so you'll need to specif
 
 ## Slow start
 
-The “remote dev server” process does some setup and may require some downloads (eg plugins).
+VSCode's container helper is 71MB.  IntelliJ's is 1.5GB.  This download is not resumable. As a result it is recommended that initial devcontainer work in IntelliJ should only take place on a fast internet connection.
+
+After that process is running, some setup occurs within the container which may require downloads (eg plugins).
 
 This can make the remote service busy for long periods, resulting in a timeout in the client.  
 In IntelliJ this is only 60s, which on a slow connection is easily exceeded.
 
-However, it will pick up where it left off every time you hit retry.  Eventually, it will connect.  See Logging below.
+However, this download is resumable, and will pick up where it left off every time you hit retry.  Eventually, it will connect.  See Logging below.
 
 ## Control
 
@@ -76,6 +78,13 @@ Restarting the container outside the IDE can cause IntelliJ to freeze
 
 The reused volume, while helpful, may mean that when you restart a container, you are actually not on the branch you expect.  Even if you specify clone/main on the IDE, the volume will be re-used if it exists and the checked out source on that disk may be on another branch.  
 This may be addressed in the future as a plugin issue.
+
+## Port re-use
+
+When starting a devcontainer, if the requested port is not available, the IDE will mediate to a different ephemoral port instead of showing an error.
+This new port is only discoverable from within the IDE.
+
+As we have different ports for all of our dev-nginx enabled services, this should not be problematic UNLESS two copies of the same application are running simultaneously.
 
 ## Logging (IntelliJ)
 
