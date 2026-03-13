@@ -27,3 +27,12 @@ NB This puts the code on the real hard drive, which **may be considered undesira
 No merge of user tooling.
 
 1. F1 (Actions), “clone”, provide the repo address, and run the action.
+
+## Logging
+
+The “remote dev server” process used to run the project environment inside the container stores its logging in `/home/vscode/.vscode-server/data/logs/` ***inside*** the container with a datestamped directory.
+
+If it is unresponsive, the logging can still be viewed via docker:
+```
+docker exec -it <container> bash -c 'find /home/vscode/.vscode-server/data/logs/*/remoteagent.log | tail -1 | xargs tail -f'
+```

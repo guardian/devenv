@@ -26,3 +26,12 @@ Note that the option "Create Dev container and Mount Sources" is also available.
 If you have no need for user-specific tooling, then IntelliJ's own [documentation](https://www.jetbrains.com/help/idea/start-dev-container-from-welcome-screen.html) covers starting a container project.
 
 Guardian project devcontainer files are, by default, at `.devcontainer/shared/devcontainer.json`.
+
+## Logging
+
+The “remote dev server” process used to run the project environment inside the container stores its logging in `/.jbdevcontainer/JetBrains/IntelliJIdea2025.3/log/idea.log` ***inside*** the container.
+
+If it is unresponsive, the logging can still be viewed via docker:
+```
+docker exec -it <container> tail -f /.jbdevcontainer/JetBrains/IntelliJIdea2025.3/log/idea.log
+```
