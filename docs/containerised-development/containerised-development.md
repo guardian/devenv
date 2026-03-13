@@ -100,15 +100,6 @@ This new port is only discoverable from within the IDE.
 
 As we have different ports for all of our dev-nginx enabled services, this should not be problematic UNLESS two copies of the same application are running simultaneously.
 
-### Logging (IntelliJ)
-
-The “remote dev server” process used to run the project environment inside the container stores its logging in `/.jbdevcontainer/JetBrains/IntelliJIdea2025.3/log/idea.log` ***inside*** the container.
-
-If it is unresponsive, the logging can still be viewed via docker:
-```
-docker exec -it <container> tail -f /.jbdevcontainer/JetBrains/IntelliJIdea2025.3/log/idea.log
-```
-
 ### SSH Agent
 
 SSH Agent is commonly used for communication with github and other ssh-based services.
