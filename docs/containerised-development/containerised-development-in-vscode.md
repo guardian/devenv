@@ -2,7 +2,11 @@
 
 Visual Studio Code will detect a devcontainer.json file and prompt to reopen in container.
 
-Once open, you will see the following information in the header bar: ![vscode.png](vscode.png)
+In a dev container project, the header bar will display
+
+`Dev Container: <project> @ <image>`
+
+For example, opening this project (devenv) in a container based on the desktop linux image results in: ![vscode.png](vscode.png)
 
 ## Clone-outside-container
 
