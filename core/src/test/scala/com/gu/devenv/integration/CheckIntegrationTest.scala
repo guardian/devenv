@@ -125,13 +125,15 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           Devenv.init(devcontainerDir, modules).success.value
           val devenvFile = devcontainerDir.resolve("devenv.yaml")
           Files.writeString(devenvFile, basicProjectConfig)
+          val userConfigFile = userConfigDir.resolve("devenv.yaml")
+          Files.writeString(userConfigFile, userConfigWithPlugins)
           Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
           val result = Devenv.check(devcontainerDir, userConfigDir, modules).success.value
 
           result match {
             case CheckResult.Match(userPath, sharedPath) =>
-              userPath shouldBe ".devcontainer/user/devcontainer.json"
+              userPath shouldBe Some(".devcontainer/user/devcontainer.json")
               sharedPath shouldBe ".devcontainer/shared/devcontainer.json"
             case CheckResult.Mismatch(userMismatch, sharedMismatch, _, _) =>
               fail(
@@ -216,20 +218,23 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           Devenv.init(devcontainerDir, modules).success.value
           val devenvFile = devcontainerDir.resolve("devenv.yaml")
           Files.writeString(devenvFile, basicProjectConfig)
-          val userConfigFile = userConfigDir.resolve("devenv.yaml")
           // Generate files as normal
           Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-          // delete user config and user devcontainer file
-          Files.deleteIfExists(userConfigFile)
+          // delete generated user devcontainer file
           val userFile = devcontainerDir.resolve("user/devcontainer.json")
           Files.deleteIfExists(userFile)
 
           val result = Devenv.check(devcontainerDir, userConfigDir, modules).success.value
 
           result match {
-            case CheckResult.Match(_, _) =>
+            case CheckResult.Match(None, _) =>
+              // we expect a match that acknowledges the user file is missing (None)
               succeed
+            case CheckResult.Match(userPath, _) =>
+              fail(
+                s"Expected Match result with no user file, but got Match with user file path: $userPath"
+              )
             case CheckResult.Mismatch(userMismatch, sharedMismatch, _, _) =>
               fail(
                 s"Expected Match result but got Mismatch when user devcontainer file is missing and no user config exists (user mismatch: ${userMismatch.isDefined}, shared mismatch: ${sharedMismatch.isDefined})"

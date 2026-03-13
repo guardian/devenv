@@ -198,7 +198,7 @@ case class UserConfigPaths(
 case class FileDiff(
     path: String,
     expected: String,
-    actual: String
+    actual: Option[String]
 )
 
 // results
@@ -224,7 +224,7 @@ enum GenerateResult(val successful: Boolean) {
 
 enum CheckResult(val successful: Boolean) {
   case Match(
-      userPath: String,
+      userPath: Option[String],
       sharedPath: String
   ) extends CheckResult(successful = true)
 

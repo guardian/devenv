@@ -3,7 +3,7 @@ package com.gu.devenv
 import cats.*
 import com.gu.devenv.Filesystem.PLACEHOLDER_PROJECT_NAME
 
-import java.nio.file.Path
+import java.nio.file.{NoSuchFileException, Path}
 import scala.util.Try
 import scala.language.implicitConversions
 import Utils.*
@@ -86,7 +86,9 @@ object Devenv {
     * configuration.
     *
     * This may be useful in CI/CD pipelines to ensure that the committed devcontainer files are
-    * up-to-date with the project's configuration.
+    * up-to-date with the project's configuration. To support the use case of CI checks running in
+    * environments without user configuration, we allow the user-specific devcontainer file (which
+    * is not checked in) to be absent if there is no user configuration.
     *
     * Uses the provided paths to locate the .devcontainer directory and the user's configuration
     * file.
@@ -121,7 +123,8 @@ object Devenv {
         .liftF
       actualUserJson <- Filesystem
         .readFile(devEnvPaths.userDevcontainerFile)
-        .recover { case _ => "" }
+        .map(Some(_))
+        .recover { case _: NoSuchFileException => None }
         .liftF
       actualSharedJson <- Filesystem
         .readFile(devEnvPaths.sharedDevcontainerFile)
