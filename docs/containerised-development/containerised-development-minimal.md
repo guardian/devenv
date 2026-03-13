@@ -6,8 +6,8 @@ This example macOS approach uses the github command line tool `gh`.  It assumes 
 
 ## Setup
 ```
-repo=<repo>
-organisation=guardian
+repo=<repo>           # replace as needed
+organisation=guardian # or any other github organisation
 
 gh auth login  
 mkdir -p $repo  
