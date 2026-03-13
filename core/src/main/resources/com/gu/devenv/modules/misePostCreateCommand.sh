@@ -10,9 +10,6 @@ ok()   { echo -e "\033[1;32m[setup] $*\033[0m"; }
 
 log "Setting up mise."
 
-log "Ensuring correct ownership of the shared mise data volume."
-sudo chown -R vscode:vscode /mnt/mise-data
-
 if test -f "$MISE_INSTALL_PATH"; then
   log "mise is already present at $MISE_INSTALL_PATH."
 else

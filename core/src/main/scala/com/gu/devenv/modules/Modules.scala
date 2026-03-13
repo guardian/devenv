@@ -1,10 +1,12 @@
 package com.gu.devenv.modules
 
+import scala.io.Source
+import scala.util.{Failure, Success, Try, Using}
+import java.nio.charset.StandardCharsets.UTF_8
+import java.util.Base64
 import cats.implicits.*
 import com.gu.devenv.*
 import io.circe.Json
-
-import scala.util.{Failure, Success, Try}
 
 object Modules {
   // all registered modules are here
@@ -32,6 +34,7 @@ object Modules {
       plugins: Plugins = Plugins.empty,
       containerEnv: List[Env] = Nil,
       remoteEnv: List[Env] = Nil,
+      onCreateCommands: List[Command] = Nil,
       postCreateCommands: List[Command] = Nil,
       capAdd: List[String] = Nil,
       securityOpt: List[String] = Nil
@@ -69,6 +72,7 @@ object Modules {
       ),
       containerEnv = contribution.containerEnv ++ config.containerEnv,
       remoteEnv = contribution.remoteEnv ++ config.remoteEnv,
+      onCreateCommand = contribution.onCreateCommands ++ config.onCreateCommand,
       postCreateCommand = contribution.postCreateCommands ++ config.postCreateCommand,
       capAdd = contribution.capAdd ++ config.capAdd,
       securityOpt = contribution.securityOpt ++ config.securityOpt
@@ -81,4 +85,21 @@ object Modules {
       case Some(module) => Success(module.contribution)
       case None         => Failure(new IllegalArgumentException(s"Unknown module: '$moduleName'"))
     }
+
+  /** Loads a script from resource directory core/src/main/resources/com/gu/devenv/modules, encodes
+    * it in base64 and returns the encoded string wrapped in a Try.
+    *
+    * This allows us to include a shell script in our project resources and execute it in the
+    * container without needing to worry about escaping special characters or formatting issues that
+    * can arise when embedding a script directly in the postCreateCommand.
+    */
+  def base64Encoded(scriptName: String): Try[String] = {
+    val resource = s"com/gu/devenv/modules/$scriptName"
+    Using(Source.fromResource(resource)) { source =>
+      Base64.getEncoder.encodeToString(source.mkString.getBytes(UTF_8))
+    }.recoverWith { case err =>
+      Failure(new RuntimeException(s"Could not load resource $resource", err))
+    }
+  }
+
 }
