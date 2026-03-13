@@ -71,6 +71,7 @@ object Config {
 
       projectConfig.copy(
         plugins = mergedPlugins,
+        onCreateCommand = projectConfig.onCreateCommand,
         postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand,
         postStartCommand = projectConfig.postStartCommand,
         runArgs = runArgs ++ projectConfig.runArgs

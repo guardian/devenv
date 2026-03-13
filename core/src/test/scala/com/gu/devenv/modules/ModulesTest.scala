@@ -229,6 +229,38 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       }
     }
 
+    "onCreateCommands field" - {
+      val genCommand: Gen[Command] = for {
+        cmd     <- Gen.alphaNumStr.suchThat(_.nonEmpty)
+        workDir <- Gen.alphaNumStr.suchThat(_.nonEmpty)
+      } yield Command(cmd, workDir)
+
+      val genCommands: Gen[List[Command]] = Gen.listOf(genCommand)
+
+      "adds onCreateCommands to empty config" in {
+        forAll(genCommands) { commands =>
+          val baseConfig   = ProjectConfig(name = "test")
+          val contribution = ModuleContribution(onCreateCommands = commands)
+
+          val result = Modules.applyModuleContribution(baseConfig, contribution)
+
+          result.onCreateCommand shouldBe commands
+        }
+      }
+
+      "prepends onCreateCommands to existing config" in {
+        forAll(genCommands, genCommands) { (moduleCommands, existingCommands) =>
+          val baseConfig   = ProjectConfig(name = "test", onCreateCommand = existingCommands)
+          val contribution = ModuleContribution(onCreateCommands = moduleCommands)
+
+          val result = Modules.applyModuleContribution(baseConfig, contribution)
+
+          // Module commands should come first
+          result.onCreateCommand shouldBe (moduleCommands ++ existingCommands)
+        }
+      }
+    }
+
     "postCreateCommands field" - {
       val genCommand: Gen[Command] = for {
         cmd     <- Gen.alphaNumStr.suchThat(_.nonEmpty)
