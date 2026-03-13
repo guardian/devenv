@@ -36,7 +36,10 @@ ssh-add -k ~/.ssh/id_ed25519
 
 ## IDEs
 
-See [here](containerised-development-in-intellij.md) for IntelliJ specific instructions and [here](containerised-development-in-vscode.md) for Visual Studio Code. 
+IDEs behave differently, and require specific instructions:
+
+  * [Intellij](containerised-development-in-intellij.md)
+  * [Visual Studio Code](containerised-development-in-vscode.md)
 
 ## AWS Credentials
 
