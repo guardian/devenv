@@ -33,5 +33,5 @@ The “remote dev server” process used to run the project environment inside t
 
 If it is unresponsive, the logging can still be viewed via docker:
 ```
-docker exec -it <container> tail -f /.jbdevcontainer/JetBrains/IntelliJIdea2025.3/log/idea.log
+docker exec -it <container> tail -f /.jbdevcontainer/JetBrains/IntelliJIdea*/log/idea.log
 ```
