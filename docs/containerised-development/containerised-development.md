@@ -115,6 +115,6 @@ SSH Agent is commonly used for communication with github and other ssh-based ser
 
 It will work in the IDE, but it is not forwarded to the docker environment when using `docker exec`. 
 
-## Absolutely Minimal Bootstrap Process
+# Absolutely Minimal Bootstrap Process
 
 As an "advanced" option, if you prefer to be strict with regard to source code on disk, but still have the ability to apply your own preferences, see [here](containerised-development-minimal.md)
