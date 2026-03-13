@@ -10,6 +10,8 @@ Supply chain poisoning attacks are a present danger to developers who run code o
 
 See https://www.upwind.io/feed/hackerbot-claw-github-actions-pull-request-rce for a real world example of an end to end attack resulting in compromised, trusted, code in a dependency.
 
+Similarly, we are entering an era of agentic coding, where we give third party AI agents access to our development environments.  This obviously comes with huge potential benefits, but we do not yet have good enough guardrails to let "trusted" AI agents run free on our development laptops.
+
 There is therefore a need to provide development capability without permitting arbitrary code from dependencies to run natively on a developer laptop, which may have wide ranging permissions, or powerful keys.
 
 ## General Approach
