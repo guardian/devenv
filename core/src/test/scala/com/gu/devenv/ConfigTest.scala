@@ -139,6 +139,7 @@ class ConfigTest
         "vscode" as List("scalameta.metals", "scala-lang.scala", "GitHub.copilot")
       )
 
+      merged.onCreateCommand should have length 1
       // Dotfiles commands should be prepended to postCreateCommand
       merged.postCreateCommand should have length 4
       merged.postCreateCommand.take(2) shouldBe List(
