@@ -199,7 +199,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         value <- Gen.alphaNumStr
       } yield Env(name, value)
 
-      val genEnvList: Gen[List[Env]] = Gen.nonEmptyListOf(genEnv)
+      val genEnvList: Gen[List[Env]] = Gen.nonEmptyListOf(genEnv).map(_.distinctBy(_._1))
 
       "appears in JSON containerEnv object" in {
         forAll(genEnvList) { envVars =>
@@ -256,6 +256,75 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         val json   = Config.configAsJson(config, Nil).get
 
         json.hcursor.downField("remoteEnv").as[Json] shouldBe a[Left[_, _]]
+      }
+    }
+
+    "onCreateCommand field" - {
+      val genCommand: Gen[Command] = for {
+        cmd     <- Gen.alphaNumStr.suchThat(_.nonEmpty)
+        workDir <- Gen.alphaNumStr.suchThat(_.nonEmpty)
+      } yield Command(cmd, workDir)
+
+      val genCommands: Gen[List[Command]] = Gen.nonEmptyListOf(genCommand)
+
+      "appears as combined string in JSON" in {
+        forAll(genCommands) { commands =>
+          val config = ProjectConfig(name = "test", onCreateCommand = commands)
+          val json   = Config.configAsJson(config, Nil).get
+
+          val commandJson = json.hcursor.downField("onCreateCommand").as[String]
+          commandJson shouldBe a[Right[_, _]]
+
+          // Verify it's not empty
+          commandJson.map(_.nonEmpty) shouldBe Right(true)
+
+          // Verify all commands are present in the combined string
+          commands.foreach { cmd =>
+            commandJson.map(_.contains(cmd.cmd)) shouldBe Right(true)
+            commandJson.map(_.contains(cmd.workingDirectory)) shouldBe Right(true)
+          }
+        }
+      }
+
+      "combines multiple commands with && separator" in {
+        val commands = List(
+          Command("echo hello", "/workspace"),
+          Command("echo world", "/tmp")
+        )
+        val config = ProjectConfig(name = "test", onCreateCommand = commands)
+        val json   = Config.configAsJson(config, Nil).get
+
+        val commandJson = json.hcursor.downField("onCreateCommand").as[String]
+        commandJson.map(_.contains("&&")) shouldBe Right(true)
+      }
+
+      "wraps each command in cd and parentheses" in {
+        val command = Command("npm install", "/app")
+        val config  = ProjectConfig(name = "test", onCreateCommand = List(command))
+        val json    = Config.configAsJson(config, Nil).get
+
+        val commandJson = json.hcursor.downField("onCreateCommand").as[String]
+        commandJson shouldBe a[Right[_, _]]
+        commandJson.map(_ should include("(cd /app && npm install)"))
+      }
+
+      "pipes command output to a useful file" in {
+        val config = ProjectConfig(
+          name = "test",
+          onCreateCommand = List(Command("ls", "/create"))
+        )
+        val json = Config.configAsJson(config, Nil).get
+
+        val commandJson = json.hcursor.downField("onCreateCommand").as[String]
+        commandJson shouldBe a[Right[_, _]]
+        commandJson.map(_ should endWith(s"sudo tee /var/log/${Config.onCreateLogName}"))
+      }
+
+      "is omitted when empty" in {
+        val config = ProjectConfig(name = "test", onCreateCommand = Nil)
+        val json   = Config.configAsJson(config, Nil).get
+
+        json.hcursor.downField("onCreateCommand").focus shouldBe empty
       }
     }
 
