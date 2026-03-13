@@ -29,6 +29,9 @@ mounts:
   - source: "${localWorkspaceFolder}/.sbt"
     target: "/home/vscode/.sbt"
     type: "volume"
+onCreateCommand:
+  - cmd: "echo onCreateCommand"
+    workingDirectory: "/workspaces/project/subdir"
 postCreateCommand:
   - cmd: "sbt update"
     workingDirectory: "/workspaces/project/subdir"

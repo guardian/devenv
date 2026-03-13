@@ -71,6 +71,7 @@ object Config {
 
       projectConfig.copy(
         plugins = mergedPlugins,
+        onCreateCommand = projectConfig.onCreateCommand,
         postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand,
         postStartCommand = projectConfig.postStartCommand,
         runArgs = runArgs ++ projectConfig.runArgs
@@ -91,6 +92,10 @@ object Config {
 
       val commands = JsonObject.fromIterable(
         List(
+          "onCreateCommand" -> combineCommands(
+            config.onCreateCommand,
+            s"/var/log/$onCreateLogName"
+          ),
           "postCreateCommand" -> combineCommands(
             config.postCreateCommand,
             s"/var/log/$postCreateLogName"
@@ -252,6 +257,7 @@ object Config {
   }
 
   private[devenv] val postStartLogName  = "post-start.log"
+  private[devenv] val onCreateLogName   = "on-create.log"
   private[devenv] val postCreateLogName = "post-create.log"
 
 }

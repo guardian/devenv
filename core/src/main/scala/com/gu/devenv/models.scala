@@ -17,6 +17,7 @@ case class ProjectConfig(
     containerEnv: List[Env] = Nil,
     plugins: Plugins = Plugins.empty,
     mounts: List[Mount] = Nil,
+    onCreateCommand: List[Command] = Nil,
     postCreateCommand: List[Command] = Nil,
     postStartCommand: List[Command] = Nil,
     features: Map[String, Json] = Map.empty,
