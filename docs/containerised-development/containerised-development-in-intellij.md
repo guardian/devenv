@@ -25,4 +25,4 @@ Note that the option "Create Dev container and Mount Sources" is also available.
 
 If you have no need for user-specific tooling, then IntelliJ's own [documentation](https://www.jetbrains.com/help/idea/start-dev-container-from-welcome-screen.html) covers starting a container project.
 
-However, *this is not recommended* as there will be no caching of shared tooling, which can result in long startup times while downloading completes.
+Guardian project devcontainer files are, by default, at `.devcontainer/shared/devcontainer.json`.
