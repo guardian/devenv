@@ -8,12 +8,22 @@ log()  { echo -e "\033[1;34m[setup] $*\033[0m"; }
 warn() { echo -e "\033[1;33m[setup] $*\033[0m"; }
 ok()   { echo -e "\033[1;32m[setup] $*\033[0m"; }
 
+if [[ -z $IVY_DATA_DIR_ROOT ]]; then
+    warn "IVY_DATA_DIR_ROOT not set"
+    exit 1
+fi
+
+if [[ -z $COURSIER_DATA_DIR_ROOT ]]; then
+    warn "COURSIER_DATA_DIR_ROOT not set"
+    exit 1
+fi
+
 log "Setting up scala cache data."
 
 log "Ensuring correct ownership of the shared ivy data volume."
-sudo chown -R vscode:vscode /home/vscode/.ivy2
+sudo chown -R vscode:vscode $IVY_DATA_DIR_ROOT
 
 log "Ensuring correct ownership of the shared coursier data volume."
-sudo chown -R vscode:vscode /home/vscode/.cache
+sudo chown -R vscode:vscode $COURSIER_DATA_DIR_ROOT
 
 ok "scala cache data complete."

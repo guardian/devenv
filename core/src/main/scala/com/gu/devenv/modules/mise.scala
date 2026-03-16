@@ -20,39 +20,43 @@ private[modules] def mise(mountKey: String): Try[Module] =
   for {
     encodedOnCreateScript   <- Command.fromResourceScript("miseOnCreateCommand.sh")
     encodedPostCreateScript <- Command.fromResourceScript("misePostCreateCommand.sh")
-  } yield Module(
-    name = "mise",
-    summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
-    enabledByDefault = true,
-    contribution = ModuleContribution(
-      onCreateCommands = List(encodedOnCreateScript),
-      postCreateCommands = List(encodedPostCreateScript),
-      // Adds mise shims to the PATH so that installed tools are available in the remote environment
-      remoteEnv = List(
-        Env("PATH", "${containerEnv:PATH}:/mnt/mise-data/shims")
-      ),
-      // Sets the MISE_DATA_DIR to a shared volume (defined below) to cache downloaded tools and versions
-      containerEnv = List(
-        Env("MISE_DATA_DIR", "/mnt/mise-data"),
-        Env("MISE_INSTALL_PATH", "/mnt/mise-data/mise")
-      ),
-      /* This mount persists the mise cache and installed tool versions across container recreations.
-       *
-       * This brings security trade-offs as the volume is shared between all containers using this module.
-       * However, without this shared volume, mise would need to re-download and re-install tools
-       * every time the container is recreated, which would be a significant usability issue.
-       */
-      mounts = List(
-        Mount.ExplicitMount(
-          source = s"$mountKey-mise-data-volume",
-          target = "/mnt/mise-data",
-          `type` = "volume"
+  } yield {
+    val MNT_MISE_DATA     = "/mnt/mise-data"
+    val MISE_INSTALL_PATH = s"$MNT_MISE_DATA/mise"
+    Module(
+      name = "mise",
+      summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
+      enabledByDefault = true,
+      contribution = ModuleContribution(
+        onCreateCommands = List(encodedOnCreateScript),
+        postCreateCommands = List(encodedPostCreateScript),
+        // Adds mise shims to the PATH so that installed tools are available in the remote environment
+        remoteEnv = List(
+          Env("PATH", s"$${containerEnv:PATH}:$MNT_MISE_DATA/shims")
+        ),
+        // Sets the MISE_DATA_DIR to a shared volume (defined below) to cache downloaded tools and versions
+        containerEnv = List(
+          Env("MISE_DATA_DIR", MNT_MISE_DATA),
+          Env("MISE_INSTALL_PATH", MISE_INSTALL_PATH)
+        ),
+        /* This mount persists the mise cache and installed tool versions across container recreations.
+         *
+         * This brings security trade-offs as the volume is shared between all containers using this module.
+         * However, without this shared volume, mise would need to re-download and re-install tools
+         * every time the container is recreated, which would be a significant usability issue.
+         */
+        mounts = List(
+          Mount.ExplicitMount(
+            source = s"$mountKey-mise-data-volume",
+            target = MNT_MISE_DATA,
+            `type` = "volume"
+          )
+        ),
+        // provide IDE support for mise
+        plugins = Plugins(
+          intellij = List("com.github.l34130.mise"),
+          vscode = List("hverlin.mise-vscode")
         )
-      ),
-      // provide IDE support for mise
-      plugins = Plugins(
-        intellij = List("com.github.l34130.mise"),
-        vscode = List("hverlin.mise-vscode")
       )
     )
-  )
+  }

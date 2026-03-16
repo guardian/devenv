@@ -8,6 +8,11 @@ log()  { echo -e "\033[1;34m[setup] $*\033[0m"; }
 warn() { echo -e "\033[1;33m[setup] $*\033[0m"; }
 ok()   { echo -e "\033[1;32m[setup] $*\033[0m"; }
 
+if [[ -z $MISE_DATA_DIR ]]; then
+    warn "MISE_DATA_DIR not set"
+    exit 1
+fi
+
 log "Setting up mise."
 
 if test -f "$MISE_INSTALL_PATH"; then
@@ -32,7 +37,7 @@ mise trust --yes || true
 mise install || warn "mise install failed. You may need to run mise install manually inside the container."
 
 log "Final checks."
-export PATH="/mnt/mise-data/shims:$PATH"
+export PATH="$MISE_DATA_DIR/shims:$PATH"
 mise doctor
 
 ok "mise setup complete at $MISE_INSTALL_PATH."
