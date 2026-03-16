@@ -5,6 +5,8 @@ import com.gu.devenv.{Command, Env, Mount, Plugins}
 
 import scala.util.Try
 
+import scala.util.Try
+
 /** Provides IDE plugin support for Scala development.
   *
   * This module adds the Scala language plugin for both VS Code and IntelliJ IDEA.
