@@ -5,8 +5,11 @@ import cats.syntax.all.*
 import com.gu.devenv.Filesystem.{FileSystemStatus, GitignoreStatus}
 import io.circe.{Decoder, DecodingFailure, Encoder, Json}
 
+import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Path
-import scala.util.Try
+import java.util.Base64
+import scala.io.Source
+import scala.util.{Failure, Success, Try, Using}
 
 case class ProjectConfig(
     name: String,
@@ -127,10 +130,77 @@ case class Plugins(
 object Plugins {
   def empty = Plugins(Nil, Nil)
 }
+
 case class Command(
     cmd: String,
     workingDirectory: String
 )
+object Command {
+
+  /** Creates a [[Command]] that runs a shell script bundled as a classpath resource.
+    *
+    * The script is expected to be located in the "/com/gu/devenv/modules" resource directory and
+    * its name is expected to end specifically in `.sh` rather than `.bash` etc. It is
+    * base64-encoded (standard RFC 4648, alphabet `[A-Za-z0-9+/=]`) at construction time, then
+    * decoded and executed in the container. Standard Base64 output contains no shell metacharacters
+    * (no single quotes, double quotes, dollar signs, backticks or backslashes), so embedding it
+    * inside a double-quoted shell string is safe against command injection.
+    *
+    * The script content is minimally validated at construction time.
+    *
+    * @param scriptName
+    *   filename of the script (e.g. `"mise.sh"`)
+    * @param workingDirectory
+    *   directory in which the command should be run
+    */
+  def fromResourceScript(scriptName: String, workingDirectory: String = "."): Try[Command] = {
+    val resource = s"com/gu/devenv/modules/$scriptName"
+
+    def validateResource(name: String): Try[String] =
+      if (name.endsWith(".sh"))
+        Success(name)
+      else
+        Failure(
+          new RuntimeException(
+            s"Script name '$name' does not end in .sh. Only shell scripts are supported."
+          )
+        )
+
+    def validateContent(content: String): Try[String] =
+      if (content.isEmpty)
+        Failure(
+          new RuntimeException(
+            s"Resource $resource is empty. The bundled script may be missing or corrupt."
+          )
+        )
+      else if (!content.startsWith("#!"))
+        Failure(
+          new RuntimeException(
+            s"Resource $resource does not begin with a shebang (#!) line.  Refusing to execute potentially corrupt or tampered content."
+          )
+        )
+      else
+        Success(content)
+
+    (for {
+      _       <- validateResource(scriptName)
+      content <- Using(Source.fromResource(resource))(_.mkString)
+      valid   <- validateContent(content)
+    } yield {
+      val encoded = Base64.getEncoder.encodeToString(valid.getBytes(UTF_8))
+      // bash -euo pipefail is applied at invocation level as an additional
+      // defence-in-depth measure even though bundled scripts set these flags
+      // themselves.
+      Command(
+        cmd = s"""printf '%s' "$encoded" | base64 -d | bash -euo pipefail""",
+        workingDirectory = workingDirectory
+      )
+    }).recoverWith { case err =>
+      Failure(new RuntimeException(s"Could not load resource $resource", err))
+    }
+  }
+}
+
 enum Mount {
   case ExplicitMount(
       source: String,

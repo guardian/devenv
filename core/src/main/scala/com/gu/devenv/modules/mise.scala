@@ -3,10 +3,7 @@ package com.gu.devenv.modules
 import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
 import com.gu.devenv.{Command, Env, Mount, Plugins}
 
-import java.nio.charset.StandardCharsets.UTF_8
-import java.util.Base64
-import scala.io.Source
-import scala.util.{Failure, Try, Using}
+import scala.util.Try
 
 /** Enables the mise tool within the development container.
   *
@@ -20,18 +17,13 @@ import scala.util.{Failure, Try, Using}
   * without needing to manually install and configure `mise` each time.
   */
 private[modules] def mise(mountKey: String): Try[Module] =
-  base64Encoded("mise.sh").map { encodedScript =>
+  Command.fromResourceScript("mise.sh").map { miseCommand =>
     Module(
       name = "mise",
       summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
       enabledByDefault = true,
       contribution = ModuleContribution(
-        postCreateCommands = List(
-          Command(
-            cmd = s"echo '$encodedScript' | base64 -d | bash",
-            workingDirectory = "."
-          )
-        ),
+        postCreateCommands = List(miseCommand),
         // Adds mise shims to the PATH so that installed tools are available in the remote environment
         remoteEnv = List(
           Env("PATH", "${containerEnv:PATH}:/mnt/mise-data/shims")
@@ -62,19 +54,3 @@ private[modules] def mise(mountKey: String): Try[Module] =
       )
     )
   }
-
-/** Loads a script from resource directory core/src/main/resources/com/gu/devenv/modules, encodes it
-  * in base64 and returns the encoded string wrapped in a Try.
-  *
-  * This allows us to include a shell script in our project resources and execute it in the
-  * container without needing to worry about escaping special characters or formatting issues that
-  * can arise when embedding a script directly in the postCreateCommand.
-  */
-private def base64Encoded(scriptName: String): Try[String] = {
-  val resource = s"com/gu/devenv/modules/$scriptName"
-  Using(Source.fromResource(resource)) { source =>
-    Base64.getEncoder.encodeToString(source.mkString.getBytes(UTF_8))
-  }.recoverWith { case err =>
-    Failure(new RuntimeException(s"Could not load resource $resource", err))
-  }
-}
