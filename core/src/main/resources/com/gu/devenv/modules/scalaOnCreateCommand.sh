@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# Sets up mise inside the devcontainer after creation.
-#
-# Also logs useful info (including the output from `mise doctor`) to the terminal to help with debugging.
+# Sets up JVM-related caches inside the devcontainer after creation.
 set -euo pipefail
 
 log()  { echo -e "\033[1;34m[setup] $*\033[0m"; }

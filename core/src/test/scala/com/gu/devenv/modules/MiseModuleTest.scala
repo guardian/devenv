@@ -16,6 +16,9 @@ class MiseModuleTest
       val mountKey = "test-mount-key"
       val module   = mise(mountKey).success.value
 
+      module.contribution.onCreateCommands should have size 1
+      module.contribution.postCreateCommands should have size 1
+
       module.contribution.mounts should have size 1
       module.contribution.mounts.head match {
         case Mount.ExplicitMount(source, _, _) =>
