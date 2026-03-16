@@ -1,12 +1,13 @@
 package com.gu.devenv.modules
 
-import scala.io.Source
-import scala.util.{Failure, Success, Try, Using}
-import java.nio.charset.StandardCharsets.UTF_8
-import java.util.Base64
 import cats.implicits.*
 import com.gu.devenv.*
 import io.circe.Json
+
+import java.nio.charset.StandardCharsets.UTF_8
+import java.util.Base64
+import scala.io.Source
+import scala.util.{Failure, Success, Try, Using}
 
 object Modules {
   // all registered modules are here
