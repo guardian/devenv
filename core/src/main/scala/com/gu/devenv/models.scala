@@ -141,9 +141,9 @@ object Command {
     *
     * The script is expected to be located in the "/com/gu/devenv/modules" resource directory. It is
     * base64-encoded (standard RFC 4648, alphabet `[A-Za-z0-9+/=]`) at construction time, then
-    * decoded and executed in the container. Standard Base64 output contains no shell
-    * metacharacters (no single quotes, double quotes, dollar signs, backticks or backslashes),
-    * so embedding it inside a double-quoted shell string is safe against command injection.
+    * decoded and executed in the container. Standard Base64 output contains no shell metacharacters
+    * (no single quotes, double quotes, dollar signs, backticks or backslashes), so embedding it
+    * inside a double-quoted shell string is safe against command injection.
     *
     * The script content is minimally validated at construction time.
     *
