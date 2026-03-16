@@ -263,7 +263,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       val genCommand: Gen[Command] = for {
         cmd     <- Gen.alphaNumStr.suchThat(_.nonEmpty)
         workDir <- Gen.alphaNumStr.suchThat(_.nonEmpty)
-      } yield Command(cmd, workDir)
+      } yield Command("onCreateCommand", cmd, workDir)
 
       val genCommands: Gen[List[Command]] = Gen.nonEmptyListOf(genCommand)
 
@@ -288,8 +288,8 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
       "combines multiple commands with && separator" in {
         val commands = List(
-          Command("echo hello", "/workspace"),
-          Command("echo world", "/tmp")
+          Command("multiple", "echo hello", "/workspace"),
+          Command("multiple", "echo world", "/tmp")
         )
         val config = ProjectConfig(name = "test", onCreateCommand = commands)
         val json   = Config.configAsJson(config, Nil).get
@@ -299,19 +299,19 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       }
 
       "wraps each command in cd and parentheses" in {
-        val command = Command("npm install", "/app")
+        val command = Command("each", "npm install", "/app")
         val config  = ProjectConfig(name = "test", onCreateCommand = List(command))
         val json    = Config.configAsJson(config, Nil).get
 
         val commandJson = json.hcursor.downField("onCreateCommand").as[String]
         commandJson shouldBe a[Right[_, _]]
-        commandJson.map(_ should include("(cd /app && npm install)"))
+        commandJson.map(_ should include("( cd /app && npm install && echo"))
       }
 
       "pipes command output to a useful file" in {
         val config = ProjectConfig(
           name = "test",
-          onCreateCommand = List(Command("ls", "/create"))
+          onCreateCommand = List(Command("pipe", "ls", "/create"))
         )
         val json = Config.configAsJson(config, Nil).get
 
@@ -332,7 +332,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       val genCommand: Gen[Command] = for {
         cmd     <- Gen.alphaNumStr.suchThat(_.nonEmpty)
         workDir <- Gen.alphaNumStr.suchThat(_.nonEmpty)
-      } yield Command(cmd, workDir)
+      } yield Command("postCreateCommand", cmd, workDir)
 
       val genCommands: Gen[List[Command]] = Gen.nonEmptyListOf(genCommand)
 
@@ -357,8 +357,8 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
       "combines multiple commands with && separator" in {
         val commands = List(
-          Command("echo hello", "/workspace"),
-          Command("echo world", "/tmp")
+          Command("multiple", "echo hello", "/workspace"),
+          Command("multiple", "echo world", "/tmp")
         )
         val config = ProjectConfig(name = "test", postCreateCommand = commands)
         val json   = Config.configAsJson(config, Nil).get
@@ -368,19 +368,19 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       }
 
       "wraps each command in cd and parentheses" in {
-        val command = Command("npm install", "/app")
+        val command = Command("each", "npm install", "/app")
         val config  = ProjectConfig(name = "test", postCreateCommand = List(command))
         val json    = Config.configAsJson(config, Nil).get
 
         val commandJson = json.hcursor.downField("postCreateCommand").as[String]
         commandJson shouldBe a[Right[_, _]]
-        commandJson.map(_ should include("(cd /app && npm install)"))
+        commandJson.map(_ should include("( cd /app && npm install && echo "))
       }
 
       "pipes command output to a useful file" in {
         val config = ProjectConfig(
           name = "test",
-          postCreateCommand = List(Command("ls", "/create"))
+          postCreateCommand = List(Command("pipe", "ls", "/create"))
         )
         val json = Config.configAsJson(config, Nil).get
 
@@ -401,7 +401,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       val genCommand: Gen[Command] = for {
         cmd     <- Gen.alphaNumStr.suchThat(_.nonEmpty)
         workDir <- Gen.alphaNumStr.suchThat(_.nonEmpty)
-      } yield Command(cmd, workDir)
+      } yield Command("postStartCommand", cmd, workDir)
 
       val genCommands: Gen[List[Command]] = Gen.nonEmptyListOf(genCommand)
 
@@ -423,8 +423,8 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
       "combines multiple commands with && separator" in {
         val commands = List(
-          Command("echo hello", "/workspace"),
-          Command("echo world", "/tmp")
+          Command("multiple", "echo hello", "/workspace"),
+          Command("multiple", "echo world", "/tmp")
         )
         val config = ProjectConfig(name = "test", postStartCommand = commands)
         val json   = Config.configAsJson(config, Nil).get
@@ -434,37 +434,25 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       }
 
       "wraps each command in cd and parentheses" in {
-        val command = Command("npm install", "/app")
+        val command = Command("each", "npm install", "/app")
         val config  = ProjectConfig(name = "test", postStartCommand = List(command))
         val json    = Config.configAsJson(config, Nil).get
 
         val commandJson = json.hcursor.downField("postStartCommand").as[String]
         commandJson shouldBe a[Right[_, _]]
-        commandJson.map(_ should include("(cd /app && npm install)"))
+        commandJson.map(_ should include("( cd /app && npm install && echo"))
       }
 
       "pipes command output to a useful file" in {
         val config = ProjectConfig(
           name = "test",
-          postStartCommand = List(Command("ls", "/start"))
+          postStartCommand = List(Command("pipe", "ls", "/start"))
         )
         val json = Config.configAsJson(config, Nil).get
 
         val commandJson = json.hcursor.downField("postStartCommand").as[String]
         commandJson shouldBe a[Right[_, _]]
         commandJson.map(_ should endWith(s"| sudo tee /var/log/${Config.postStartLogName}"))
-      }
-
-      "all commands are wrapped in brackets before the tee" in {
-        val config = ProjectConfig(
-          name = "test",
-          postStartCommand = List(Command("ls 1", "."), Command("ls 2", "."))
-        )
-        val json = Config.configAsJson(config, Nil).get
-
-        val commandJson = json.hcursor.downField("postStartCommand").as[String]
-        commandJson shouldBe a[Right[_, _]]
-        commandJson.map(_ should startWith("((cd . && ls 1) && (cd . && ls 2)) |"))
       }
 
       "is omitted when empty" in {

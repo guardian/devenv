@@ -16,12 +16,8 @@ if [[ -z $COURSIER_DATA_DIR_ROOT ]]; then
     exit 1
 fi
 
-log "Setting up scala cache data."
-
 log "Ensuring correct ownership of the shared ivy data volume."
-sudo chown -R vscode:vscode $IVY_DATA_DIR_ROOT
+sudo chown -R vscode:vscode "$IVY_DATA_DIR_ROOT"
 
 log "Ensuring correct ownership of the shared coursier data volume."
-sudo chown -R vscode:vscode $COURSIER_DATA_DIR_ROOT
-
-ok "scala cache data complete."
+sudo chown -R vscode:vscode "$COURSIER_DATA_DIR_ROOT"
