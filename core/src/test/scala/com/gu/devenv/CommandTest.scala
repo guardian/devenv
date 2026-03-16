@@ -79,6 +79,22 @@ class CommandTest extends AnyFreeSpec with Matchers with TryValues {
       }
     }
 
+    "given a script name that does not end in .sh" - {
+      val result = Command.fromResourceScript("mise.bash")
+
+      "should fail" in {
+        result.isFailure shouldBe true
+      }
+
+      "should report that the script name must end in .sh" in {
+        result.failure.exception.getCause.getMessage should include(".sh")
+      }
+
+      "should include the offending script name in the error" in {
+        result.failure.exception.getMessage should include("mise.bash")
+      }
+    }
+
     "given a non-existent resource" - {
       val result = Command.fromResourceScript("does-not-exist.sh")
 
