@@ -16,6 +16,9 @@ class ScalaModuleTest
       val mountKey = "test-mount-key"
       val module   = scalaLang(mountKey).success.value
 
+      module.contribution.onCreateCommands should have size 1
+      module.contribution.postCreateCommands should have size 0
+
       module.contribution.mounts should have size 2
 
       module.contribution.mounts.map {

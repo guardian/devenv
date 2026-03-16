@@ -27,7 +27,7 @@ private[modules] def scalaLang(mountKey: String): Try[Module] =
           intellij = List("org.intellij.scala"),
           vscode = List("scala-lang.scala")
         ),
-        postCreateCommands = List(encodedOnCreateScript),
+        onCreateCommands = List(encodedOnCreateScript),
         // Sets the roots of the cache volumes so that they can be appropriately chown'd
         containerEnv = List(
           Env("IVY_DATA_DIR_ROOT", IVY_DATA_DIR_ROOT),
