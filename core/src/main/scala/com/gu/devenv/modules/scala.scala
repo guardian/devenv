@@ -20,7 +20,7 @@ private[modules] def scalaLang(mountKey: String): Try[Module] = {
   val coursierCacheLocation = s"$coursierCacheLocationRoot/coursier/v1"
   val ivy2CacheLocation     = s"$ivy2CacheLocationRoot/cache"
 
-  base64Encoded("scala.sh").map { encodedScript =>
+  Command.fromResourceScript("scala.sh").map { scalaCommand =>
     Module(
       name = "scala",
       summary = "Add IDE plugins and jar caching for Scala development",
@@ -30,12 +30,7 @@ private[modules] def scalaLang(mountKey: String): Try[Module] = {
           intellij = List("org.intellij.scala"),
           vscode = List("scala-lang.scala")
         ),
-        postCreateCommands = List(
-          Command(
-            cmd = s"echo '$encodedScript' | base64 -d | bash",
-            workingDirectory = "."
-          )
-        ),
+        postCreateCommands = List(scalaCommand),
         /* All mounts bring security trade-offs as the volume is shared between all containers using this module.  */
         mounts = List(
           /* This mount persists the coursier cache across container recreations. */
