@@ -14,7 +14,7 @@ class ScalaModuleTest
   "scala module" - {
     "should use the provided ModuleConfig to parameterise all the data mount's name" in {
       val mountKey = "test-mount-key"
-      val module   = scalaLang(mountKey)
+      val module   = scalaLang(mountKey).success.value
 
       module.contribution.mounts should have size 2
 
@@ -42,7 +42,7 @@ class ScalaModuleTest
       val moduleConfig = Modules.ModuleConfig("test-mount-key")
       val modules      = Modules.builtInModules(moduleConfig).success.value
 
-      modules should contain(scalaLang(moduleConfig.mountKey))
+      modules should contain(scalaLang(moduleConfig.mountKey).success.value)
     }
   }
 }
