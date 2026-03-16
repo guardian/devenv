@@ -233,7 +233,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       val genCommand: Gen[Command] = for {
         cmd     <- Gen.alphaNumStr.suchThat(_.nonEmpty)
         workDir <- Gen.alphaNumStr.suchThat(_.nonEmpty)
-      } yield Command(cmd, workDir)
+      } yield Command("onCreateCommands", cmd, workDir)
 
       val genCommands: Gen[List[Command]] = Gen.listOf(genCommand)
 
@@ -265,7 +265,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       val genCommand: Gen[Command] = for {
         cmd     <- Gen.alphaNumStr.suchThat(_.nonEmpty)
         workDir <- Gen.alphaNumStr.suchThat(_.nonEmpty)
-      } yield Command(cmd, workDir)
+      } yield Command("postCreateCommands", cmd, workDir)
 
       val genCommands: Gen[List[Command]] = Gen.listOf(genCommand)
 

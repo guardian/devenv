@@ -55,11 +55,11 @@ class ConfigTest
           )
         ),
         "postCreateCommand" as List(
-          Command("sbt update", "/workspaces/project/subdir"),
-          Command("sbt compile", "subdir")
+          Command("postCreateCommand", "sbt update", "/workspaces/project/subdir"),
+          Command("postCreateCommand", "sbt compile", "subdir")
         ),
         "postStartCommand" as List(
-          Command("echo 'Container started successfully'", ".")
+          Command("postStartCommand", "echo 'Container started successfully'", ".")
         ),
         "features" as Map(
           "ghcr.io/devcontainers/features/docker-in-docker:1" -> Json.obj()
@@ -143,8 +143,8 @@ class ConfigTest
       // Dotfiles commands should be prepended to postCreateCommand
       merged.postCreateCommand should have length 4
       merged.postCreateCommand.take(2) shouldBe List(
-        Command("git clone https://github.com/example/dotfiles.git ~", "."),
-        Command("install.sh", "~")
+        Command("clone", "git clone https://github.com/example/dotfiles.git ~", "."),
+        Command("dotfiles", "install.sh", "~")
       )
       merged.postCreateCommand.drop(2) shouldBe projectConfig.postCreateCommand
 
@@ -193,5 +193,24 @@ class ConfigTest
 
       merged shouldBe projectConfig
     }
+  }
+
+  "combineCommands" - {
+    "should wrap all commands in brackets before the tee" in {
+      val commandMaybe = Config.combineCommands(
+        List(Command("one", "ls 1", "."), Command("two", "ls 2", ".")),
+        "someLogFile"
+      )
+
+      val pattern1 =
+        "\\( echo .* Starting one.* && \\( cd . && ls 1 && echo .* Finished one.* \\) \\|\\| echo .* Errored! one.* \\)"
+      val pattern2 =
+        "\\( echo .* Starting two.* && \\( cd . && ls 2 && echo .* Finished two.* \\) \\|\\| echo .* Errored! two.* \\)"
+      val bothPatterns = s"\\( $pattern1  &&  $pattern2\\) \\| sudo tee.*"
+
+      val pattern = bothPatterns.r
+      commandMaybe.map(command => pattern.matches(command) shouldBe (true))
+    }
+
   }
 }

@@ -133,6 +133,7 @@ object Plugins {
 }
 
 case class Command(
+    logLine: String,
     cmd: String,
     workingDirectory: String
 )
@@ -193,6 +194,7 @@ object Command {
       // defence-in-depth measure even though bundled scripts set these flags
       // themselves.
       Command(
+        logLine = scriptName,
         cmd = s"""printf '%s' "$encoded" | base64 -d | bash -euo pipefail""",
         workingDirectory = workingDirectory
       )

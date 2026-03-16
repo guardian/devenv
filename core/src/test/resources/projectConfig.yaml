@@ -30,15 +30,19 @@ mounts:
     target: "/home/vscode/.sbt"
     type: "volume"
 onCreateCommand:
-  - cmd: "echo onCreateCommand"
+  - logLine: "onCreateCommand"
+    cmd: "echo onCreateCommand"
     workingDirectory: "/workspaces/project/subdir"
 postCreateCommand:
-  - cmd: "sbt update"
+  - logLine: "postCreateCommand"
+    cmd: "sbt update"
     workingDirectory: "/workspaces/project/subdir"
-  - cmd: "sbt compile"
+  - logLine: "postCreateCommand"
+    cmd: "sbt compile"
     workingDirectory: "subdir"
 postStartCommand:
-  - cmd: "echo 'Container started successfully'"
+  - logLine: "postStartCommand"
+    cmd: "echo 'Container started successfully'"
     workingDirectory: "."
 features:
   "ghcr.io/devcontainers/features/docker-in-docker:1": {}

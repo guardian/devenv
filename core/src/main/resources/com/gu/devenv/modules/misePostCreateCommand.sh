@@ -13,8 +13,6 @@ if [[ -z $MISE_DATA_DIR ]]; then
     exit 1
 fi
 
-log "Setting up mise."
-
 if test -f "$MISE_INSTALL_PATH"; then
   log "mise is already present at $MISE_INSTALL_PATH."
 else
@@ -39,5 +37,3 @@ mise install || warn "mise install failed. You may need to run mise install manu
 log "Final checks."
 export PATH="$MISE_DATA_DIR/shims:$PATH"
 mise doctor
-
-ok "mise setup complete at $MISE_INSTALL_PATH."

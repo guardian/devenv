@@ -210,17 +210,29 @@ object Config {
     }
   }
 
-  private def combineCommands(commands: List[Command], logFile: String): Option[String] =
+  private[devenv] def combineCommands(commands: List[Command], logFile: String): Option[String] =
     if (commands.isEmpty) None
     else
       Some(
-        "(" +
+        s"(" +
           commands
-            .map(command => s"(cd ${command.workingDirectory} && ${command.cmd})")
+            .map(command =>
+              s"""
+                 |(
+                 |echo "\\033[1;34m[setup] Starting ${command.logLine}\\033[0m" &&
+                 |(
+                 |cd ${command.workingDirectory} &&
+                 |${command.cmd} &&
+                 |echo "\\033[1;32m[setup] Finished ${command.logLine}\\033[0m"
+                 |) ||
+                 |echo "\\033[1;31m[setup] Errored! ${command.logLine}\\033[0m"
+                 |)
+                 |""".stripMargin)
             .mkString(" && ")
+            .split("\n")
+            .mkString(" ")
           + s") | sudo tee $logFile"
       )
-
   private def envListToJson(envList: List[Env]): Json =
     Json.obj(
       envList.map(env => env.name -> Json.fromString(env.value)): _*
@@ -246,10 +258,12 @@ object Config {
 
   private def applyDotfiles(dotfiles: Dotfiles): List[Command] = {
     val cloneCommand = Command(
+      "clone",
       s"git clone ${dotfiles.repository} ${dotfiles.targetPath}",
       "."
     )
     val installCommand = Command(
+      "dotfiles",
       dotfiles.installCommand,
       dotfiles.targetPath
     )
