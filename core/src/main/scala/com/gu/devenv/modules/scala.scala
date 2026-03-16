@@ -3,11 +3,13 @@ package com.gu.devenv.modules
 import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
 import com.gu.devenv.{Command, Mount, Plugins}
 
+import scala.util.Try
+
 /** Provides IDE plugin support for Scala development.
   *
   * This module adds the Scala language plugin for both VS Code and IntelliJ IDEA.
   */
-private[modules] def scalaLang(mountKey: String) = {
+private[modules] def scalaLang(mountKey: String): Try[Module] = {
   // These are the locations which needs chown'ing (directories are created up to the mount point, but owned by root.
   val coursierCacheLocationRoot = "/home/vscode/.cache"
   val ivy2CacheLocationRoot     = "/home/vscode/.ivy2"
@@ -18,44 +20,33 @@ private[modules] def scalaLang(mountKey: String) = {
   val coursierCacheLocation = s"$coursierCacheLocationRoot/coursier/v1"
   val ivy2CacheLocation     = s"$ivy2CacheLocationRoot/cache"
 
-  Module(
-    name = "scala",
-    summary = "Add IDE plugins and jar caching for Scala development",
-    enabledByDefault = false,
-    contribution = ModuleContribution(
-      plugins = Plugins(
-        intellij = List("org.intellij.scala"),
-        vscode = List("scala-lang.scala")
-      ),
-      postCreateCommands = List(
-        Command(
-          cmd = s"""bash -c '
-            |set -e &&
-            |echo -e "\\033[1;34m[setup] Setting up .ivy2 ...\\033[0m" &&
-            |sudo chown -R vscode:vscode $ivy2CacheLocationRoot &&
-            |
-            |echo -e "\\033[1;34m[setup] Setting up coursier ...\\033[0m" &&
-            |sudo chown -R vscode:vscode $coursierCacheLocationRoot
-            |
-            |'""".stripMargin.split('\n').mkString(" "),
-          workingDirectory = "."
-        )
-      ),
-      /* All mounts bring security trade-offs as the volume is shared between all containers using this module.  */
-      mounts = List(
-        /* This mount persists the coursier cache across container recreations. */
-        Mount.ExplicitMount(
-          source = s"$mountKey-coursier-data-volume",
-          target = coursierCacheLocation,
-          `type` = "volume"
+  Command.fromResourceScript("scala.sh").map { scalaCommand =>
+    Module(
+      name = "scala",
+      summary = "Add IDE plugins and jar caching for Scala development",
+      enabledByDefault = false,
+      contribution = ModuleContribution(
+        plugins = Plugins(
+          intellij = List("org.intellij.scala"),
+          vscode = List("scala-lang.scala")
         ),
-        /* This mount persists the ivy2 cache across container recreations. */
-        Mount.ExplicitMount(
-          source = s"$mountKey-ivy-data-volume",
-          target = ivy2CacheLocation,
-          `type` = "volume"
+        postCreateCommands = List(scalaCommand),
+        /* All mounts bring security trade-offs as the volume is shared between all containers using this module.  */
+        mounts = List(
+          /* This mount persists the coursier cache across container recreations. */
+          Mount.ExplicitMount(
+            source = s"$mountKey-coursier-data-volume",
+            target = coursierCacheLocation,
+            `type` = "volume"
+          ),
+          /* This mount persists the ivy2 cache across container recreations. */
+          Mount.ExplicitMount(
+            source = s"$mountKey-ivy-data-volume",
+            target = ivy2CacheLocation,
+            `type` = "volume"
+          )
         )
       )
     )
-  )
+  }
 }
