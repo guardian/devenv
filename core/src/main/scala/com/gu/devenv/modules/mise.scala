@@ -25,8 +25,8 @@ private[modules] def mise(mountKey: String): Try[Module] =
     summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
     enabledByDefault = true,
     contribution = ModuleContribution(
-        onCreateCommands = List(encodedOnCreateScript),
-        postCreateCommands = List(encodedPostCreateScript),
+      onCreateCommands = List(encodedOnCreateScript),
+      postCreateCommands = List(encodedPostCreateScript),
       // Adds mise shims to the PATH so that installed tools are available in the remote environment
       remoteEnv = List(
         Env("PATH", "${containerEnv:PATH}:/mnt/mise-data/shims")
