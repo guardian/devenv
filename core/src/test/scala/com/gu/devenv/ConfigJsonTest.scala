@@ -199,7 +199,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         value <- Gen.alphaNumStr
       } yield Env(name, value)
 
-      val genEnvList: Gen[List[Env]] = Gen.nonEmptyListOf(genEnv).map(_.distinctBy(_._1))
+      val genEnvList: Gen[List[Env]] = Gen.nonEmptyListOf(genEnv).map(_.distinctBy(_.name))
 
       "appears in JSON containerEnv object" in {
         forAll(genEnvList) { envVars =>
