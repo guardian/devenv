@@ -55,11 +55,11 @@ class ConfigTest
           )
         ),
         "postCreateCommand" as List(
-          Command("postCreateCommand", "sbt update", "/workspaces/project/subdir"),
-          Command("postCreateCommand", "sbt compile", "subdir")
+          Command("sbt update", "/workspaces/project/subdir", Some("postCreateCommand1")),
+          Command("sbt compile", "subdir", Some("postCreateCommand2"))
         ),
         "postStartCommand" as List(
-          Command("postStartCommand", "echo 'Container started successfully'", ".")
+          Command("echo 'Container started successfully'", ".", Some("postStartCommand"))
         ),
         "features" as Map(
           "ghcr.io/devcontainers/features/docker-in-docker:1" -> Json.obj()
@@ -143,8 +143,8 @@ class ConfigTest
       // Dotfiles commands should be prepended to postCreateCommand
       merged.postCreateCommand should have length 4
       merged.postCreateCommand.take(2) shouldBe List(
-        Command("clone", "git clone https://github.com/example/dotfiles.git ~", "."),
-        Command("dotfiles", "install.sh", "~")
+        Command("git clone https://github.com/example/dotfiles.git ~", ".", Some("clone")),
+        Command("install.sh", "~", Some("dotfiles"))
       )
       merged.postCreateCommand.drop(2) shouldBe projectConfig.postCreateCommand
 
@@ -198,7 +198,7 @@ class ConfigTest
   "combineCommands" - {
     "should wrap all commands in brackets before the tee" in {
       val commandMaybe = Config.combineCommands(
-        List(Command("one", "ls 1", "."), Command("two", "ls 2", ".")),
+        List(Command("ls 1", ".", Some("one")), Command("ls 2", ".", Some("two"))),
         "someLogFile"
       )
 
@@ -209,7 +209,7 @@ class ConfigTest
       val bothPatterns = s"\\($pattern1 && $pattern2\\) \\| sudo tee.*"
 
       val pattern = bothPatterns.r
-      commandMaybe.map(command => pattern.matches(command) shouldBe (true))
+      commandMaybe.map(command => pattern.matches(command) shouldBe true)
     }
   }
 }

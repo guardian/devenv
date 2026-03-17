@@ -242,14 +242,14 @@ object Config {
 
   private def applyDotfiles(dotfiles: Dotfiles): List[Command] = {
     val cloneCommand = Command(
-      "clone",
       s"git clone ${dotfiles.repository} ${dotfiles.targetPath}",
-      "."
+      ".",
+      Some("clone")
     )
     val installCommand = Command(
-      "dotfiles",
       dotfiles.installCommand,
-      dotfiles.targetPath
+      dotfiles.targetPath,
+      Some("dotfiles")
     )
     List(cloneCommand, installCommand)
   }

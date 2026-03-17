@@ -34,10 +34,10 @@ onCreateCommand:
     cmd: "echo onCreateCommand"
     workingDirectory: "/workspaces/project/subdir"
 postCreateCommand:
-  - logLine: "postCreateCommand"
+  - logLine: "postCreateCommand1"
     cmd: "sbt update"
     workingDirectory: "/workspaces/project/subdir"
-  - logLine: "postCreateCommand"
+  - logLine: "postCreateCommand2"
     cmd: "sbt compile"
     workingDirectory: "subdir"
 postStartCommand:

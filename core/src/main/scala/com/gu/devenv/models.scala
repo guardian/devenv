@@ -133,9 +133,9 @@ object Plugins {
 }
 
 case class Command(
-    logLine: String,
     cmd: String,
-    workingDirectory: String
+    workingDirectory: String,
+    logLine: Option[String] = None
 )
 object Command {
 
@@ -192,9 +192,9 @@ object Command {
       val encoded = Base64.getEncoder.encodeToString(valid.getBytes(UTF_8))
       // bash -euo pipefail is applied at invocation - see README in main/resources/com/gu/devenv/modules
       Command(
-        logLine = scriptName,
         cmd = s"""printf '%s' "$encoded" | base64 -d | bash -euo pipefail""",
-        workingDirectory = workingDirectory
+        workingDirectory = workingDirectory,
+        logLine = Some(scriptName)
       )
     }).recoverWith { case err =>
       Failure(new RuntimeException(s"Could not load resource $resource", err))
@@ -206,7 +206,7 @@ object Command {
   private val red   = "\\033[1;31m[setup]"
   private val reset = "\\033[0m"
   def renderCommandWithLogging(command: Command): String = {
-    val l = command.logLine
+    val l = command.logLine.getOrElse("unknown")
     val c = renderCommand(command)
     s"""(echo "$blue Starting $l$reset" && ($c && echo "$green Finished $l$reset") || echo "$red Errored! $l$reset")"""
   }
