@@ -19,12 +19,17 @@ printf <encoded> | base64 -d | bash
 
 ## Invocation
 
-The bash invocation uses `-euo pipefail` so it will terminate with a non-zero return code on any error.  
+The bash invocation uses `-euo pipefail` so it will terminate with a non-zero return code on any error.
 
-It is possible to use bash logical constructs like `(a && b) || c` without triggering errors allowing 
+It is possible to use bash logical constructs like `(a && b) || c` without triggering errors allowing
 success if either `a` or `b` fail but `c` does not.
 
 ## Logging
 
 Logs are written to appropriately named files in /var/log/ which can be tailed through the ide or docker exec.
 
+## Failure
+
+A non-zero return code from any of onCreateCommand, postCreateCommand, postStartCommand does not stop the container
+or the IDE. You may, at best, get an error popup. For this reason, the error logging has been coloured red to
+maximise its visibility, but this may not be sufficient.
