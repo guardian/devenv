@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Sets up JVM-related caches inside the devcontainer after creation.
-set -euo pipefail
 
 log()  { echo -e "\033[1;34m[setup] $*\033[0m"; }
 warn() { echo -e "\033[1;33m[setup] $*\033[0m"; }
