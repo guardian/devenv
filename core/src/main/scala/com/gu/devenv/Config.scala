@@ -212,27 +212,13 @@ object Config {
 
   private[devenv] def combineCommands(commands: List[Command], logFile: String): Option[String] =
     if (commands.isEmpty) None
-    else
-      Some(
-        s"(" +
-          commands
-            .map(command =>
-              s"""
-                 |(
-                 |echo "\\033[1;34m[setup] Starting ${command.logLine}\\033[0m" &&
-                 |(
-                 |cd ${command.workingDirectory} &&
-                 |${command.cmd} &&
-                 |echo "\\033[1;32m[setup] Finished ${command.logLine}\\033[0m"
-                 |) ||
-                 |echo "\\033[1;31m[setup] Errored! ${command.logLine}\\033[0m"
-                 |)
-                 |""".stripMargin)
-            .mkString(" && ")
-            .split("\n")
-            .mkString(" ")
-          + s") | sudo tee $logFile"
-      )
+    else Some(s"(${renderCommands(commands)}) | sudo tee $logFile")
+
+  private def renderCommands(commands: List[Command]): String =
+    commands
+      .map(Command.renderCommandWithLogging)
+      .mkString(" && ")
+
   private def envListToJson(envList: List[Env]): Json =
     Json.obj(
       envList.map(env => env.name -> Json.fromString(env.value)): _*
