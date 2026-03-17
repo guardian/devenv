@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Sets up tooling-related caching inside the devcontainer after creation.
-set -euo pipefail
 
 error() { echo -e "\033[1;31m[setup] $*\033[0m"; }  # red
 ok()    { echo -e "\033[1;32m[setup] $*\033[0m"; }  # green

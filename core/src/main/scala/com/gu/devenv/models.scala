@@ -190,9 +190,7 @@ object Command {
       valid   <- validateContent(content)
     } yield {
       val encoded = Base64.getEncoder.encodeToString(valid.getBytes(UTF_8))
-      // bash -euo pipefail is applied at invocation level as an additional
-      // defence-in-depth measure even though bundled scripts set these flags
-      // themselves.
+      // bash -euo pipefail is applied at invocation - see README in main/resources/com/gu/devenv/modules
       Command(
         logLine = scriptName,
         cmd = s"""printf '%s' "$encoded" | base64 -d | bash -euo pipefail""",
