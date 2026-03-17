@@ -200,6 +200,25 @@ object Command {
       Failure(new RuntimeException(s"Could not load resource $resource", err))
     }
   }
+
+  def renderCommandWithLogging(command: Command): String =
+    s"""
+       |(
+       |echo "\\033[1;34m[setup] Starting ${command.logLine}\\033[0m" &&
+       |(
+       |${renderCommand(command)} &&
+       |echo "\\033[1;32m[setup] Finished ${command.logLine}\\033[0m"
+       |) ||
+       |echo "\\033[1;31m[setup] Errored! ${command.logLine}\\033[0m"
+       |)
+       |""".stripMargin.replace("\n", " ").trim
+
+  def renderCommand(command: Command): String =
+    s"""
+       |cd ${command.workingDirectory} &&
+       |${command.cmd}
+       |""".stripMargin.replace("\n", " ").trim
+
 }
 
 enum Mount {

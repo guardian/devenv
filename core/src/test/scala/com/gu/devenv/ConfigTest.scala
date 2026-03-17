@@ -211,6 +211,5 @@ class ConfigTest
       val pattern = bothPatterns.r
       commandMaybe.map(command => pattern.matches(command) shouldBe (true))
     }
-
   }
 }
