@@ -209,7 +209,7 @@ class ConfigTest
       val bothPatterns = s"\\($pattern1 && $pattern2\\) \\| sudo tee.*"
 
       val pattern = bothPatterns.r
-      commandMaybe.isDefined shouldBe(true)
+      commandMaybe.isDefined shouldBe (true)
       commandMaybe.map(command => pattern.matches(command) shouldBe true)
     }
   }
