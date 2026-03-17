@@ -37,6 +37,9 @@ jobs:
         gh release download --repo guardian/devenv --pattern "devenv-*-${OS}-${ARCH}" --output /usr/local/bin/devenv
         chmod +x /usr/local/bin/devenv
 
+        # debug
+        devenv --version
+
         # check config files
         devenv check
 
