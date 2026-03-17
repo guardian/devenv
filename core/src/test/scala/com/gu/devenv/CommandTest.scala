@@ -119,7 +119,7 @@ class CommandTest extends AnyFreeSpec with Matchers with TryValues {
   "renderCommandWithLogging" - {
     "should render the command in brackets with logging" in {
       val commandRendered = Command.renderCommandWithLogging(Command("one", "ls 1", "."))
-      val pattern = "\\( echo .* Starting one.* && \\( cd . && ls 1 && echo .* Finished one.* \\) \\|\\| echo .* Errored! one.* \\)".r
+      val pattern = "\\(echo .* Starting one.* && \\(cd . && ls 1 && echo .* Finished one.*\\) \\|\\| echo .* Errored! one.*\\)".r
       pattern.matches(commandRendered) shouldBe (true)
     }
   }
