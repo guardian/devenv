@@ -212,12 +212,10 @@ object Config {
 
   private[devenv] def combineCommands(commands: List[Command], logFile: String): Option[String] =
     if (commands.isEmpty) None
-    else Some(s"(${renderCommands(commands)}) | sudo tee $logFile")
-
-  private def renderCommands(commands: List[Command]): String =
-    commands
-      .map(Command.renderCommandWithLogging)
-      .mkString(" && ")
+    else {
+      val renderedCommands = commands.map(Command.renderCommandWithLogging).mkString(" && ")
+      Some(s"($renderedCommands) | sudo tee $logFile")
+    }
 
   private def envListToJson(envList: List[Env]): Json =
     Json.obj(
