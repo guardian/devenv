@@ -4,7 +4,7 @@
 error() { echo -e "\033[1;31m[setup] $*\033[0m"; }  # red
 ok()    { echo -e "\033[1;32m[setup] $*\033[0m"; }  # green
 warn()  { echo -e "\033[1;33m[setup] $*\033[0m"; }  # gold
-log()   { echo -e "\033[1;36m[setup] $*\033[0m"; }  # blue
+log()   { echo -e "\033[1;36m[setup] $*\033[0m"; }  # cyan
 
 if [[ -z $IVY_DATA_DIR_ROOT ]]; then
     warn "IVY_DATA_DIR_ROOT not set"
