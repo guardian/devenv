@@ -4,8 +4,8 @@ import org.scalatest.TryValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
-import java.util.Base64
 import java.nio.charset.StandardCharsets.UTF_8
+import java.util.Base64
 
 class CommandTest extends AnyFreeSpec with Matchers with TryValues {
 
@@ -111,7 +111,7 @@ class CommandTest extends AnyFreeSpec with Matchers with TryValues {
   "renderCommand" - {
     "should render the command" in {
       val commandRendered = Command.renderCommand(Command("one", "ls 1", "."))
-      val pattern = "cd . && ls 1".r
+      val pattern         = "cd . && ls 1".r
       pattern.matches(commandRendered) shouldBe (true)
     }
   }
@@ -119,7 +119,8 @@ class CommandTest extends AnyFreeSpec with Matchers with TryValues {
   "renderCommandWithLogging" - {
     "should render the command in brackets with logging" in {
       val commandRendered = Command.renderCommandWithLogging(Command("one", "ls 1", "."))
-      val pattern = "\\(echo .* Starting one.* && \\(cd . && ls 1 && echo .* Finished one.*\\) \\|\\| echo .* Errored! one.*\\)".r
+      val pattern =
+        "\\(echo .* Starting one.* && \\(cd . && ls 1 && echo .* Finished one.*\\) \\|\\| echo .* Errored! one.*\\)".r
       pattern.matches(commandRendered) shouldBe (true)
     }
   }
