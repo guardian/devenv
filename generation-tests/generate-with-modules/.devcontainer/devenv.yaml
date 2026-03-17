@@ -17,5 +17,6 @@ plugins:
     - com.intellij.plugins.markdown  # Additional plugin beyond module defaults
 
 postCreateCommand:
-  - cmd: "echo 'Container created'"
+  - logLine: "gen-test"
+    cmd: "echo 'Container created'"
     workingDirectory: "/workspaces/test"

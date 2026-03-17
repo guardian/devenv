@@ -145,9 +145,10 @@ cp -r "$SCRIPT_DIR/generate-with-modules/.devcontainer" "$TEMP_DIR/"
 cd "$TEMP_DIR"
 
 info "Running: devenv generate"
-if "$BINARY" generate > /dev/null 2>&1; then
+if "$BINARY" generate > generate.log 2>&1; then
     pass "Generate command succeeded"
 else
+    cat generate.log
     fail "Generate command failed" "Exit code: $?"
 fi
 
