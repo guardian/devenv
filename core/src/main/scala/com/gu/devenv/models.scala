@@ -206,9 +206,12 @@ object Command {
   private val red   = "\\033[1;31m[setup]"
   private val reset = "\\033[0m"
   def renderCommandWithLogging(command: Command): String = {
-    val l = command.logLine.getOrElse("unknown")
+    val l = command.logLine
+      .map(_.replaceAll("[^a-zA-Z0-9._]", "")) // sanitize
+      .filter(_.nonEmpty)
+      .getOrElse("unknown")
     val c = renderCommand(command)
-    s"""(echo "$blue Starting $l$reset" && ($c && echo "$green Finished $l$reset") || echo "$red Errored! $l$reset")"""
+    s"""(echo -e "$blue Starting $l$reset" && ($c && echo -e "$green Finished $l$reset") || echo -e "$red Errored! $l$reset")"""
   }
 
   def renderCommand(command: Command): String = s"cd ${command.workingDirectory} && ${command.cmd}"
