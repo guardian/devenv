@@ -3,10 +3,10 @@
 #
 # Also logs useful info (including the output from `mise doctor`) to the terminal to help with debugging.
 
-error() { echo -e "\033[1;31m[setup] $*\033[0m"; }  # red
-ok()    { echo -e "\033[1;32m[setup] $*\033[0m"; }  # green
-warn()  { echo -e "\033[1;33m[setup] $*\033[0m"; }  # gold
-log()   { echo -e "\033[1;36m[setup] $*\033[0m"; }  # cyan
+error() { echo -e "\033[1;31m[...] $*\033[0m"; }  # red
+ok()    { echo -e "\033[1;32m[...] $*\033[0m"; }  # green
+warn()  { echo -e "\033[1;33m[...] $*\033[0m"; }  # gold
+log()   { echo -e "\033[1;36m[...] $*\033[0m"; }  # cyan
 
 if [[ -z $MISE_DATA_DIR ]]; then
     warn "MISE_DATA_DIR not set"
