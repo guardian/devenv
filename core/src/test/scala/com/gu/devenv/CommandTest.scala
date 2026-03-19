@@ -120,28 +120,28 @@ class CommandTest extends AnyFreeSpec with Matchers with TryValues {
     "should render the command in brackets with logging" in {
       val commandRendered = Command.renderCommandWithLogging(Command("ls 1", ".", Some("one")))
       val pattern =
-        "\\(echo -e .* Starting one.* && \\(cd . && ls 1 && echo -e .* Finished one.*\\) \\|\\| echo -e .* Errored! one.*\\)".r
+        "\\(printf .* Starting one.* && \\(cd . && ls 1 && printf .* Finished one.*\\) \\|\\| printf .* Errored! one.*\\)".r
       pattern.matches(commandRendered) shouldBe (true)
     }
 
     "should sanitise the log label in logging" in {
       val commandRendered = Command.renderCommandWithLogging(Command("ls 1", ".", Some("$`()")))
       val pattern =
-        "\\(echo -e .* Starting unknown.* && \\(cd . && ls 1 && echo -e .* Finished unknown.*\\) \\|\\| echo -e .* Errored! unknown.*\\)".r
+        "\\(printf .* Starting unknown.* && \\(cd . && ls 1 && printf .* Finished unknown.*\\) \\|\\| printf .* Errored! unknown.*\\)".r
       pattern.matches(commandRendered) shouldBe (true)
     }
 
     "should sanitise the log label (even if it becomes empty) in logging" in {
       val commandRendered = Command.renderCommandWithLogging(Command("ls 1", ".", Some("one$`()")))
       val pattern =
-        "\\(echo -e .* Starting one.* && \\(cd . && ls 1 && echo -e .* Finished one.*\\) \\|\\| echo -e .* Errored! one.*\\)".r
+        "\\(printf .* Starting one.* && \\(cd . && ls 1 && printf .* Finished one.*\\) \\|\\| printf .* Errored! one.*\\)".r
       pattern.matches(commandRendered) shouldBe (true)
     }
 
     "should handle missing log label in logging" in {
       val commandRendered = Command.renderCommandWithLogging(Command("ls 1", "."))
       val pattern =
-        "\\(echo -e .* Starting unknown.* && \\(cd . && ls 1 && echo -e .* Finished unknown.*\\) \\|\\| echo -e .* Errored! unknown.*\\)".r
+        "\\(printf .* Starting unknown.* && \\(cd . && ls 1 && printf .* Finished unknown.*\\) \\|\\| printf .* Errored! unknown.*\\)".r
       pattern.matches(commandRendered) shouldBe (true)
     }
   }

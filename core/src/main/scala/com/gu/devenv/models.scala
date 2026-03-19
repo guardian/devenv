@@ -211,7 +211,7 @@ object Command {
       .filter(_.nonEmpty)
       .getOrElse("unknown")
     val c = renderCommand(command)
-    s"""(echo -e "$blue Starting $l$reset" && ($c && echo -e "$green Finished $l$reset") || echo -e "$red Errored! $l$reset")"""
+    s"""(printf "$blue Starting $l$reset\\n" && ($c && printf "$green Finished $l$reset\\n") || printf "$red Errored! $l$reset\\n")"""
   }
 
   def renderCommand(command: Command): String = s"cd ${command.workingDirectory} && ${command.cmd}"
