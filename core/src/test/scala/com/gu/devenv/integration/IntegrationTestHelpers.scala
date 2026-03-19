@@ -36,7 +36,6 @@ object IntegrationTestHelpers {
 
   val basicProjectConfig: String =
     """|name: "My Test Project"
-       |image: "mcr.microsoft.com/devcontainers/base:ubuntu"
        |modules: []
        |""".stripMargin
 
@@ -78,7 +77,6 @@ object IntegrationTestHelpers {
 
   val complexProjectConfig: String =
     """|name: "Complex Project"
-       |image: "mcr.microsoft.com/devcontainers/base:ubuntu"
        |modules:
        |  - mise
        |  - docker-in-docker

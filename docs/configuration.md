@@ -21,7 +21,6 @@ The project config (`.devcontainer/devenv.yaml`) supports the following fields:
 | Field                 | Description                                                                                     | Default                                       |
 |-----------------------|-------------------------------------------------------------------------------------------------|-----------------------------------------------|
 | `name`                | Project name, used as the devcontainer name (required)                                          | -                                             |
-| `image`               | Base Docker image                                                                               | `mcr.microsoft.com/devcontainers/base:ubuntu` |
 | `modules`             | List of module names to enable (see Modules section)                                            | `[]`                                          |
 | `forwardPorts`        | Port forwarding config, either as integer (maps same port) or `"hostPort:containerPort"` string | `[]`                                          |
 | `remoteEnv`           | Environment variables set in the remote/container environment                                   | `[]`                                          |
@@ -31,7 +30,6 @@ The project config (`.devcontainer/devenv.yaml`) supports the following fields:
 | `postCreateCommand`   | Commands to run once after container creation                                                   | `[]`                                          |
 | `postStartCommand`    | Commands to run each time the container starts                                                  | `[]`                                          |
 | `features`            | Dev Container features to enable (as key-value pairs)                                           | `{}`                                          |
-| `remoteUser`          | User account to use in the container                                                            | `vscode`                                      |
 | `updateRemoteUserUID` | Whether to update remote user's UID to match host                                               | `true`                                        |
 | `capAdd`              | Linux capabilities to add to the container (use with caution)                                   | `[]`                                          |
 | `securityOpt`         | Security options for the container (use with caution)                                           | `[]`                                          |
@@ -41,7 +39,6 @@ The project config (`.devcontainer/devenv.yaml`) supports the following fields:
 
 ```yaml
 name: my-project
-image: mcr.microsoft.com/devcontainers/base:ubuntu
 modules:
   - mise
 forwardPorts:

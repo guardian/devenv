@@ -15,6 +15,25 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
   */
 class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
   "Config.configAsJson" - {
+    "fixed fields" - {
+      "Image appears in JSON image field" in {
+        forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { name =>
+          val config = ProjectConfig(name = name)
+          val json   = Config.configAsJson(config, Nil).get
+
+          json.hcursor.downField("image").as[String] shouldBe Right(Config.fixedImage)
+        }
+      }
+      "Remote User appears in JSON remoteUser field" in {
+        forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { name =>
+          val config = ProjectConfig(name = name)
+          val json   = Config.configAsJson(config, Nil).get
+
+          json.hcursor.downField("remoteUser").as[String] shouldBe Right(Config.fixedRemoteUser)
+        }
+      }
+    }
+
     "base fields" - {
       "name appears in JSON name field" in {
         forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { name =>
@@ -22,15 +41,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
           val json   = Config.configAsJson(config, Nil).get
 
           json.hcursor.downField("name").as[String] shouldBe Right(name)
-        }
-      }
-
-      "image appears in JSON image field" in {
-        forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { image =>
-          val config = ProjectConfig(name = "test", image = image)
-          val json   = Config.configAsJson(config, Nil).get
-
-          json.hcursor.downField("image").as[String] shouldBe Right(image)
         }
       }
     }

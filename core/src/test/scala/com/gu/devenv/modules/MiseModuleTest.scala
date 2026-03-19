@@ -22,7 +22,7 @@ class MiseModuleTest
       module.contribution.mounts should have size 1
       module.contribution.mounts.head match {
         case Mount.ExplicitMount(source, _, _) =>
-          source shouldBe s"$mountKey-mise-data-volume"
+          source shouldBe s"$mountKey-mise-cache-volume"
         case Mount.ShortMount(mount) =>
           fail(
             s"Expected an ExplicitMount, but got ShortMount($mount). The mise module should use an ExplicitMount for clarity."
