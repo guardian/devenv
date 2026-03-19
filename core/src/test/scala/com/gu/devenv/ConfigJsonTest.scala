@@ -305,7 +305,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
         val commandJson = json.hcursor.downField("onCreateCommand").as[String]
         commandJson shouldBe a[Right[_, _]]
-        commandJson.map(_ should include("(cd /app && npm install && echo"))
+        commandJson.map(_ should include("(cd /app && npm install && printf"))
       }
 
       "pipes command output to a useful file" in {
@@ -374,7 +374,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
         val commandJson = json.hcursor.downField("postCreateCommand").as[String]
         commandJson shouldBe a[Right[_, _]]
-        commandJson.map(_ should include("(cd /app && npm install && echo"))
+        commandJson.map(_ should include("(cd /app && npm install && printf"))
       }
 
       "pipes command output to a useful file" in {
@@ -440,7 +440,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
         val commandJson = json.hcursor.downField("postStartCommand").as[String]
         commandJson shouldBe a[Right[_, _]]
-        commandJson.map(_ should include("(cd /app && npm install && echo"))
+        commandJson.map(_ should include("(cd /app && npm install && printf"))
       }
 
       "pipes command output to a useful file" in {
