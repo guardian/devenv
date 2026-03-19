@@ -203,9 +203,9 @@ class ConfigTest
       )
 
       val pattern1 =
-        "\\(echo .* Starting one.* && \\(cd . && ls 1 && echo .* Finished one.*\\) \\|\\| echo .* Errored! one.*\\)"
+        "\\(printf .* Starting one.* && \\(cd . && ls 1 && printf .* Finished one.*\\) \\|\\| printf .* Errored! one.*\\)"
       val pattern2 =
-        "\\(echo .* Starting two.* && \\(cd . && ls 2 && echo .* Finished two.*\\) \\|\\| echo .* Errored! two.*\\)"
+        "\\(printf .* Starting two.* && \\(cd . && ls 2 && printf .* Finished two.*\\) \\|\\| printf .* Errored! two.*\\)"
       val bothPatterns = s"\\($pattern1 && $pattern2\\) \\| sudo tee.*"
 
       val pattern = bothPatterns.r
