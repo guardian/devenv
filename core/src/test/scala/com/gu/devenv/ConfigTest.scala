@@ -29,7 +29,6 @@ class ConfigTest
 
       projectConfig should have(
         "name" as "Scala SBT Development Container",
-        "image" as "mcr.microsoft.com/devcontainers/base:ubuntu",
         "forwardPorts" as List(
           ForwardPort.SamePort(8080),
           ForwardPort.DifferentPorts(8000, 9000)
@@ -64,7 +63,6 @@ class ConfigTest
         "features" as Map(
           "ghcr.io/devcontainers/features/docker-in-docker:1" -> Json.obj()
         ),
-        "remoteUser" as "vscode",
         "updateRemoteUserUID" as true
       )
     }
@@ -151,14 +149,12 @@ class ConfigTest
       // Other fields should remain unchanged from project config
       merged should have(
         "name" as projectConfig.name,
-        "image" as projectConfig.image,
         "forwardPorts" as projectConfig.forwardPorts,
         "remoteEnv" as projectConfig.remoteEnv,
         "containerEnv" as projectConfig.containerEnv,
         "mounts" as projectConfig.mounts,
         "postStartCommand" as projectConfig.postStartCommand,
         "features" as projectConfig.features,
-        "remoteUser" as projectConfig.remoteUser,
         "updateRemoteUserUID" as projectConfig.updateRemoteUserUID,
         // Note this is a list inferred from the "small" container size configuration item in the yaml
         "runArgs" as Config.smallContainerRunArgs
@@ -206,7 +202,7 @@ class ConfigTest
         "\\(printf .* Starting one.* && \\(cd . && ls 1 && printf .* Finished one.*\\) \\|\\| printf .* Errored! one.*\\)"
       val pattern2 =
         "\\(printf .* Starting two.* && \\(cd . && ls 2 && printf .* Finished two.*\\) \\|\\| printf .* Errored! two.*\\)"
-      val bothPatterns = s"\\($pattern1 && $pattern2\\) \\| sudo tee.*"
+      val bothPatterns = s"\\($pattern1 && $pattern2\\) 2>&1 \\| sudo tee.*"
 
       val pattern = bothPatterns.r
       commandMaybe.isDefined shouldBe (true)

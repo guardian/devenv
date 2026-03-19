@@ -135,9 +135,6 @@ object Filesystem {
         |modules:
         |$stubModules
         |
-        |# Optional: Container image to use (defaults to latest ubuntu LTS)
-        |# image: "mcr.microsoft.com/devcontainers/base:ubuntu"
-        |
         |# Optional: Ports to forward
         |# forwardPorts:
         |#   - 8080  # same port on host and container

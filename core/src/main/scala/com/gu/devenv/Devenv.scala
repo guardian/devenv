@@ -2,12 +2,12 @@ package com.gu.devenv
 
 import cats.*
 import com.gu.devenv.Filesystem.PLACEHOLDER_PROJECT_NAME
+import com.gu.devenv.Utils.*
+import com.gu.devenv.modules.Modules.Module
 
 import java.nio.file.{NoSuchFileException, Path}
-import scala.util.Try
 import scala.language.implicitConversions
-import Utils.*
-import com.gu.devenv.modules.Modules.Module
+import scala.util.Try
 
 object Devenv {
 

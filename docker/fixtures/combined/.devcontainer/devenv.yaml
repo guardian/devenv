@@ -3,6 +3,3 @@ name: "combined-modules-test"
 modules:
   - mise
   - docker-in-docker
-
-image: "mcr.microsoft.com/devcontainers/base:ubuntu"
-

@@ -8,8 +8,13 @@ ok()    { printf "\033[1;32m[...] %s\033[0m\n" "$*"; }  # green
 warn()  { printf "\033[1;33m[...] %s\033[0m\n" "$*"; }  # gold
 log()   { printf "\033[1;36m[...] %s\033[0m\n" "$*"; }  # cyan
 
-if [[ -z $MISE_DATA_DIR ]]; then
-    warn "MISE_DATA_DIR not set"
+if [[ -z $DEVENV_MISE_CACHE_MOUNT_DIR ]]; then
+    warn "DEVENV_MISE_CACHE_MOUNT_DIR not set"
+    exit 1
+fi
+
+if [[ -z $MISE_INSTALL_PATH ]]; then
+    warn "MISE_INSTALL_PATH not set"
     exit 1
 fi
 
@@ -32,8 +37,21 @@ mise self-update --yes || warn "Skipping mise self-update - you may be offline."
 log "Trusting mise config (see: https://mise.jdx.dev/cli/trust.html)."
 mise trust --yes || true
 
+log "Symlinking $DEVENV_MISE_CACHE_MOUNT_DIR/installs to /home/$(whoami)/.local/share/mise/installs"
+mkdir -p "/home/$(whoami)/.local/share/mise"
+mkdir -p "$DEVENV_MISE_CACHE_MOUNT_DIR/installs"
+sudo ln -sf "$DEVENV_MISE_CACHE_MOUNT_DIR/installs" "/home/$(whoami)/.local/share/mise/installs"
+
+log "Installing tooling."
 mise install || warn "mise install failed. You may need to run mise install manually inside the container."
 
+PATH=$PATH:/home/$(whoami)/.local/share/mise/shims/
+
+log "Reshim."
+mise reshim
+
+log "List installed tools."
+mise list
+
 log "Final checks."
-export PATH="$MISE_DATA_DIR/shims:$PATH"
 mise doctor

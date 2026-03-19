@@ -15,6 +15,18 @@ import scala.util.Try
 object Config {
   given Configuration = Configuration.default.withDefaults
 
+  private[devenv] val fixedImage      = "mcr.microsoft.com/devcontainers/base:ubuntu"
+  private[devenv] val fixedRemoteUser = "vscode"
+
+  /** `image` and `RemoteUser` are fixed until we have a requirement to support other values.
+    *
+    * The `remoteUser` must match a user id provided by the image.
+    */
+  private[devenv] val fixedConfig = JsonObject(
+    "image"      -> fixedImage.asJson,
+    "remoteUser" -> fixedRemoteUser.asJson
+  )
+
   def loadProjectConfig(path: Path): Try[ProjectConfig] =
     for {
       configStr <- Filesystem.readFile(path)
@@ -109,9 +121,8 @@ object Config {
         }
       )
 
-      val baseConfig = JsonObject(
+      val baseConfig = fixedConfig deepMerge JsonObject(
         "name"           -> config.name.asJson,
-        "image"          -> config.image.asJson,
         "customizations" -> customizations.asJson,
         "forwardPorts"   -> config.forwardPorts.asJson
       )
@@ -214,7 +225,7 @@ object Config {
     if (commands.isEmpty) None
     else {
       val renderedCommands = commands.map(Command.renderCommandWithLogging).mkString(" && ")
-      Some(s"($renderedCommands) | sudo tee $logFile")
+      Some(s"($renderedCommands) 2>&1 | sudo tee $logFile")
     }
 
   private def envListToJson(envList: List[Env]): Json =

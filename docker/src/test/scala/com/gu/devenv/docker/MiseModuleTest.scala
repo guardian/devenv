@@ -1,7 +1,7 @@
 package com.gu.devenv.docker
 
-import com.gu.devenv.docker.verifiers.MiseVerifier
 import com.gu.devenv.docker.testutils.{ContainerTest, DevcontainerTestSupport}
+import com.gu.devenv.docker.verifiers.MiseVerifier
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -55,11 +55,11 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
 
         case Right(runner) =>
           val pathResult = runner.exec("echo $PATH")
-          pathResult.stdout should include("/mnt/mise-data/shims")
+          pathResult.stdout should include("~/.local/share/mise/shims")
       }
     }
 
-    "should have MISE_DATA_DIR set correctly" taggedAs ContainerTest in {
+    "should have DEVENV_MISE_CACHE_MOUNT_DIR set correctly" taggedAs ContainerTest in {
       val workspace = setupWorkspaceWithSmallContainer("mise")
 
       startContainer(workspace) match {
@@ -67,8 +67,8 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
           fail(s"Failed to start container: $error")
 
         case Right(runner) =>
-          val envResult = runner.exec("echo $MISE_DATA_DIR")
-          envResult.stdout.trim shouldBe "/mnt/mise-data"
+          val envResult = runner.exec("echo $DEVENV_MISE_CACHE_MOUNT_DIR")
+          envResult.stdout.trim shouldBe "/mnt/mise-cache"
       }
     }
 
