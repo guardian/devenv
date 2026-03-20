@@ -111,9 +111,12 @@ object Config {
 
       val baseConfig = JsonObject(
         "name"           -> config.name.asJson,
-        "image"          -> config.image.asJson,
+        // This value is fixed until we have a requirement to support other values.  It would have to match remoteUser.
+        "image"          -> ProjectConfig.image.asJson,
         "customizations" -> customizations.asJson,
-        "forwardPorts"   -> config.forwardPorts.asJson
+        "forwardPorts"   -> config.forwardPorts.asJson,
+        // This value is fixed until we have a requirement to support other values.  It would have to match image.
+        "remoteUser"     -> ProjectConfig.remoteUser.asJson
       )
 
       // Add optional fields if they exist

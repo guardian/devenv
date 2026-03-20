@@ -11,6 +11,11 @@ if [[ -z $IVY_DATA_DIR ]]; then
     exit 1
 fi
 
+if [[ -z $COURSIER_DATA_DIR ]]; then
+    warn "COURSIER_DATA_DIR not set"
+    exit 1
+fi
+
 IVY_CACHE_DIR_ROOT="/home/$(whoami)/.ivy2"
 IVY_CACHE_DIR_LINK="$IVY_CACHE_DIR_ROOT/cache"
 
@@ -21,11 +26,6 @@ ln -sf "$IVY_DATA_DIR" "$IVY_CACHE_DIR_LINK"
 
 log "Ensuring correct ownership of the shared ivy data volume."
 sudo chown -R "$(whoami)":"$(whoami)" "$IVY_CACHE_DIR_ROOT"
-
-if [[ -z $COURSIER_DATA_DIR ]]; then
-    warn "COURSIER_DATA_DIR not set"
-    exit 1
-fi
 
 COURSIER_CACHE_DIR_ROOT="/home/$(whoami)/.cache"
 COURSIER_CACHE_DIR_LINK="$COURSIER_CACHE_DIR_ROOT/coursier/v1"

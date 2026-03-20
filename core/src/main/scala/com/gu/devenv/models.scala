@@ -11,9 +11,12 @@ import java.util.Base64
 import scala.io.Source
 import scala.util.{Failure, Success, Try, Using}
 
+case object ProjectConfig {
+  val remoteUser  = "vscode"
+  val image = "mcr.microsoft.com/devcontainers/base:ubuntu"
+}
 case class ProjectConfig(
     name: String,
-    image: String = "mcr.microsoft.com/devcontainers/base:ubuntu",
     modules: List[String] = Nil,
     forwardPorts: List[ForwardPort] = Nil,
     remoteEnv: List[Env] = Nil,
@@ -24,7 +27,6 @@ case class ProjectConfig(
     postCreateCommand: List[Command] = Nil,
     postStartCommand: List[Command] = Nil,
     features: Map[String, Json] = Map.empty,
-    remoteUser: String = "vscode",
     updateRemoteUserUID: Boolean = true,
     capAdd: List[String] = Nil,
     securityOpt: List[String] = Nil,

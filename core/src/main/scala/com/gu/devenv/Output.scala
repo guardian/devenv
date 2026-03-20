@@ -40,6 +40,7 @@ object Output {
 
       case GenerateResult.ConfigNotCustomized =>
         buildConfigNotCustomizedMessage()
+
     }
 
   def checkResultMessage(result: CheckResult): String =
