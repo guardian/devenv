@@ -145,7 +145,11 @@ object Config {
         withSecurityOpt.add("runArgs", config.runArgs.asJson)
       } else withSecurityOpt
 
-      commands.deepMerge(withRunArgs).asJson
+      val withRemoteUser = if (config.remoteUser.nonEmpty) {
+        withSecurityOpt.add("remoteUser", config.remoteUser.asJson)
+      } else withRunArgs
+
+      commands.deepMerge(withRemoteUser).asJson
     }
 
   def generateConfigs(
