@@ -273,7 +273,9 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         val config = ProjectConfig(name = "test")
         val json   = Config.configAsJson(config, Nil).get
 
-        json.hcursor.downField("remoteUser").as[String] shouldBe Right(ProjectConfig.defaultRemoteUser)
+        json.hcursor.downField("remoteUser").as[String] shouldBe Right(
+          ProjectConfig.defaultRemoteUser
+        )
       }
     }
 
