@@ -12,4 +12,4 @@ if [[ -z $MISE_DATA_DIR ]]; then
 fi
 
 log "Ensuring correct ownership of the shared mise data volume."
-sudo chown -R vscode:vscode "$MISE_DATA_DIR"
+sudo chown -R "$(whoami)":"$(whoami)" "$MISE_DATA_DIR"

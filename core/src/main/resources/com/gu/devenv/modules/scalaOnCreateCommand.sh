@@ -18,10 +18,9 @@ log "Link the shared ivy data volume at the correct point."
 mkdir -p "$IVY_CACHE_DIR_LINK"
 rmdir "$IVY_CACHE_DIR_LINK"
 ln -sf "$IVY_DATA_DIR" "$IVY_CACHE_DIR_LINK"
-sudo chown -R vscode:vscode "$IVY_CACHE_DIR_ROOT"
 
 log "Ensuring correct ownership of the shared ivy data volume."
-sudo chown -R vscode:vscode "$IVY_CACHE_DIR_ROOT"
+sudo chown -R "$(whoami)":"$(whoami)" "$IVY_CACHE_DIR_ROOT"
 
 if [[ -z $COURSIER_DATA_DIR ]]; then
     warn "COURSIER_DATA_DIR not set"
@@ -37,4 +36,4 @@ rmdir "$COURSIER_CACHE_DIR_LINK"
 ln -sf "$COURSIER_DATA_DIR" "$COURSIER_CACHE_DIR_LINK"
 
 log "Ensuring correct ownership of the shared coursier data volume."
-sudo chown -R vscode:vscode "$COURSIER_CACHE_DIR_ROOT"
+sudo chown -R "$(whoami)":"$(whoami)" "$COURSIER_CACHE_DIR_ROOT"
