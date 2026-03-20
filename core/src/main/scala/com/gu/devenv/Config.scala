@@ -146,7 +146,7 @@ object Config {
       } else withSecurityOpt
 
       val withRemoteUser = if (config.remoteUser.nonEmpty) {
-        withSecurityOpt.add("remoteUser", config.remoteUser.asJson)
+        withRunArgs.add("remoteUser", config.remoteUser.asJson)
       } else withRunArgs
 
       commands.deepMerge(withRemoteUser).asJson

@@ -66,6 +66,11 @@ object Devenv {
         projectConfig.name == PLACEHOLDER_PROJECT_NAME,
         GenerateResult.ConfigNotCustomized
       )
+      // stop if the remoteUser has been changed but not the base image
+      _ <- exitIf(
+        projectConfig.remoteUser != ProjectConfig.defaultRemoteUser && projectConfig.image == ProjectConfig.defaultRemoteImage ,
+        GenerateResult.MismatchOnRemoteUserAndImage
+      )
       maybeUserConfig <- Config.loadUserConfig(userPaths.devenvConf).liftF
       (userJson, sharedJson) <- Config
         .generateConfigs(projectConfig, maybeUserConfig, modules)
