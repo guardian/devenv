@@ -259,6 +259,24 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       }
     }
 
+    "remoteUser field" - {
+      "appears in JSON remoteEnv object" in {
+        forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { remoteUser =>
+          val config = ProjectConfig(name = "test", remoteUser = remoteUser)
+          val json   = Config.configAsJson(config, Nil).get
+
+          json.hcursor.downField("remoteUser").as[String] shouldBe Right(remoteUser)
+        }
+      }
+
+      "is default when empty" in {
+        val config = ProjectConfig(name = "test")
+        val json   = Config.configAsJson(config, Nil).get
+
+        json.hcursor.downField("remoteUser").as[String] shouldBe Right(ProjectConfig.defaultRemoteUser)
+      }
+    }
+
     "onCreateCommand field" - {
       val genCommand: Gen[Command] = for {
         cmd     <- Gen.alphaNumStr.suchThat(_.nonEmpty)
