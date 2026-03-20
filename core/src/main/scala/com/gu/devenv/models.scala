@@ -11,9 +11,13 @@ import java.util.Base64
 import scala.io.Source
 import scala.util.{Failure, Success, Try, Using}
 
+case object ProjectConfig {
+  val defaultRemoteUser  = "vscode"
+  val defaultRemoteImage = "mcr.microsoft.com/devcontainers/base:ubuntu"
+}
 case class ProjectConfig(
     name: String,
-    image: String = "mcr.microsoft.com/devcontainers/base:ubuntu",
+    image: String = defaultRemoteImage,
     modules: List[String] = Nil,
     forwardPorts: List[ForwardPort] = Nil,
     remoteEnv: List[Env] = Nil,
@@ -24,7 +28,7 @@ case class ProjectConfig(
     postCreateCommand: List[Command] = Nil,
     postStartCommand: List[Command] = Nil,
     features: Map[String, Json] = Map.empty,
-    remoteUser: String = "vscode",
+    remoteUser: String = defaultRemoteUser,
     updateRemoteUserUID: Boolean = true,
     capAdd: List[String] = Nil,
     securityOpt: List[String] = Nil,
@@ -307,6 +311,8 @@ enum GenerateResult(val successful: Boolean) {
   case NotInitialized extends GenerateResult(successful = false)
 
   case ConfigNotCustomized extends GenerateResult(successful = false)
+
+  case MismatchOnRemoteUserAndImage extends GenerateResult(successful = false)
 }
 
 enum CheckResult(val successful: Boolean) {

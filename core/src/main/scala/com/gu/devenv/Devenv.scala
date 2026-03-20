@@ -2,12 +2,12 @@ package com.gu.devenv
 
 import cats.*
 import com.gu.devenv.Filesystem.PLACEHOLDER_PROJECT_NAME
+import com.gu.devenv.Utils.*
+import com.gu.devenv.modules.Modules.Module
 
 import java.nio.file.{NoSuchFileException, Path}
-import scala.util.Try
 import scala.language.implicitConversions
-import Utils.*
-import com.gu.devenv.modules.Modules.Module
+import scala.util.Try
 
 object Devenv {
 
@@ -65,6 +65,11 @@ object Devenv {
       _ <- exitIf(
         projectConfig.name == PLACEHOLDER_PROJECT_NAME,
         GenerateResult.ConfigNotCustomized
+      )
+      // stop if the remoteUser has been changed but not the base image
+      _ <- exitIf(
+        projectConfig.remoteUser != ProjectConfig.defaultRemoteUser && projectConfig.image == ProjectConfig.defaultRemoteImage,
+        GenerateResult.MismatchOnRemoteUserAndImage
       )
       maybeUserConfig <- Config.loadUserConfig(userPaths.devenvConf).liftF
       (userJson, sharedJson) <- Config

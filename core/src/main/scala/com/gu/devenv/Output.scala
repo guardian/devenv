@@ -40,6 +40,9 @@ object Output {
 
       case GenerateResult.ConfigNotCustomized =>
         buildConfigNotCustomizedMessage()
+
+      case GenerateResult.MismatchOnRemoteUserAndImage =>
+        buildMismatchOnRemoteUserAndImage()
     }
 
   def checkResultMessage(result: CheckResult): String =
@@ -125,6 +128,24 @@ object Output {
        |  ${Bold.On(Color.Red("name: \"CHANGE_ME\""))}
        |to:
        |  ${Bold.On(Color.Green("name: \"Your Project Name\""))}
+       |
+       |Then run ${Bold.On(Color.Cyan("devenv generate"))} again.""".stripMargin
+  }
+
+  private def buildMismatchOnRemoteUserAndImage(): String = {
+    val header  = Bold.On(Color.Yellow("Configuration not customized"))
+    val divider = Color.Yellow("━" * 60)
+
+    s"""$header
+       |$divider
+       |${Color.Yellow(
+        "The devenv.yaml configuration file does not override the default base image but has a different remoteUser."
+      )}
+       |
+       |Please edit ${Color.Cyan(".devcontainer/devenv.yaml")} and either remove the :
+       |  ${Bold.On(Color.Red("\"remoteUser\": <user>"))}
+       |setting or change to a matching:
+       |  ${Bold.On(Color.Green("\"image\": <image>"))}
        |
        |Then run ${Bold.On(Color.Cyan("devenv generate"))} again.""".stripMargin
   }

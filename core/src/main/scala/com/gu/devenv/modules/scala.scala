@@ -13,10 +13,9 @@ private[modules] def scalaLang(mountKey: String): Try[Module] =
   for {
     encodedOnCreateScript <- Command.fromResourceScript("scalaOnCreateCommand.sh")
   } yield {
-    val COURSIER_DATA_DIR_ROOT = "/home/vscode/.cache"
-    val IVY_DATA_DIR_ROOT      = "/home/vscode/.ivy2"
-    val COURSIER_DATA_DIR      = s"$COURSIER_DATA_DIR_ROOT/coursier/v1"
-    val IVY_DATA_DIR           = s"$IVY_DATA_DIR_ROOT/cache"
+
+    val IVY_DATA_DIR      = "/mnt/ivy-data"
+    val COURSIER_DATA_DIR = "/mnt/coursier-data"
 
     Module(
       name = "scala",
@@ -30,8 +29,8 @@ private[modules] def scalaLang(mountKey: String): Try[Module] =
         onCreateCommands = List(encodedOnCreateScript),
         // Sets the roots of the cache volumes so that they can be appropriately chown'd
         containerEnv = List(
-          Env("IVY_DATA_DIR_ROOT", IVY_DATA_DIR_ROOT),
-          Env("COURSIER_DATA_DIR_ROOT", COURSIER_DATA_DIR_ROOT)
+          Env("IVY_DATA_DIR", IVY_DATA_DIR),
+          Env("COURSIER_DATA_DIR", COURSIER_DATA_DIR)
         ),
         /* All mounts bring security trade-offs as the volume is shared between all containers using this module.  */
         mounts = List(
