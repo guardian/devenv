@@ -21,8 +21,10 @@ private[modules] def mise(mountKey: String): Try[Module] =
     encodedOnCreateScript   <- Command.fromResourceScript("miseOnCreateCommand.sh")
     encodedPostCreateScript <- Command.fromResourceScript("misePostCreateCommand.sh")
   } yield {
-    val MISE_DATA_DIR     = "/mnt/mise-data"
-    val MISE_INSTALL_PATH = s"$MISE_DATA_DIR/mise"
+    // Sets the DEVENV_MISE_CACHE_MOUNT_DIR to a shared volume (defined below) to cache downloaded tools and versions
+    val DEVENV_MISE_CACHE_MOUNT_DIR = "/mnt/mise-data"
+    // This is not a DEVENV var, it's a MISE var, so no DEVENV_ namespacing.
+    val MISE_INSTALL_PATH = s"$DEVENV_MISE_CACHE_MOUNT_DIR/mise"
     Module(
       name = "mise",
       summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
@@ -32,11 +34,10 @@ private[modules] def mise(mountKey: String): Try[Module] =
         postCreateCommands = List(encodedPostCreateScript),
         // Adds mise shims to the PATH so that installed tools are available in the remote environment
         remoteEnv = List(
-          Env("PATH", s"$${containerEnv:PATH}:$MISE_DATA_DIR/shims")
+          Env("PATH", s"$${containerEnv:PATH}:$DEVENV_MISE_CACHE_MOUNT_DIR/shims")
         ),
-        // Sets the MISE_DATA_DIR to a shared volume (defined below) to cache downloaded tools and versions
         containerEnv = List(
-          Env("MISE_DATA_DIR", MISE_DATA_DIR),
+          Env("DEVENV_MISE_CACHE_MOUNT_DIR", DEVENV_MISE_CACHE_MOUNT_DIR),
           Env("MISE_INSTALL_PATH", MISE_INSTALL_PATH)
         ),
         /* This mount persists the mise cache and installed tool versions across container recreations.
@@ -48,7 +49,7 @@ private[modules] def mise(mountKey: String): Try[Module] =
         mounts = List(
           Mount.ExplicitMount(
             source = s"$mountKey-mise-data-volume",
-            target = MISE_DATA_DIR,
+            target = DEVENV_MISE_CACHE_MOUNT_DIR,
             `type` = "volume"
           )
         ),

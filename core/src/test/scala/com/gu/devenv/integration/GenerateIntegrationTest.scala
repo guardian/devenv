@@ -246,7 +246,7 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           sharedJson should include("hverlin.mise-vscode")
           sharedJson should include("com.github.l34130.mise")
-          sharedJson should include("MISE_DATA_DIR")
+          sharedJson should include("DEVENV_MISE_CACHE_MOUNT_DIR")
           sharedJson should include("/mnt/mise-data")
           sharedJson should include("${containerEnv:PATH}:/mnt/mise-data/shims")
           sharedJson should include("mise install")

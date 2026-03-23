@@ -8,8 +8,8 @@ ok()    { printf "\033[1;32m[...] %s\033[0m\n" "$*"; }  # green
 warn()  { printf "\033[1;33m[...] %s\033[0m\n" "$*"; }  # gold
 log()   { printf "\033[1;36m[...] %s\033[0m\n" "$*"; }  # cyan
 
-if [[ -z $MISE_DATA_DIR ]]; then
-    warn "MISE_DATA_DIR not set"
+if [[ -z $DEVENV_MISE_CACHE_MOUNT_DIR ]]; then
+    warn "DEVENV_MISE_CACHE_MOUNT_DIR not set"
     exit 1
 fi
 
@@ -35,5 +35,5 @@ mise trust --yes || true
 mise install || warn "mise install failed. You may need to run mise install manually inside the container."
 
 log "Final checks."
-export PATH="$MISE_DATA_DIR/shims:$PATH"
+export PATH="$DEVENV_MISE_CACHE_MOUNT_DIR/shims:$PATH"
 mise doctor

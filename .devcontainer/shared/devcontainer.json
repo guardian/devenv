@@ -36,10 +36,10 @@
     }
   ],
   "containerEnv" : {
-    "MISE_DATA_DIR" : "/mnt/mise-data",
+    "DEVENV_MISE_CACHE_MOUNT_DIR" : "/mnt/mise-data",
     "MISE_INSTALL_PATH" : "/mnt/mise-data/mise",
-    "IVY_DATA_DIR" : "/mnt/ivy-data",
-    "COURSIER_DATA_DIR" : "/mnt/coursier-data"
+    "DEVENV_IVY_CACHE_MOUNT_DIR" : "/mnt/ivy-data",
+    "DEVENV_COURSIER_CACHE_MOUNT_DIR" : "/mnt/coursier-data"
   },
   "remoteEnv" : {
     "PATH" : "${containerEnv:PATH}:/mnt/mise-data/shims"

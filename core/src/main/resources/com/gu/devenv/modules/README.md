@@ -24,6 +24,17 @@ The bash invocation uses `-euo pipefail` so it will terminate with a non-zero re
 It is possible to use bash logical constructs like `(a && b) || c` without triggering errors allowing
 success if either `a` or `b` fail but `c` does not.
 
+## Env Vars
+
+As few env vars as possible should be required.  We are adopting a naming conventtion of `DEVENV_*`.
+
+ * DEVENV_xxx_CACHE_MOUNT_DIR - the actual mount locations of caches 
+ * DEVENV_xxx_USER_DIR - the location from which chown commands begin 
+ * DEVENV_xxx_CACHE_MOUNT_LINK - the location at which the mounted cache is symlinked
+
+Multiple values are used so that the symlinked cache location can be several layers deep in a userland 
+directory structure.
+
 ## Logging
 
 Logs are written to appropriately named files in /var/log/ which can be tailed through the ide or docker exec.

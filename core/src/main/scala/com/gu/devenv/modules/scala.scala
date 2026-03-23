@@ -14,8 +14,8 @@ private[modules] def scalaLang(mountKey: String): Try[Module] =
     encodedOnCreateScript <- Command.fromResourceScript("scalaOnCreateCommand.sh")
   } yield {
 
-    val IVY_DATA_DIR      = "/mnt/ivy-data"
-    val COURSIER_DATA_DIR = "/mnt/coursier-data"
+    val DEVENV_IVY_CACHE_MOUNT_DIR      = "/mnt/ivy-data"
+    val DEVENV_COURSIER_CACHE_MOUNT_DIR = "/mnt/coursier-data"
 
     Module(
       name = "scala",
@@ -29,21 +29,21 @@ private[modules] def scalaLang(mountKey: String): Try[Module] =
         onCreateCommands = List(encodedOnCreateScript),
         // Sets the roots of the cache volumes so that they can be appropriately chown'd
         containerEnv = List(
-          Env("IVY_DATA_DIR", IVY_DATA_DIR),
-          Env("COURSIER_DATA_DIR", COURSIER_DATA_DIR)
+          Env("DEVENV_IVY_CACHE_MOUNT_DIR", DEVENV_IVY_CACHE_MOUNT_DIR),
+          Env("DEVENV_COURSIER_CACHE_MOUNT_DIR", DEVENV_COURSIER_CACHE_MOUNT_DIR)
         ),
         /* All mounts bring security trade-offs as the volume is shared between all containers using this module.  */
         mounts = List(
           /* This mount persists the coursier cache across container recreations. */
           Mount.ExplicitMount(
             source = s"$mountKey-coursier-data-volume",
-            target = COURSIER_DATA_DIR,
+            target = DEVENV_COURSIER_CACHE_MOUNT_DIR,
             `type` = "volume"
           ),
           /* This mount persists the ivy2 cache across container recreations. */
           Mount.ExplicitMount(
             source = s"$mountKey-ivy-data-volume",
-            target = IVY_DATA_DIR,
+            target = DEVENV_IVY_CACHE_MOUNT_DIR,
             `type` = "volume"
           )
         )

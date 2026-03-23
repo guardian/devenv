@@ -59,7 +59,7 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
       }
     }
 
-    "should have MISE_DATA_DIR set correctly" taggedAs ContainerTest in {
+    "should have DEVENV_MISE_CACHE_MOUNT_DIR set correctly" taggedAs ContainerTest in {
       val workspace = setupWorkspaceWithSmallContainer("mise")
 
       startContainer(workspace) match {
@@ -67,7 +67,7 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
           fail(s"Failed to start container: $error")
 
         case Right(runner) =>
-          val envResult = runner.exec("echo $MISE_DATA_DIR")
+          val envResult = runner.exec("echo $DEVENV_MISE_CACHE_MOUNT_DIR")
           envResult.stdout.trim shouldBe "/mnt/mise-data"
       }
     }
