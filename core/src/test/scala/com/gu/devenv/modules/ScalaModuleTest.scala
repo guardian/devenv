@@ -23,7 +23,7 @@ class ScalaModuleTest
 
       module.contribution.mounts.map {
         case Mount.ExplicitMount(source, _, _) =>
-          source should include regex s"$mountKey-.*-data-volume"
+          source should include regex s"$mountKey-.*-cache-volume"
         case Mount.ShortMount(mount) =>
           fail(
             s"Expected an ExplicitMount, but got ShortMount($mount). The scala module should use an ExplicitMount for all caches for clarity."
@@ -35,8 +35,8 @@ class ScalaModuleTest
         case _                                 => None
       }
 
-      sources should contain(s"$mountKey-coursier-data-volume")
-      sources should contain(s"$mountKey-ivy-data-volume")
+      sources should contain(s"$mountKey-coursier-cache-volume")
+      sources should contain(s"$mountKey-ivy-cache-volume")
     }
   }
 

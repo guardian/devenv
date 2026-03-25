@@ -18,7 +18,7 @@ if [[ -z $MISE_INSTALL_PATH ]]; then
     exit 1
 fi
 
-if test -f "$MISE_INSTALL_PATH"; then
+if test -f "$MISE_INSTALL_PATH" && mise --version; then
   log "mise is already present at $MISE_INSTALL_PATH."
 else
   log "Installing mise..."

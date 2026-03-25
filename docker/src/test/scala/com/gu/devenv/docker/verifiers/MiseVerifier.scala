@@ -20,7 +20,10 @@ object MiseVerifier {
       _ <- checkMiseDoctor(runner)
       _ <- checkMiseToolsAvailable(runner)
     } yield ()
-    if (result.isLeft) println(getLogs(runner))
+    if (result.isLeft) {
+      println(getLogs(runner))
+      println(getPath(runner))
+    }
     result
   }
 
@@ -31,8 +34,13 @@ object MiseVerifier {
   }
 
   private def getLogs(runner: DevcontainerRunner): String = {
-    val result = runner.exec(s"cat /var/log/on-create.log /var/log/post-create.log ")
+    val result = runner.exec("cat /var/log/on-create.log /var/log/post-create.log ")
     if (result.succeeded) result.stdout else s"Unable to read logs: ${result.combinedOutput}"
+  }
+
+  private def getPath(runner: DevcontainerRunner): String = {
+    val result = runner.exec("echo $PATH")
+    if (result.succeeded) result.stdout else s"Unable to echo path: ${result.combinedOutput}"
   }
 
   private def checkMiseDoctor(runner: DevcontainerRunner): Either[String, Unit] = {

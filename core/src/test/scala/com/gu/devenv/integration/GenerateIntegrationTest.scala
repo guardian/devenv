@@ -247,8 +247,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           sharedJson should include("hverlin.mise-vscode")
           sharedJson should include("com.github.l34130.mise")
           sharedJson should include("DEVENV_MISE_CACHE_MOUNT_DIR")
-          sharedJson should include("/mnt/mise-data")
-          sharedJson should include("${containerEnv:PATH}:/mnt/mise-data/shims")
+          sharedJson should include("/mnt/mise-cache")
+          sharedJson should include("${containerEnv:PATH}:/mnt/mise-cache/shims")
           sharedJson should include("mise install")
         }
       }
@@ -300,8 +300,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           val sharedJson = Files.readString(devcontainerDir.resolve("shared/devcontainer.json"))
 
           // Both should have mise module mounts (volume name includes the test mount key)
-          userJson should include("mise-data-volume")
-          sharedJson should include("mise-data-volume")
+          userJson should include("mise-cache-volume")
+          sharedJson should include("mise-cache-volume")
 
           // Both should have project plugins
           userJson should include("project-plugin-1")

@@ -55,5 +55,19 @@ class CombinedModulesTest extends AnyFreeSpec with Matchers with DevcontainerTes
           }
       }
     }
+
+    "should have mise shims on the PATH" taggedAs ContainerTest in {
+      val workspace = setupWorkspaceWithSmallContainer("mise")
+
+      startContainer(workspace) match {
+        case Left(error) =>
+          fail(s"Failed to start container: $error")
+
+        case Right(runner) =>
+          val pathResult = runner.exec("echo $PATH")
+          pathResult.stdout should include("~/.local/share/mise/shims")
+      }
+    }
+
   }
 }

@@ -14,8 +14,8 @@ private[modules] def scalaLang(mountKey: String): Try[Module] =
     encodedOnCreateScript <- Command.fromResourceScript("scalaOnCreateCommand.sh")
   } yield {
 
-    val DEVENV_IVY_CACHE_MOUNT_DIR      = "/mnt/ivy-data"
-    val DEVENV_COURSIER_CACHE_MOUNT_DIR = "/mnt/coursier-data"
+    val DEVENV_IVY_CACHE_MOUNT_DIR      = "/mnt/ivy-cache"
+    val DEVENV_COURSIER_CACHE_MOUNT_DIR = "/mnt/coursier-cache"
 
     Module(
       name = "scala",
@@ -36,13 +36,13 @@ private[modules] def scalaLang(mountKey: String): Try[Module] =
         mounts = List(
           /* This mount persists the coursier cache across container recreations. */
           Mount.ExplicitMount(
-            source = s"$mountKey-coursier-data-volume",
+            source = s"$mountKey-coursier-cache-volume",
             target = DEVENV_COURSIER_CACHE_MOUNT_DIR,
             `type` = "volume"
           ),
           /* This mount persists the ivy2 cache across container recreations. */
           Mount.ExplicitMount(
-            source = s"$mountKey-ivy-data-volume",
+            source = s"$mountKey-ivy-cache-volume",
             target = DEVENV_IVY_CACHE_MOUNT_DIR,
             `type` = "volume"
           )

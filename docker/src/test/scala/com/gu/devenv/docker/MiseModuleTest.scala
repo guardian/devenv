@@ -68,7 +68,7 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
 
         case Right(runner) =>
           val envResult = runner.exec("echo $DEVENV_MISE_CACHE_MOUNT_DIR")
-          envResult.stdout.trim shouldBe "/mnt/mise-data"
+          envResult.stdout.trim shouldBe "/mnt/mise-cache"
       }
     }
 
