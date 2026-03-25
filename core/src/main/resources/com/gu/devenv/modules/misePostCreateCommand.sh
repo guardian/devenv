@@ -37,15 +37,15 @@ mise self-update --yes || warn "Skipping mise self-update - you may be offline."
 log "Trusting mise config (see: https://mise.jdx.dev/cli/trust.html)."
 mise trust --yes || true
 
-log "Symlinking $DEVENV_MISE_CACHE_MOUNT_DIR/installs to /home/vscode/.local/share/mise/installs"
-mkdir -p /home/vscode/.local/share/mise
+log "Symlinking $DEVENV_MISE_CACHE_MOUNT_DIR/installs to /home/$(whoami)/.local/share/mise/installs"
+mkdir -p /home/$(whoami)/.local/share/mise"
 mkdir -p "$DEVENV_MISE_CACHE_MOUNT_DIR/installs"
-sudo ln -sf "$DEVENV_MISE_CACHE_MOUNT_DIR/installs" /home/vscode/.local/share/mise/installs
+sudo ln -sf "$DEVENV_MISE_CACHE_MOUNT_DIR/installs" "/home/$(whoami)/.local/share/mise/installs"
 
 log "Installing tooling."
 mise install || warn "mise install failed. You may need to run mise install manually inside the container."
 
-PATH=$PATH:/home/vscode/.local/share/mise/shims/
+PATH=$PATH:/home/$(whoami)/.local/share/mise/shims/
 
 log "Reshim."
 mise reshim

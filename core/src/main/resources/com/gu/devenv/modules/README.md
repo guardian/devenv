@@ -26,7 +26,7 @@ success if either `a` or `b` fail but `c` does not.
 
 ## Env Vars
 
-As few env vars as possible should be required.  We are adopting a naming conventtion of `DEVENV_*`.
+As few env vars as possible should be required.  We are adopting a naming convention of `DEVENV_*`.
 
  * DEVENV_xxx_CACHE_MOUNT_DIR - the actual mount locations of caches 
  * DEVENV_xxx_USER_DIR - the location from which chown commands begin 
