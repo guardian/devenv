@@ -34,7 +34,7 @@ private[modules] def mise(mountKey: String): Try[Module] =
         postCreateCommands = List(encodedPostCreateScript),
         // Adds mise shims to the PATH so that installed tools are available in the remote environment
         remoteEnv = List(
-          Env("PATH", s"$${containerEnv:PATH}:$DEVENV_MISE_CACHE_MOUNT_DIR/shims")
+          Env("PATH", s"$${containerEnv:PATH}:~/.local/share/mise/shims")
         ),
         containerEnv = List(
           Env("DEVENV_MISE_CACHE_MOUNT_DIR", DEVENV_MISE_CACHE_MOUNT_DIR),

@@ -225,7 +225,7 @@ object Config {
     if (commands.isEmpty) None
     else {
       val renderedCommands = commands.map(Command.renderCommandWithLogging).mkString(" && ")
-      Some(s"($renderedCommands) | sudo tee $logFile")
+      Some(s"($renderedCommands) 2>&1 | sudo tee $logFile")
     }
 
   private def envListToJson(envList: List[Env]): Json =

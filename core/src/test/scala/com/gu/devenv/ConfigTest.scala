@@ -202,7 +202,7 @@ class ConfigTest
         "\\(printf .* Starting one.* && \\(cd . && ls 1 && printf .* Finished one.*\\) \\|\\| printf .* Errored! one.*\\)"
       val pattern2 =
         "\\(printf .* Starting two.* && \\(cd . && ls 2 && printf .* Finished two.*\\) \\|\\| printf .* Errored! two.*\\)"
-      val bothPatterns = s"\\($pattern1 && $pattern2\\) \\| sudo tee.*"
+      val bothPatterns = s"\\($pattern1 && $pattern2\\) 2>&1 \\| sudo tee.*"
 
       val pattern = bothPatterns.r
       commandMaybe.isDefined shouldBe (true)

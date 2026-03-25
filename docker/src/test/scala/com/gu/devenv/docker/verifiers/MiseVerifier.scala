@@ -14,17 +14,25 @@ object MiseVerifier {
   // replace with install location (`/home/vscode/.local/bin/mise`) for debugging
   private val miseBin = "mise"
 
-  def verify(runner: DevcontainerRunner): Either[String, Unit] =
-    for {
+  def verify(runner: DevcontainerRunner): Either[String, Unit] = {
+    val result = for {
       _ <- checkMiseInstalled(runner)
       _ <- checkMiseDoctor(runner)
       _ <- checkMiseToolsAvailable(runner)
     } yield ()
+    if (result.isLeft) println(getLogs(runner))
+    result
+  }
 
   private def checkMiseInstalled(runner: DevcontainerRunner): Either[String, Unit] = {
     val result = runner.exec(s"$miseBin --version")
     if (result.succeeded) Right(())
     else Left(s"mise is not installed: ${result.combinedOutput}")
+  }
+
+  private def getLogs(runner: DevcontainerRunner): String = {
+    val result = runner.exec(s"cat /var/log/on-create.log /var/log/post-create.log ")
+    if (result.succeeded) result.stdout else s"Unable to read logs: ${result.combinedOutput}"
   }
 
   private def checkMiseDoctor(runner: DevcontainerRunner): Either[String, Unit] = {

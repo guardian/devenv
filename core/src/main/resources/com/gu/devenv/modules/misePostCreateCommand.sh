@@ -13,6 +13,11 @@ if [[ -z $DEVENV_MISE_CACHE_MOUNT_DIR ]]; then
     exit 1
 fi
 
+if [[ -z $MISE_INSTALL_PATH ]]; then
+    warn "MISE_INSTALL_PATH not set"
+    exit 1
+fi
+
 if test -f "$MISE_INSTALL_PATH"; then
   log "mise is already present at $MISE_INSTALL_PATH."
 else
@@ -32,8 +37,21 @@ mise self-update --yes || warn "Skipping mise self-update - you may be offline."
 log "Trusting mise config (see: https://mise.jdx.dev/cli/trust.html)."
 mise trust --yes || true
 
+log "Symlinking $DEVENV_MISE_CACHE_MOUNT_DIR/installs to /home/vscode/.local/share/mise/installs"
+mkdir -p /home/vscode/.local/share/mise
+mkdir -p "$DEVENV_MISE_CACHE_MOUNT_DIR/installs"
+sudo ln -sf "$DEVENV_MISE_CACHE_MOUNT_DIR/installs" /home/vscode/.local/share/mise/installs
+
+log "Installing tooling."
 mise install || warn "mise install failed. You may need to run mise install manually inside the container."
 
+PATH=$PATH:/home/vscode/.local/share/mise/shims/
+
+log "Reshim."
+mise reshim
+
+log "List installed tools."
+mise list
+
 log "Final checks."
-export PATH="$DEVENV_MISE_CACHE_MOUNT_DIR/shims:$PATH"
 mise doctor
