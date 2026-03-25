@@ -11,10 +11,6 @@ import java.util.Base64
 import scala.io.Source
 import scala.util.{Failure, Success, Try, Using}
 
-case object ProjectConfig {
-  val remoteUser  = "vscode"
-  val image = "mcr.microsoft.com/devcontainers/base:ubuntu"
-}
 case class ProjectConfig(
     name: String,
     modules: List[String] = Nil,

@@ -15,6 +15,15 @@ import scala.util.Try
 object Config {
   given Configuration = Configuration.default.withDefaults
 
+  /** `image` and `RemoteUser` are fixed until we have a requirement to support other values.
+    *
+    * The `remoteUser` must match a user id provided by the image.
+    */
+  private val fixedConfig = JsonObject(
+    "image"      -> "mcr.microsoft.com/devcontainers/base:ubuntu".asJson,
+    "remoteUser" -> "vscode".asJson
+  )
+
   def loadProjectConfig(path: Path): Try[ProjectConfig] =
     for {
       configStr <- Filesystem.readFile(path)
@@ -109,14 +118,10 @@ object Config {
         }
       )
 
-      val baseConfig = JsonObject(
+      val baseConfig = fixedConfig deepMerge JsonObject(
         "name"           -> config.name.asJson,
-        // This value is fixed until we have a requirement to support other values.  It would have to match remoteUser.
-        "image"          -> ProjectConfig.image.asJson,
         "customizations" -> customizations.asJson,
-        "forwardPorts"   -> config.forwardPorts.asJson,
-        // This value is fixed until we have a requirement to support other values.  It would have to match image.
-        "remoteUser"     -> ProjectConfig.remoteUser.asJson
+        "forwardPorts"   -> config.forwardPorts.asJson
       )
 
       // Add optional fields if they exist
