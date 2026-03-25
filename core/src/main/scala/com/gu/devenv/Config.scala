@@ -15,13 +15,16 @@ import scala.util.Try
 object Config {
   given Configuration = Configuration.default.withDefaults
 
+  private[devenv] val fixedImage      = "mcr.microsoft.com/devcontainers/base:ubuntu"
+  private[devenv] val fixedRemoteUser = "vscode"
+
   /** `image` and `RemoteUser` are fixed until we have a requirement to support other values.
     *
     * The `remoteUser` must match a user id provided by the image.
     */
-  private val fixedConfig = JsonObject(
-    "image"      -> "mcr.microsoft.com/devcontainers/base:ubuntu".asJson,
-    "remoteUser" -> "vscode".asJson
+  private[devenv] val fixedConfig = JsonObject(
+    "image"      -> fixedImage.asJson,
+    "remoteUser" -> fixedRemoteUser.asJson
   )
 
   def loadProjectConfig(path: Path): Try[ProjectConfig] =

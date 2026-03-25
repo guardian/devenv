@@ -15,6 +15,25 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
   */
 class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
   "Config.configAsJson" - {
+    "fixed fields" - {
+      "Image appears in JSON image field" in {
+        forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { name =>
+          val config = ProjectConfig(name = name)
+          val json   = Config.configAsJson(config, Nil).get
+
+          json.hcursor.downField("image").as[String] shouldBe Right(Config.fixedImage)
+        }
+      }
+      "Remote User appears in JSON remoteUser field" in {
+        forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { name =>
+          val config = ProjectConfig(name = name)
+          val json   = Config.configAsJson(config, Nil).get
+
+          json.hcursor.downField("remoteUser").as[String] shouldBe Right(Config.fixedRemoteUser)
+        }
+      }
+    }
+
     "base fields" - {
       "name appears in JSON name field" in {
         forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { name =>
@@ -23,13 +42,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
           json.hcursor.downField("name").as[String] shouldBe Right(name)
         }
-      }
-
-      "image appears in JSON image field" in {
-        val config = ProjectConfig(name = "test")
-        val json   = Config.configAsJson(config, Nil).get
-
-        json.hcursor.downField("image").as[String] shouldBe Right(ProjectConfig.image)
       }
     }
 
@@ -255,16 +267,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
         json.hcursor.downField("remoteEnv").as[Json] shouldBe a[Left[_, _]]
       }
-    }
-
-    "remoteUser field" - {
-      "appears in JSON remoteEnv object" in {
-        val config = ProjectConfig(name = "test")
-        val json   = Config.configAsJson(config, Nil).get
-
-        json.hcursor.downField("remoteUser").as[String] shouldBe Right(ProjectConfig.remoteUser)
-      }
-
     }
 
     "onCreateCommand field" - {
