@@ -33,7 +33,13 @@ As few env vars as possible should be required.  We are adopting a naming conven
  * DEVENV_xxx_CACHE_MOUNT_LINK - the location at which the mounted cache is symlinked
 
 Multiple values are used so that the symlinked cache location can be several layers deep in a userland 
-directory structure.
+directory structure.  For example, a tool called magic might live at `$HOME/.magic/` with a
+cache at `$HOME/.magic/magiccache/`, and _container specific_ lock files at `$HOME/.magic/.magiclock/`.
+
+We would want to share the cache (mounted at `/mnt/magic-cache` and symlinked in at `$HOME/.magic/magiccache`)
+but not the remainder of the tree.  The whole structure should be chown'ed to the container user.  The name
+of the container user will not matter, and could even vary across multiple containers, _as long as the UID
+is the same_. Standard practice is that the first non-root user in a modern linux is 1000.
 
 ## Logging
 
