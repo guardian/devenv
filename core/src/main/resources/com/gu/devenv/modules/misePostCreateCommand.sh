@@ -21,7 +21,7 @@ fi
 # We will use this to chown below
 DEVENV_CONTAINER_USER=$(whoami)
 
-if test -f "$MISE_INSTALL_PATH"; then
+if test -f "$MISE_INSTALL_PATH" && $MISE_INSTALL_PATH --version; then
   log "mise is already present at $MISE_INSTALL_PATH."
 else
   log "Installing mise..."
