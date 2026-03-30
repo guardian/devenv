@@ -14,19 +14,13 @@ object MiseVerifier {
   // replace with install location (`/home/vscode/.local/bin/mise`) for debugging
   private val miseBin = "mise"
 
-  def verify(runner: DevcontainerRunner): Either[String, Unit] = {
-    val result = for {
+  def verify(runner: DevcontainerRunner): Either[String, Unit] =
+    for {
       _ <- checkMiseInstalled(runner)
       _ <- checkMiseShimsOnPath(runner)
       _ <- checkMiseDoctor(runner)
       _ <- checkMiseToolsAvailable(runner)
     } yield ()
-    if (result.isLeft) {
-      println(getLogs(runner))
-      println(getPath(runner))
-    }
-    result
-  }
 
   private def checkMiseInstalled(runner: DevcontainerRunner): Either[String, Unit] = {
     val result = runner.exec(s"$miseBin --version")
@@ -40,17 +34,6 @@ object MiseVerifier {
     val shimsLocationPresent  = pathResult.stdout.split(":").contains(expectedShimsLocation)
     if (shimsLocationPresent) Right(())
     else Left(s"$expectedShimsLocation not found in path $pathResult")
-  }
-
-
-  private def getLogs(runner: DevcontainerRunner): String = {
-    val result = runner.exec("cat /var/log/on-create.log /var/log/post-create.log ")
-    if (result.succeeded) result.stdout else s"Unable to read logs: ${result.combinedOutput}"
-  }
-
-  private def getPath(runner: DevcontainerRunner): String = {
-    val result = runner.exec("echo $PATH")
-    if (result.succeeded) result.stdout else s"Unable to echo path: ${result.combinedOutput}"
   }
 
   private def checkMiseDoctor(runner: DevcontainerRunner): Either[String, Unit] = {
