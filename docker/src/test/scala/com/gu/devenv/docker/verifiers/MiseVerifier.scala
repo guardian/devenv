@@ -17,6 +17,7 @@ object MiseVerifier {
   def verify(runner: DevcontainerRunner): Either[String, Unit] = {
     val result = for {
       _ <- checkMiseInstalled(runner)
+      _ <- checkMiseShimsOnPath(runner)
       _ <- checkMiseDoctor(runner)
       _ <- checkMiseToolsAvailable(runner)
     } yield ()
@@ -32,6 +33,15 @@ object MiseVerifier {
     if (result.succeeded) Right(())
     else Left(s"mise is not installed: ${result.combinedOutput}")
   }
+
+  private def checkMiseShimsOnPath(runner: DevcontainerRunner): Either[String, Unit] = {
+    val pathResult            = runner.exec("echo $PATH")
+    val expectedShimsLocation = "~/.local/share/mise/shims/"
+    val shimsLocationPresent  = pathResult.stdout.split(":").contains(expectedShimsLocation)
+    if (shimsLocationPresent) Right(())
+    else Left(s"$expectedShimsLocation not found in path $pathResult")
+  }
+
 
   private def getLogs(runner: DevcontainerRunner): String = {
     val result = runner.exec("cat /var/log/on-create.log /var/log/post-create.log ")
