@@ -11,5 +11,8 @@ if [[ -z $DEVENV_MISE_CACHE_MOUNT_DIR ]]; then
     exit 1
 fi
 
+# We will use this to chown below
+DEVENV_CONTAINER_USER=$(whoami)
+
 log "Ensuring correct ownership of the shared mise data volume."
-sudo chown -R "$(whoami)":"$(whoami)" "$DEVENV_MISE_CACHE_MOUNT_DIR"
+sudo chown -R "$DEVENV_CONTAINER_USER":"$DEVENV_CONTAINER_USER" "$DEVENV_MISE_CACHE_MOUNT_DIR"

@@ -16,8 +16,11 @@ if [[ -z $DEVENV_COURSIER_CACHE_MOUNT_DIR ]]; then
     exit 1
 fi
 
-DEVENV_IVY_USER_DIR="/home/$(whoami)/.ivy2"
+DEVENV_IVY_USER_DIR="/home/$DEVENV_CONTAINER_USER/.ivy2"
 DEVENV_IVY_CACHE_MOUNT_LINK="$DEVENV_IVY_USER_DIR/cache"
+
+# We will use this to chown below
+DEVENV_CONTAINER_USER=$(whoami)
 
 log "Link the shared ivy data volume at the correct point."
 mkdir -p "$DEVENV_IVY_CACHE_MOUNT_LINK"
@@ -25,9 +28,9 @@ rmdir "$DEVENV_IVY_CACHE_MOUNT_LINK"
 ln -sf "$DEVENV_IVY_CACHE_MOUNT_DIR" "$DEVENV_IVY_CACHE_MOUNT_LINK"
 
 log "Ensuring correct ownership of the shared ivy data volume."
-sudo chown -R "$(whoami)":"$(whoami)" "$DEVENV_IVY_USER_DIR"
+sudo chown -R "$DEVENV_CONTAINER_USER":"$DEVENV_CONTAINER_USER" "$DEVENV_IVY_USER_DIR"
 
-DEVENV_COURSIER_USER_DIR="/home/$(whoami)/.cache"
+DEVENV_COURSIER_USER_DIR="/home/$DEVENV_CONTAINER_USER/.cache"
 DEVENV_COURSIER_CACHE_MOUNT_LINK="$DEVENV_COURSIER_USER_DIR/coursier/v1"
 
 log "Link the shared coursier data volume at the correct point."
@@ -36,4 +39,4 @@ rmdir "$DEVENV_COURSIER_CACHE_MOUNT_LINK"
 ln -sf "$DEVENV_COURSIER_CACHE_MOUNT_DIR" "$DEVENV_COURSIER_CACHE_MOUNT_LINK"
 
 log "Ensuring correct ownership of the shared coursier data volume."
-sudo chown -R "$(whoami)":"$(whoami)" "$DEVENV_COURSIER_USER_DIR"
+sudo chown -R "$DEVENV_CONTAINER_USER":"$DEVENV_CONTAINER_USER" "$DEVENV_COURSIER_USER_DIR"
