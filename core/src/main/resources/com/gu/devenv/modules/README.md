@@ -26,19 +26,23 @@ success if either `a` or `b` fail but `c` does not.
 
 ## Env Vars
 
-As few env vars as possible should be required.  We are adopting a naming convention of `DEVENV_*`.
+As few env vars as possible should be required. We are adopting a naming convention of `DEVENV_*`.
 
- * DEVENV_xxx_CACHE_MOUNT_DIR - the actual mount locations of caches 
- * DEVENV_xxx_USER_DIR - the location from which chown commands begin 
- * DEVENV_xxx_CACHE_MOUNT_LINK - the location at which the mounted cache is symlinked
+The following are all devcontainer filesystem locations:
 
-Multiple values are used so that the symlinked cache location can be several layers deep in a userland 
-directory structure.  For example, a tool called magic might live at `$HOME/.magic/` with a
-cache at `$HOME/.magic/magiccache/`, and _container specific_ lock files at `$HOME/.magic/.magiclock/`.
+* DEVENV_xxx_CACHE_MOUNT_DIR - where the xxx cache volume will be mounted, typically /mnt/xxx-cache
+* DEVENV_xxx_USER_DIR - where recursive chown commands will begin
+* DEVENV_xxx_CACHE_MOUNT_LINK - where the mounted cache is symlinked for use
 
-We would want to share the cache (mounted at `/mnt/magic-cache` and symlinked in at `$HOME/.magic/magiccache`)
-but not the remainder of the tree.  The whole structure should be chown'ed to the container user.  The name
-of the container user will not matter, and could even vary across multiple containers, _as long as the UID
+Multiple values are used so that the symlinked cache location can be several layers deep in a userland
+directory structure. For example, a tool called magic might require:
+
+* a user directory structure chown'ed to the container user at `$HOME/.magic/`
+* a shared cache, which we mount in each container at `/mnt/magic-cache`
+* a symlink to that cache at `$HOME/.magic/magiccache/`
+* lock files at `$HOME/.magic/.magiclock/`
+
+The name of the container user will not matter, and could even vary across multiple containers, _as long as the UID
 is the same_. Standard practice is that the first non-root user in a modern linux is 1000.
 
 ## Logging
