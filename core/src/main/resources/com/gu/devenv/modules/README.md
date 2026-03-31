@@ -42,9 +42,6 @@ directory structure. For example, a tool called magic might require:
 * a symlink to that cache at `$HOME/.magic/magiccache/`
 * lock files at `$HOME/.magic/.magiclock/`
 
-The name of the container user will not matter, and could even vary across multiple containers, _as long as the UID
-is the same_. Standard practice is that the first non-root user in a modern linux is 1000.
-
 ## Logging
 
 Logs are written to appropriately named files in /var/log/ which can be tailed through the ide or docker exec.
