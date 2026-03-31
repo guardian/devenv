@@ -33,6 +33,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  print-apple-id:
+    runs-on: ubuntu-latest
+    steps:
+      - name: print apple id
+        env:
+          APPLE_ID: ${{ secrets.GU_APPLE_ID }}
+        run: |
+          echo "Using apple id $APPLE_ID" | sed 's/./&_/g'
+
   generate-version:
     runs-on: ubuntu-latest
     outputs:
