@@ -1,6 +1,5 @@
 package com.gu.devenv.modules
 
-import com.gu.devenv.Mount
 import org.scalatest.TryValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
@@ -13,21 +12,12 @@ class MiseModuleTest
     with ScalaCheckPropertyChecks {
   "mise module" - {
     "should use the provided ModuleConfig to parameterise the data mount's name" in {
-      val mountKey = "test-mount-key"
-      val module   = mise(mountKey).success.value
+      val module = mise.success.value
 
-      module.contribution.onCreateCommands should have size 1
+      module.contribution.onCreateCommands should have size 0
       module.contribution.postCreateCommands should have size 1
 
-      module.contribution.mounts should have size 1
-      module.contribution.mounts.head match {
-        case Mount.ExplicitMount(source, _, _) =>
-          source shouldBe s"$mountKey-mise-cache-volume"
-        case Mount.ShortMount(mount) =>
-          fail(
-            s"Expected an ExplicitMount, but got ShortMount($mount). The mise module should use an ExplicitMount for clarity."
-          )
-      }
+      module.contribution.mounts should have size 0
     }
   }
 
@@ -36,7 +26,7 @@ class MiseModuleTest
       val moduleConfig = Modules.ModuleConfig("test-mount-key")
       val modules      = Modules.builtInModules(moduleConfig).success.value
 
-      modules should contain(mise(moduleConfig.mountKey).success.value)
+      modules should contain(mise.success.value)
     }
   }
 }

@@ -46,32 +46,6 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
       }
     }
 
-    "should have mise shims on the PATH" taggedAs ContainerTest in {
-      val workspace = setupWorkspaceWithSmallContainer("mise")
-
-      startContainer(workspace) match {
-        case Left(error) =>
-          fail(s"Failed to start container: $error")
-
-        case Right(runner) =>
-          val pathResult = runner.exec("echo $PATH")
-          pathResult.stdout should include("~/.local/share/mise/shims")
-      }
-    }
-
-    "should have DEVENV_MISE_CACHE_MOUNT_DIR set correctly" taggedAs ContainerTest in {
-      val workspace = setupWorkspaceWithSmallContainer("mise")
-
-      startContainer(workspace) match {
-        case Left(error) =>
-          fail(s"Failed to start container: $error")
-
-        case Right(runner) =>
-          val envResult = runner.exec("echo $DEVENV_MISE_CACHE_MOUNT_DIR")
-          envResult.stdout.trim shouldBe "/mnt/mise-cache"
-      }
-    }
-
     // replace `ignore` with `in` to enable this test for debugging purposes
     "debug" taggedAs ContainerTest ignore {
       val workspace = setupWorkspaceWithSmallContainer("mise")
