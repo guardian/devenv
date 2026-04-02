@@ -16,11 +16,11 @@ if [[ -z $DEVENV_COURSIER_CACHE_MOUNT_DIR ]]; then
     exit 1
 fi
 
-DEVENV_IVY_USER_DIR="/home/$DEVENV_CONTAINER_USER/.ivy2"
-DEVENV_IVY_CACHE_MOUNT_LINK="$DEVENV_IVY_USER_DIR/cache"
-
 # We will use this to chown below
 DEVENV_CONTAINER_USER=$(whoami)
+
+DEVENV_IVY_USER_DIR="/home/$DEVENV_CONTAINER_USER/.ivy2"
+DEVENV_IVY_CACHE_MOUNT_LINK="$DEVENV_IVY_USER_DIR/cache"
 
 log "Link the shared ivy data volume at the correct point."
 mkdir -p "$DEVENV_IVY_CACHE_MOUNT_LINK"

@@ -45,6 +45,11 @@ mkdir -p "/home/$DEVENV_CONTAINER_USER/.local/share/mise"
 mkdir -p "$DEVENV_MISE_CACHE_MOUNT_DIR/installs"
 sudo ln -sf "$DEVENV_MISE_CACHE_MOUNT_DIR/installs" "/home/$DEVENV_CONTAINER_USER/.local/share/mise/installs"
 
+log "Symlinking $DEVENV_MISE_CACHE_MOUNT_DIR/downloads to /home/$DEVENV_CONTAINER_USER/.local/share/mise/downloads"
+mkdir -p "/home/$DEVENV_CONTAINER_USER/.local/share/mise"
+mkdir -p "$DEVENV_MISE_CACHE_MOUNT_DIR/downloads"
+sudo ln -sf "$DEVENV_MISE_CACHE_MOUNT_DIR/downloads" "/home/$DEVENV_CONTAINER_USER/.local/share/mise/downloads"
+
 log "Installing mise tooling."
 mise install || warn "mise install failed. You may need to run mise install manually inside the container."
 
