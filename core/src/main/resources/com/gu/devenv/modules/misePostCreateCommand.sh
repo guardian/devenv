@@ -32,25 +32,25 @@ fi
 #sudo ln -sf "$MISE_INSTALL_PATH" /usr/local/bin/mise
 
 log "Checking mise is working correctly."
-mise --version
+$MISE_INSTALL_PATH --version
 
 log "Updating mise if needed."
-mise self-update --yes || warn "Skipping mise self-update - you may be offline."
+$MISE_INSTALL_PATH self-update --yes || warn "Skipping mise self-update - you may be offline."
 
 log "Trusting mise config (see: https://mise.jdx.dev/cli/trust.html)."
-mise trust --yes || true
+$MISE_INSTALL_PATH trust --yes || true
 
 log "Installing mise tooling."
-mise install || warn "mise install failed. You may need to run mise install manually inside the container."
+$MISE_INSTALL_PATH install || warn "mise install failed. You may need to run mise install manually inside the container."
 
 PATH=/home/$DEVENV_CONTAINER_USER/.local/share/mise/shims:$PATH
 #unset MISE_INSTALL_PATH
 
 log "Reshimming mise shims."
-mise reshim
+$MISE_INSTALL_PATH reshim
 
 log "List installed tools."
-mise list
+$MISE_INSTALL_PATH list
 
 log "Final checks."
-mise doctor
+$MISE_INSTALL_PATH doctor
