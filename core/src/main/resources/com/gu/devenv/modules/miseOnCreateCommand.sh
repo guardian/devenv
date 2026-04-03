@@ -15,4 +15,4 @@ fi
 DEVENV_CONTAINER_USER=$(whoami)
 
 log "Ensuring correct ownership of the shared mise data volume."
-sudo chown -R "$DEVENV_CONTAINER_USER":"$DEVENV_CONTAINER_USER" "$DEVENV_MISE_CACHE_MOUNT_DIR"
+sudo chown -RL "$DEVENV_CONTAINER_USER":"$DEVENV_CONTAINER_USER" "$DEVENV_MISE_CACHE_MOUNT_DIR"
