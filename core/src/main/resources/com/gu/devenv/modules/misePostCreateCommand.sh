@@ -44,7 +44,7 @@ log "Installing mise tooling."
 $MISE_INSTALL_PATH install || warn "mise install failed. You may need to run mise install manually inside the container."
 
 PATH=/home/$DEVENV_CONTAINER_USER/.local/share/mise/shims:$PATH
-#unset MISE_INSTALL_PATH
+echo -en "export PATH=/home/$DEVENV_CONTAINER_USER/.local/share/mise/shims:$PATH" | sudo tee -a /etc/bash.bashrc
 
 log "Reshimming mise shims."
 $MISE_INSTALL_PATH reshim
