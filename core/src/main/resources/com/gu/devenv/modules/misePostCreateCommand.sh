@@ -28,8 +28,8 @@ else
   curl -fsSL https://mise.run/bash | sh
 fi
 
-log "Symlinking $MISE_INSTALL_PATH to /usr/local/bin/mise."
-sudo ln -sf "$MISE_INSTALL_PATH" /usr/local/bin/mise
+#log "Symlinking $MISE_INSTALL_PATH to /usr/local/bin/mise."
+#sudo ln -sf "$MISE_INSTALL_PATH" /usr/local/bin/mise
 
 log "Checking mise is working correctly."
 mise --version
@@ -43,7 +43,8 @@ mise trust --yes || true
 log "Installing mise tooling."
 mise install || warn "mise install failed. You may need to run mise install manually inside the container."
 
-PATH=$PATH:/home/$DEVENV_CONTAINER_USER/.local/share/mise/shims/
+PATH=/home/$DEVENV_CONTAINER_USER/.local/share/mise/shims:$PATH
+#unset MISE_INSTALL_PATH
 
 log "Reshimming mise shims."
 mise reshim
