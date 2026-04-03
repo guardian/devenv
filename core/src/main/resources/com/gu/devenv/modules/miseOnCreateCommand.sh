@@ -14,5 +14,17 @@ fi
 # We will use this to chown below
 DEVENV_CONTAINER_USER=$(whoami)
 
+DEVENV_CONTAINER_USER_MISE="/home/$DEVENV_CONTAINER_USER/.local/share/mise"
+mkdir -p "$DEVENV_CONTAINER_USER_MISE"
+
+log "Symlinking $DEVENV_MISE_CACHE_MOUNT_DIR/installs to $DEVENV_CONTAINER_USER_MISE/installs"
+mkdir -p "$DEVENV_MISE_CACHE_MOUNT_DIR/installs"
+sudo ln -sf "$DEVENV_MISE_CACHE_MOUNT_DIR/installs" "$DEVENV_CONTAINER_USER_MISE/installs"
+
+log "Symlinking $DEVENV_MISE_CACHE_MOUNT_DIR/downloads to $DEVENV_CONTAINER_USER_MISE/downloads"
+mkdir -p "$DEVENV_MISE_CACHE_MOUNT_DIR/downloads"
+sudo ln -sf "$DEVENV_MISE_CACHE_MOUNT_DIR/downloads" "$DEVENV_CONTAINER_USER_MISE/downloads"
+
 log "Ensuring correct ownership of the shared mise data volume."
 sudo chown -RL "$DEVENV_CONTAINER_USER":"$DEVENV_CONTAINER_USER" "$DEVENV_MISE_CACHE_MOUNT_DIR"
+sudo chown -RL "$DEVENV_CONTAINER_USER":"$DEVENV_CONTAINER_USER" "$DEVENV_CONTAINER_USER_MISE"

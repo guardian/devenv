@@ -40,16 +40,6 @@ mise self-update --yes || warn "Skipping mise self-update - you may be offline."
 log "Trusting mise config (see: https://mise.jdx.dev/cli/trust.html)."
 mise trust --yes || true
 
-log "Symlinking $DEVENV_MISE_CACHE_MOUNT_DIR/installs to /home/$DEVENV_CONTAINER_USER/.local/share/mise/installs"
-mkdir -p "/home/$DEVENV_CONTAINER_USER/.local/share/mise"
-mkdir -p "$DEVENV_MISE_CACHE_MOUNT_DIR/installs"
-sudo ln -sf "$DEVENV_MISE_CACHE_MOUNT_DIR/installs" "/home/$DEVENV_CONTAINER_USER/.local/share/mise/installs"
-
-log "Symlinking $DEVENV_MISE_CACHE_MOUNT_DIR/downloads to /home/$DEVENV_CONTAINER_USER/.local/share/mise/downloads"
-mkdir -p "/home/$DEVENV_CONTAINER_USER/.local/share/mise"
-mkdir -p "$DEVENV_MISE_CACHE_MOUNT_DIR/downloads"
-sudo ln -sf "$DEVENV_MISE_CACHE_MOUNT_DIR/downloads" "/home/$DEVENV_CONTAINER_USER/.local/share/mise/downloads"
-
 log "Installing mise tooling."
 mise install || warn "mise install failed. You may need to run mise install manually inside the container."
 
