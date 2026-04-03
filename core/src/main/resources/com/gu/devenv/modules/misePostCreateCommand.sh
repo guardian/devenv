@@ -43,12 +43,12 @@ $MISE_INSTALL_PATH trust --yes || true
 log "Installing mise tooling."
 $MISE_INSTALL_PATH install || warn "mise install failed. You may need to run mise install manually inside the container."
 
-echo -en "export PATH=/home/$DEVENV_CONTAINER_USER/.local/share/mise/shims:$PATH" | sudo tee -a /etc/bash.bashrc
-. /etc/bash.bashrc
-. "$HOME/.bashrc"
-
-log "Reshimming mise shims."
-$MISE_INSTALL_PATH reshim
+#echo -en "export PATH=/home/$DEVENV_CONTAINER_USER/.local/share/mise/shims:$PATH" | sudo tee -a /etc/bash.bashrc
+#. /etc/bash.bashrc
+eval "$(/mnt/mise-cache/mise activate --shims bash)"
+#
+#log "Reshimming mise shims."
+#$MISE_INSTALL_PATH reshim
 
 log "List installed tools."
 $MISE_INSTALL_PATH list
