@@ -17,6 +17,7 @@ object MiseVerifier {
   def verify(runner: DevcontainerRunner): Either[String, Unit] =
     for {
       _ <- checkMiseInstalled(runner)
+      _ <- checkMiseShimsOnPathAfterActivation(runner)
       _ <- checkMiseDoctor(runner)
       _ <- checkMiseToolsAvailable(runner)
     } yield ()
@@ -27,10 +28,21 @@ object MiseVerifier {
     else Left(s"mise is not installed: ${result.combinedOutput}")
   }
 
+  private val activateMise = """eval "$(mise activate --shims bash)" &>/dev/null"""
+  private val activateMiseAndGetPath = activateMise + " && echo $PATH"
+  private def checkMiseShimsOnPathAfterActivation(runner: DevcontainerRunner): Either[String, Unit] = {
+    val pathResult            = runner.exec(activateMiseAndGetPath)
+    val expectedShimsLocation = "/home/vscode/.local/share/mise/shims"
+    val shimsLocationPresent  = pathResult.stdout.split(":").contains(expectedShimsLocation)
+    if (shimsLocationPresent) Right(())
+    else Left(s"$expectedShimsLocation not found in path $pathResult")
+  }
+
+  private val activateMiseAndRunDoctor = activateMise + s" && $miseBin doctor"
   private def checkMiseDoctor(runner: DevcontainerRunner): Either[String, Unit] = {
     // mise doctor may return non-zero for warnings, so we just check it runs
     // and produces output containing expected sections
-    val result = runner.exec(s"$miseBin doctor")
+    val result = runner.exec(activateMiseAndRunDoctor)
     if (result.stdout.contains("toolset:") || result.stdout.contains("dirs:")) {
       Right(())
     } else {
@@ -38,10 +50,10 @@ object MiseVerifier {
     }
   }
 
+  private val activateMiseAndGetNodeVersion = activateMise + s" && node --version"
   private def checkMiseToolsAvailable(runner: DevcontainerRunner): Either[String, Unit] = {
     // Check that node is available via mise shims (our test fixture installs node 24)
-    // In normal usage, the activation line is in ~/.bashrc
-    val result = runner.exec("eval \"$(mise activate bash)\" && node --version")
+    val result = runner.exec(activateMiseAndGetNodeVersion)
     if (result.succeeded && result.stdout.contains("v24")) {
       Right(())
     } else if (result.succeeded) {
