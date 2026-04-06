@@ -13,13 +13,12 @@ import java.nio.file.{Files, Path}
 import java.util.Base64
 import scala.util.Try
 
-def getBase64StringsDecoded(devcontainerDir: Path, value1: String) = {
+def getBase64StringsDecoded(devcontainerDir: Path, value1: String) =
   Files
     .readString(devcontainerDir.resolve(value1))
     .split("""\\"""")
     .map(s => Try(Base64.getDecoder.decode(s)))
     .flatMap(s => s.toOption.map(b => String(b)))
-}
 
 class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
