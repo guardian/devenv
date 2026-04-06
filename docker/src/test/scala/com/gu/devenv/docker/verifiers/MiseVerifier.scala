@@ -28,9 +28,11 @@ object MiseVerifier {
     else Left(s"mise is not installed: ${result.combinedOutput}")
   }
 
-  private val activateMise = """eval "$(mise activate --shims bash)" &>/dev/null"""
+  private val activateMise           = """eval "$(mise activate --shims bash)" &>/dev/null"""
   private val activateMiseAndGetPath = activateMise + " && echo $PATH"
-  private def checkMiseShimsOnPathAfterActivation(runner: DevcontainerRunner): Either[String, Unit] = {
+  private def checkMiseShimsOnPathAfterActivation(
+      runner: DevcontainerRunner
+  ): Either[String, Unit] = {
     val pathResult            = runner.exec(activateMiseAndGetPath)
     val expectedShimsLocation = "/home/vscode/.local/share/mise/shims"
     val shimsLocationPresent  = pathResult.stdout.split(":").contains(expectedShimsLocation)

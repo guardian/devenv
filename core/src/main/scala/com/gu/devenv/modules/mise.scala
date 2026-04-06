@@ -19,18 +19,16 @@ import scala.util.Try
 private[modules] def mise: Try[Module] =
   for {
     encodedPostCreateScript <- Command.fromResourceScript("misePostCreateCommand.sh")
-  } yield {
-    Module(
-      name = "mise",
-      summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
-      enabledByDefault = true,
-      contribution = ModuleContribution(
-        postCreateCommands = List(encodedPostCreateScript),
-        // provide IDE support for mise
-        plugins = Plugins(
-          intellij = List("com.github.l34130.mise"),
-          vscode = List("hverlin.mise-vscode")
-        )
+  } yield Module(
+    name = "mise",
+    summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
+    enabledByDefault = true,
+    contribution = ModuleContribution(
+      postCreateCommands = List(encodedPostCreateScript),
+      // provide IDE support for mise
+      plugins = Plugins(
+        intellij = List("com.github.l34130.mise"),
+        vscode = List("hverlin.mise-vscode")
       )
     )
-  }
+  )
