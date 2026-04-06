@@ -17,7 +17,6 @@ object MiseVerifier {
   def verify(runner: DevcontainerRunner): Either[String, Unit] =
     for {
       _ <- checkMiseInstalled(runner)
-      _ <- checkMiseShimsOnPath(runner)
       _ <- checkMiseDoctor(runner)
       _ <- checkMiseToolsAvailable(runner)
     } yield ()
@@ -26,14 +25,6 @@ object MiseVerifier {
     val result = runner.exec(s"$miseBin --version")
     if (result.succeeded) Right(())
     else Left(s"mise is not installed: ${result.combinedOutput}")
-  }
-
-  private def checkMiseShimsOnPath(runner: DevcontainerRunner): Either[String, Unit] = {
-    val pathResult            = runner.exec("echo $PATH")
-    val expectedShimsLocation = "~/.local/share/mise/shims/"
-    val shimsLocationPresent  = pathResult.stdout.split(":").contains(expectedShimsLocation)
-    if (shimsLocationPresent) Right(())
-    else Left(s"$expectedShimsLocation not found in path $pathResult")
   }
 
   private def checkMiseDoctor(runner: DevcontainerRunner): Either[String, Unit] = {
@@ -49,8 +40,8 @@ object MiseVerifier {
 
   private def checkMiseToolsAvailable(runner: DevcontainerRunner): Either[String, Unit] = {
     // Check that node is available via mise shims (our test fixture installs node 24)
-    // The shims directory is on PATH via remoteEnv
-    val result = runner.exec("node --version")
+    // In normal usage, the activation line is in ~/.bashrc
+    val result = runner.exec("eval \"$(mise activate bash)\" && node --version")
     if (result.succeeded && result.stdout.contains("v24")) {
       Right(())
     } else if (result.succeeded) {

@@ -18,7 +18,6 @@ import scala.util.Try
   */
 private[modules] def mise: Try[Module] =
   for {
-    encodedOnCreateScript   <- Command.fromResourceScript("miseOnCreateCommand.sh")
     encodedPostCreateScript <- Command.fromResourceScript("misePostCreateCommand.sh")
   } yield {
     Module(
@@ -26,7 +25,6 @@ private[modules] def mise: Try[Module] =
       summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
       enabledByDefault = true,
       contribution = ModuleContribution(
-        onCreateCommands = List(encodedOnCreateScript),
         postCreateCommands = List(encodedPostCreateScript),
         // provide IDE support for mise
         plugins = Plugins(

@@ -15,7 +15,7 @@ else
   curl -fsSL https://mise.run/bash | sh
 fi
 
-log "Checking mise is working correctly."
+log "Checking mise is working correctly and on the path."
 mise --version
 
 log "Updating mise if needed."
@@ -27,7 +27,11 @@ mise trust --yes || true
 log "Installing mise tooling."
 mise install || warn "mise install failed. You may need to run mise install manually inside the container."
 
-eval "$(mise activate --shims bash)"
+log "Ensuring that mise activate bash is in bashrc"
+grep 'mise activate bash' ~/.bashrc || echo 'eval "$(mise activate bash)"' >> ~/.bashrc
+
+log "Ensuring that mise activate bash _works_ from bashrc"
+source ~/.bashrc
 
 log "List installed tools."
 mise list
