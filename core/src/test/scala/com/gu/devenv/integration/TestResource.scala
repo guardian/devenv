@@ -4,11 +4,11 @@ import cats.Apply
 
 /** A composable test resource that manages setup and teardown.
   *
-  * Compose multiple resources using `mapN`:
+  * Compose multiple resources using `tupled.run` :
   * {{{
   * import cats.syntax.all.*
   *
-  * (tempDir, tempDir, testModules).mapN { (projectDir, userConfigDir, modules) =>
+  * (tempDir, tempDir, testModules).tupled.run { (projectDir, userConfigDir, modules) =>
   *   // test using all three resources
   * }
   * }}}
