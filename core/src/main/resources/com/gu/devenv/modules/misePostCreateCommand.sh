@@ -27,11 +27,15 @@ mise trust --yes || true
 log "Installing mise tooling."
 mise install || warn "mise install failed. You may need to run mise install manually inside the container."
 
-log "Ensuring that mise activate bash is in bashrc"
-grep 'mise activate bash' ~/.bashrc || echo 'eval "$(mise activate bash)"' >> ~/.bashrc
+log "Ensure that mise activate --shims bash is in bashrc."
+sed -i 's/mise activate bash/mise activate --shims bash/' ~/.bashrc
+grep 'mise activate --shims bash' ~/.bashrc || echo 'eval "$(mise activate --shims bash)" #Added by devenv' | tee ~/.bashrc
 
-log "Ensuring that mise activate bash _works_ from bashrc"
-source ~/.bashrc
+log "Check there is exactly one activate command in bashrc."
+test "$(grep -c 'mise activate' ~/.bashrc)" -eq 1 || echo 'Did not find exactly one activate command'
+
+log "Run the activate command from bashrc."
+eval "$(grep 'mise activate' ~/.bashrc)"
 
 log "List installed tools."
 mise list
