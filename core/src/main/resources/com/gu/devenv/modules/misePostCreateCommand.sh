@@ -29,7 +29,7 @@ mise install || warn "mise install failed. You may need to run mise install manu
 
 log "Ensure that mise activate --shims bash is in bashrc."
 sed -i 's/mise activate bash/mise activate --shims bash/' ~/.bashrc
-grep 'mise activate --shims bash' ~/.bashrc || echo 'eval "$(mise activate --shims bash)" #Added by devenv' | tee ~/.bashrc
+grep 'mise activate --shims bash' ~/.bashrc || echo 'eval "$(mise activate --shims bash)" #Added by devenv' | tee -a ~/.bashrc
 
 log "Check there is exactly one activate command in bashrc."
 test "$(grep -c 'mise activate' ~/.bashrc)" -eq 1 || echo 'Did not find exactly one activate command'
