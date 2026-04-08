@@ -62,9 +62,6 @@ object MiseVerifier {
   private def checkMiseToolsAvailable(runner: DevcontainerRunner): Either[String, Unit] = {
     // Check that node is available via mise shims (our test fixture installs node 24)
     val result = runner.exec("node --version")
-    println(result.stdout)
-    val result2 = runner.exec("which node && echo $PATH")
-    println(result2.stdout)
     if (result.succeeded && result.stdout.contains("v24")) {
       Right(())
     } else if (result.succeeded) {
