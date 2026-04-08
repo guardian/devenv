@@ -4,7 +4,7 @@ import com.gu.devenv.docker.verifiers.DockerVerifier
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.ModuleConfig
 import com.gu.devenv.{Devenv, GenerateResult}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag, TryValues}
+import org.scalatest.*
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 
