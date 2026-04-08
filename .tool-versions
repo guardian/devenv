@@ -3,4 +3,3 @@ sbt latest
 graalvm 21
 aqua:aws/aws-cli latest
 node lts
-github:guardian/devenv  20260401-083945
