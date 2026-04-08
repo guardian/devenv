@@ -37,7 +37,10 @@ class DevcontainerRunner(workspaceDir: Path) {
     }
   }
 
-  /** Executes a command inside the running devcontainer */
+  /** Executes a command inside the running devcontainer
+    *
+    * Note that the command cannot contain single quotes
+    */
   def exec(command: String): CommandResult =
     CommandRunner.run(
       s"""$devcontainer exec --workspace-folder $workspacePath --config $configPath $noGitRoot -- bash -c '$command'"""
