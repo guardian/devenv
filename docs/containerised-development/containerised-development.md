@@ -31,7 +31,16 @@ Your git credentials will not be visible inside the container.  The IDE will med
 Ensure your git key is available to the ssh agent:
    
 ```
-ssh-add -k ~/.ssh/id_ed25519
+ssh-add --apple-use-keychain -k ~/.ssh/id_ed25519
+```
+
+For maximum reliability, we recommend also adding the following to ~/.ssh/config
+
+```
+Host github.com
+        AddKeysToAgent yes
+        UseKeychain yes
+        IdentityFile ~/.ssh/id_ed25519
 ```
 
 ### IDEs

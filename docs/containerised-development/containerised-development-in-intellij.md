@@ -35,3 +35,19 @@ If it is unresponsive, the logging can still be viewed via docker:
 ```
 docker exec -it <container> tail -f /.jbdevcontainer/JetBrains/IntelliJIdea*/log/idea.log
 ```
+
+## Gotchas
+
+On opening a newly cloned dev container, the initial sbt import can fail with a message like:
+
+```
+sbt import cancelled: The paths:
+/$devcontainer.ij/3428b9017dfd@u~var~run~docker.sock/IdeaProjects/janus,
+/Users/justin_rowles/.local/share/mise/installs/java/corretto-21.0.3/bin/java,
+/$devcontainer.ij/3428b9017dfd@u~var~run~docker.sock/tmp/a20wr0sbt-launch.jar are not compatible.
+They point to paths in different (virtual) machines.
+Please check your project configuration, sbt settings and project JDK settings.
+```
+
+Run it again.  It will work second time.
+
