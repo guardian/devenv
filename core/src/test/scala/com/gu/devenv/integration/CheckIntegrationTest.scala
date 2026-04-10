@@ -524,7 +524,7 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           Files.writeString(escapeHatch, escapeHatchJson)
 
           val result = Devenv.check(devcontainerDir, userConfigDir, modules)
-          result.isFailure shouldBe (true)
+          result.isFailure shouldBe true
         }
       }
     }
