@@ -4,36 +4,43 @@ This document provides detailed specifications for the project and user configur
 
 ## Overview
 
-**Project config**: `.devcontainer/devenv.yaml` - Project-specific settings (image, ports, IDE plugins, commands). Checked into version control.
+**Project config**: `.devcontainer/devenv.yaml` - Project-specific settings (image, ports, IDE plugins, commands).
+Checked into version control.
 
-**User config**: `~/.config/devenv/devenv.yaml` - Personal preferences (dotfiles, additional IDE plugins). Merged with project config for the user-specific devcontainer.
+**User config**: `~/.config/devenv/devenv.yaml` - Personal preferences (dotfiles, additional IDE plugins). Merged with
+project config for the user-specific devcontainer.
+
+**Escape Hatch**: `.devcontainer/escapehatch.json` - Final overrides to allow projects to merge in devcontainer.json
+content that devenv does not support.
 
 Two devcontainer files are generated:
+
 - `.devcontainer/user/devcontainer.json` - Merged config with your personal settings
 - `.devcontainer/shared/devcontainer.json` - Project-only config for team use
 
-Your user-specific file is excluded from the Git repository with a .gitignore entry. The general project file can be checked in to provide a project environment for cloud-based editors.
+Your user-specific file is excluded from the Git repository with a .gitignore entry. The general project file can be
+checked in to provide a project environment for cloud-based editors.
 
 ## Project Configuration Spec
 
 The project config (`.devcontainer/devenv.yaml`) supports the following fields:
 
-| Field                 | Description                                                                                     | Default                                       |
-|-----------------------|-------------------------------------------------------------------------------------------------|-----------------------------------------------|
-| `name`                | Project name, used as the devcontainer name (required)                                          | -                                             |
-| `modules`             | List of module names to enable (see Modules section)                                            | `[]`                                          |
-| `forwardPorts`        | Port forwarding config, either as integer (maps same port) or `"hostPort:containerPort"` string | `[]`                                          |
-| `remoteEnv`           | Environment variables set in the remote/container environment                                   | `[]`                                          |
-| `containerEnv`        | Environment variables set at container creation time                                            | `[]`                                          |
-| `plugins`             | IDE plugins to install (`intellij`: list of plugin IDs, `vscode`: list of extension IDs)        | `{}`                                          |
-| `mounts`              | Volume mounts, either as Docker mount strings or objects with `source`, `target`, and `type`    | `[]`                                          |
-| `postCreateCommand`   | Commands to run once after container creation                                                   | `[]`                                          |
-| `postStartCommand`    | Commands to run each time the container starts                                                  | `[]`                                          |
-| `features`            | Dev Container features to enable (as key-value pairs)                                           | `{}`                                          |
-| `updateRemoteUserUID` | Whether to update remote user's UID to match host                                               | `true`                                        |
-| `capAdd`              | Linux capabilities to add to the container (use with caution)                                   | `[]`                                          |
-| `securityOpt`         | Security options for the container (use with caution)                                           | `[]`                                          |
-| `runArgs`             | Extra switches for container generation                                                         | `[]`                                          |
+| Field                 | Description                                                                                     | Default |
+|-----------------------|-------------------------------------------------------------------------------------------------|---------|
+| `name`                | Project name, used as the devcontainer name (required)                                          | -       |
+| `modules`             | List of module names to enable (see Modules section)                                            | `[]`    |
+| `forwardPorts`        | Port forwarding config, either as integer (maps same port) or `"hostPort:containerPort"` string | `[]`    |
+| `remoteEnv`           | Environment variables set in the remote/container environment                                   | `[]`    |
+| `containerEnv`        | Environment variables set at container creation time                                            | `[]`    |
+| `plugins`             | IDE plugins to install (`intellij`: list of plugin IDs, `vscode`: list of extension IDs)        | `{}`    |
+| `mounts`              | Volume mounts, either as Docker mount strings or objects with `source`, `target`, and `type`    | `[]`    |
+| `postCreateCommand`   | Commands to run once after container creation                                                   | `[]`    |
+| `postStartCommand`    | Commands to run each time the container starts                                                  | `[]`    |
+| `features`            | Dev Container features to enable (as key-value pairs)                                           | `{}`    |
+| `updateRemoteUserUID` | Whether to update remote user's UID to match host                                               | `true`  |
+| `capAdd`              | Linux capabilities to add to the container (use with caution)                                   | `[]`    |
+| `securityOpt`         | Security options for the container (use with caution)                                           | `[]`    |
+| `runArgs`             | Extra switches for container generation                                                         | `[]`    |
 
 ### Example
 
@@ -71,7 +78,8 @@ The user config (`~/.config/devenv/devenv.yaml`) supports the following (optiona
 
 ### Dotfiles Configuration
 
-The `dotfiles` field in the user config allows you to specify a GitHub repository containing your personal dotfiles to be cloned and installed into the devcontainer. All three fields are required.
+The `dotfiles` field in the user config allows you to specify a GitHub repository containing your personal dotfiles to
+be cloned and installed into the devcontainer. All three fields are required.
 
 | Field            | Description                                                 |
 |------------------|-------------------------------------------------------------|
@@ -92,19 +100,51 @@ dotfiles:
   installCommand: "install.sh"
 ```
 
+## Escape Hatch Spec
+
+Literally any valid json. Devenv does not validate content, only structure. You could use this, for example, to
+specify a different image and matching file:
+
+```
+{ 
+  "image": "your special image",
+  "remoteUser": "your special user"
+}
+```
+
+Or to override with a build pointing at a local Dockerfile at `.devcontainer/user/Dockerfile`:
+
+```
+{
+  "name": "My Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile",
+  },
+  "remoteUser": "root"
+}
+```
+
+That Dockerfile could then specify any base image and manipulate it as desired.
+
 ## Modules
 
-Modules are pre-configured bundles of features, plugins, and commands that can be enabled in your project config. They're included in the default `.devenv` template and can be disabled by commenting them out or removing them from the list.
+Modules are pre-configured bundles of features, plugins, and commands that can be enabled in your project config.
+They're included in the default `.devenv` template and can be disabled by commenting them out or removing them from the
+list.
 
 ### Available Modules
 
-- **`mise`** - Installs and configures [mise](https://mise.jdx.dev/) for version management of languages and tools. Enabled by default.
-- **`docker-in-docker`** - Enables running Docker containers within the devcontainer. Uses an isolated Docker daemon (not host socket) with minimal capabilities for better security. Disabled by default.
-  - Image storage is ephemeral (lost on container rebuild)
-  - Containers run inside the devcontainer, not directly on host network
-  - Use `docker run -p 8080:8080` then access via devcontainer's forwarded ports
-- **`scala`** - Adds IDE plugins for Scala development (Scala plugin for both VS Code and IntelliJ) _and_ mounts docker volumes to provide persistent ivy and coursier caches. Disabled by default.
-- **`node`** - Adds IDE plugins for Node.js development (IntelliJ only; VS Code has built-in support). Disabled by default.
+- **`mise`** - Installs and configures [mise](https://mise.jdx.dev/) for version management of languages and tools.
+  Enabled by default.
+- **`docker-in-docker`** - Enables running Docker containers within the devcontainer. Uses an isolated Docker daemon (
+  not host socket) with minimal capabilities for better security. Disabled by default.
+    - Image storage is ephemeral (lost on container rebuild)
+    - Containers run inside the devcontainer, not directly on host network
+    - Use `docker run -p 8080:8080` then access via devcontainer's forwarded ports
+- **`scala`** - Adds IDE plugins for Scala development (Scala plugin for both VS Code and IntelliJ) _and_ mounts docker
+  volumes to provide persistent ivy and coursier caches. Disabled by default.
+- **`node`** - Adds IDE plugins for Node.js development (IntelliJ only; VS Code has built-in support). Disabled by
+  default.
 
 ### Example
 
@@ -129,7 +169,8 @@ modules:
 
 ## Dotfiles
 
-You can configure personal dotfiles in your user config (`~/.config/devenv/devenv.yaml`) to automatically clone and install them during container creation:
+You can configure personal dotfiles in your user config (`~/.config/devenv/devenv.yaml`) to automatically clone and
+install them during container creation:
 
 ```yaml
 dotfiles:
@@ -138,27 +179,31 @@ dotfiles:
   installCommand: "install.sh"
 ```
 
-The dotfiles setup runs after project/container setup to avoid interfering with shared configuration. The repository is cloned into the container at the specified path, and the `installCommand` is executed from there.
+The dotfiles setup runs after project/container setup to avoid interfering with shared configuration. The repository is
+cloned into the container at the specified path, and the `installCommand` is executed from there.
 
 ## Container Size
 
 eg
+
 ```yaml
 containerSize: small
 ```
 
-Developer laptops are typically quite powerful, so a container size of `large` is defaulted.  This will
+Developer laptops are typically quite powerful, so a container size of `large` is defaulted. This will
 result in additional runArgs switches:
 
- | Switch          | Effect                  |
+| Switch          | Effect                  |
  |-----------------|-------------------------|
- | --memory=16g    | 16Gb of memory          |
- | --cpus=8        | Eight cores             |
- | --shm-size=512m | 512Mb of shared memory* |
+| --memory=16g    | 16Gb of memory          |
+| --cpus=8        | Eight cores             |
+| --shm-size=512m | 512Mb of shared memory* |
 
 *More shared memory is useful for running playwright tests in chrome, for example.
 
-However, this is not suitable for use with github actions, as the GHA environment cannot support such a large container.  For this purpose, all tests which start a docker environment pull in a github user profile, which specifies a small container (although we keep the shared memory):
+However, this is not suitable for use with github actions, as the GHA environment cannot support such a large container.
+For this purpose, all tests which start a docker environment pull in a github user profile, which specifies a small
+container (although we keep the shared memory):
 
 | Switch          | Effect                  |
 |-----------------|-------------------------|
