@@ -43,6 +43,16 @@ object Config {
         None
       }
 
+  def loadEscapeHatch(path: Path): Try[Option[Json]] =
+    Filesystem
+      .readFile(path)
+      .flatMap(s => io.circe.parser.parse(s).toTry)
+      .map(Some(_))
+      .recover { case _: java.nio.file.NoSuchFileException =>
+        // It's ok if the escape hatch file doesn't exist, but not if it's broken
+        None
+      }
+
   def parseProjectConfig(contents: String): Try[ProjectConfig] =
     for {
       json          <- parser.parse(contents).toTry
@@ -162,13 +172,16 @@ object Config {
   def generateConfigs(
       projectConfig: ProjectConfig,
       maybeUserConfig: Option[UserConfig],
-      modules: List[Module]
+      modules: List[Module],
+      escapeHatch: Option[Json]
   ): Try[(String, String)] = {
     val mergedUserConfig = Config.mergeConfigs(projectConfig, maybeUserConfig)
     for {
-      userJson   <- Config.configAsJson(mergedUserConfig, modules)
+      userJson <- Config.configAsJson(mergedUserConfig, modules)
+      userJsonWithEscapeHatch = escapeHatch.fold(userJson)(userJson deepMerge _)
       sharedJson <- Config.configAsJson(projectConfig, modules)
-    } yield (userJson.spaces2, sharedJson.spaces2)
+      sharedJsonWithEscapeHatch = escapeHatch.fold(sharedJson)(sharedJson deepMerge _)
+    } yield (userJsonWithEscapeHatch.spaces2, sharedJsonWithEscapeHatch.spaces2)
   }
 
   /** Compares the expected devcontainer.json content with the actual discovered content.
