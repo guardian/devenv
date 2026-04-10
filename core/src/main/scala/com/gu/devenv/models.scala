@@ -273,7 +273,8 @@ case class DevEnvPaths(
     sharedDir: Path,
     sharedDevcontainerFile: Path,
     gitignoreFile: Path,
-    devenvFile: Path
+    devenvFile: Path,
+    escapeHatch: Path
 )
 
 case class UserConfigPaths(

@@ -1,9 +1,10 @@
 package com.gu.devenv.integration
 
 import cats.syntax.all.*
-import com.gu.devenv.Devenv
-import com.gu.devenv.CheckResult
-import com.gu.devenv.integration.IntegrationTestHelpers._
+import com.gu.devenv.integration.IntegrationTestHelpers.*
+import com.gu.devenv.{CheckResult, Devenv}
+import io.circe.syntax.*
+import io.circe.{Json, JsonObject}
 import org.scalatest.TryValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
@@ -460,6 +461,70 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
           }
+        }
+      }
+
+      "should deep merge with a valid escapehatch.json" in {
+        (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
+
+          // Generate with one user config
+          val userDevenvFile = userConfigDir.resolve("devenv.yaml")
+          Files.writeString(userDevenvFile, userConfigWithPlugins)
+
+          Devenv.init(devcontainerDir, modules).success.value
+          val devenvFile = devcontainerDir.resolve("devenv.yaml")
+          Files.writeString(devenvFile, basicProjectConfig)
+          val userConfigFile = userConfigDir.resolve("devenv.yaml")
+          Files.writeString(userConfigFile, userConfigWithPlugins)
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+
+          val escapeHatch = devcontainerDir.resolve("escapehatch.json")
+          val escapeHatchJson = Json
+            .fromJsonObject(
+              JsonObject.empty.add("remoteUser", "not-vscode".asJson)
+            )
+            .noSpaces
+          Files.writeString(escapeHatch, escapeHatchJson)
+
+          val result = Devenv.check(devcontainerDir, userConfigDir, modules).success.value
+
+          result match {
+            case CheckResult.Mismatch(userMismatch, sharedMismatch, _, _) =>
+              // Both user and shared files should differ due to changed user
+              userMismatch shouldBe defined
+              sharedMismatch shouldBe defined
+            case CheckResult.Match(_, _) =>
+              fail(
+                "Expected Mismatch result but got Match (remoteUser was changed by escapehatch.json)"
+              )
+            case CheckResult.NotInitialized =>
+              fail("Expected Mismatch result but got NotInitialized")
+          }
+        }
+      }
+
+      "should error on deep merge with an invalid escapehatch.json" in {
+        (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
+
+          // Generate with one user config
+          val userDevenvFile = userConfigDir.resolve("devenv.yaml")
+          Files.writeString(userDevenvFile, userConfigWithPlugins)
+
+          Devenv.init(devcontainerDir, modules).success.value
+          val devenvFile = devcontainerDir.resolve("devenv.yaml")
+          Files.writeString(devenvFile, basicProjectConfig)
+          val userConfigFile = userConfigDir.resolve("devenv.yaml")
+          Files.writeString(userConfigFile, userConfigWithPlugins)
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+
+          val escapeHatch     = devcontainerDir.resolve("escapehatch.json")
+          val escapeHatchJson = """{"forgot-closing-brace": "oops" """
+          Files.writeString(escapeHatch, escapeHatchJson)
+
+          val result = Devenv.check(devcontainerDir, userConfigDir, modules)
+          result.isFailure shouldBe (true)
         }
       }
     }

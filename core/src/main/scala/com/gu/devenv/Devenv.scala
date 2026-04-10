@@ -67,8 +67,9 @@ object Devenv {
         GenerateResult.ConfigNotCustomized
       )
       maybeUserConfig <- Config.loadUserConfig(userPaths.devenvConf).liftF
+      escapeHatch     <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
       (userJson, sharedJson) <- Config
-        .generateConfigs(projectConfig, maybeUserConfig, modules)
+        .generateConfigs(projectConfig, maybeUserConfig, modules, escapeHatch)
         .liftF
       userDevcontainerStatus <- Filesystem
         .updateFile(devEnvPaths.userDevcontainerFile, userJson)
@@ -114,11 +115,13 @@ object Devenv {
         CheckResult.NotInitialized
       )
       maybeUserConfig <- Config.loadUserConfig(userPaths.devenvConf).liftF
+      escapeHatch     <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
       (expectedUserJson, expectedSharedJson) <- Config
         .generateConfigs(
           projectConfig,
           maybeUserConfig,
-          modules
+          modules,
+          escapeHatch
         )
         .liftF
       actualUserJson <- Filesystem

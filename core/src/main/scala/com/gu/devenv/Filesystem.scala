@@ -18,7 +18,8 @@ object Filesystem {
       sharedDir = sharedDir,
       sharedDevcontainerFile = sharedDir.resolve("devcontainer.json"),
       gitignoreFile = devcontainerDir.resolve(".gitignore"),
-      devenvFile = devcontainerDir.resolve("devenv.yaml")
+      devenvFile = devcontainerDir.resolve("devenv.yaml"),
+      escapeHatch = devcontainerDir.resolve("escapehatch.json")
     )
   }
 
