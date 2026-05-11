@@ -24,7 +24,7 @@ private[modules] def scalaLang(mountKey: String): Try[Module] =
       contribution = ModuleContribution(
         plugins = Plugins(
           intellij = List("org.intellij.scala"),
-          vscode = List("scala-lang.scala")
+          vscode = List("scala-lang.scala", "scalameta.metals")
         ),
         onCreateCommands = List(encodedOnCreateScript),
         // Sets the roots of the cache volumes so that they can be appropriately chown'd
