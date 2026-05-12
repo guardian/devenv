@@ -31,12 +31,14 @@ object Devenv {
       sharedStatus    <- Filesystem.createDirIfNotExists(devEnvPaths.sharedDir)
       gitignoreStatus <- Filesystem.setupGitignore(devEnvPaths.gitignoreFile)
       devenvStatus    <- Filesystem.setupDevenv(devEnvPaths.devenvFile, modules)
+      readmeStatus    <- Filesystem.setupReadme(devEnvPaths.readmeFile)
     } yield InitResult(
       devcontainerStatus,
       userStatus,
       sharedStatus,
       gitignoreStatus,
-      devenvStatus
+      devenvStatus,
+      readmeStatus
     )
   }
 

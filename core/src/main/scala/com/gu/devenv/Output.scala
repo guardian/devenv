@@ -63,7 +63,8 @@ object Output {
         ".devcontainer/.gitignore",
         formatGitignoreStatus(result.gitignoreStatus)
       ),
-      (".devcontainer/devenv.yaml", formatInitStatus(result.devenvStatus))
+      (".devcontainer/devenv.yaml", formatInitStatus(result.devenvStatus)),
+      (".devcontainer/README.md", formatInitStatus(result.readmeStatus))
     )
     buildTable("Initialization Summary:", rows, 32)
   }

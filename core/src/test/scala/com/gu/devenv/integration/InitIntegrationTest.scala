@@ -25,12 +25,14 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           result.sharedStatus shouldBe FileSystemStatus.Created
           result.gitignoreStatus shouldBe GitignoreStatus.Created
           result.devenvStatus shouldBe FileSystemStatus.Created
+          result.readmeStatus shouldBe FileSystemStatus.Created
 
           Files.exists(devcontainerDir) shouldBe true
           Files.exists(devcontainerDir.resolve("user")) shouldBe true
           Files.exists(devcontainerDir.resolve("shared")) shouldBe true
           Files.exists(devcontainerDir.resolve(".gitignore")) shouldBe true
           Files.exists(devcontainerDir.resolve("devenv.yaml")) shouldBe true
+          Files.exists(devcontainerDir.resolve("README.md")) shouldBe true
         }
       }
 
@@ -75,6 +77,7 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           result.sharedStatus shouldBe FileSystemStatus.AlreadyExists
           result.gitignoreStatus shouldBe GitignoreStatus.AlreadyExistsWithExclusion
           result.devenvStatus shouldBe FileSystemStatus.AlreadyExists
+          result.readmeStatus shouldBe FileSystemStatus.AlreadyExists
         }
       }
 
