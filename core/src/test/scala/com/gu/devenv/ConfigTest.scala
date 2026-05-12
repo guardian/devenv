@@ -179,7 +179,7 @@ class ConfigTest
       )
     }
 
-    "returns unchanged project config when user config is None" in {
+    "applies large container run args when user config is None" in {
       val projectConfigYaml =
         scala.io.Source.fromResource("projectConfig.yaml").mkString
       val Success(projectConfig) =
@@ -187,7 +187,7 @@ class ConfigTest
 
       val merged = Config.mergeConfigs(projectConfig, None)
 
-      merged shouldBe projectConfig
+      merged shouldBe projectConfig.copy(runArgs = Config.largeContainerRunArgs)
     }
   }
 

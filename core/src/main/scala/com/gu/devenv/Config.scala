@@ -75,30 +75,30 @@ object Config {
   def mergeConfigs(
       projectConfig: ProjectConfig,
       maybeUserConfig: Option[UserConfig]
-  ): ProjectConfig =
-    maybeUserConfig.fold(projectConfig) { userConfig =>
-      // fetch the user's configured items so they can be added to the project config
-      val mergedPlugins =
-        applyPlugins(projectConfig.plugins, userConfig.plugins)
+  ): ProjectConfig = {
+    // fetch the user's configured items so they can be added to the project config
+    val mergedPlugins =
+      applyPlugins(projectConfig.plugins, maybeUserConfig.flatMap(_.plugins))
 
-      val dotfilesCommands = userConfig.dotfiles
-        .map(applyDotfiles)
-        .getOrElse(Nil)
+    val dotfilesCommands = maybeUserConfig
+      .flatMap(_.dotfiles)
+      .map(applyDotfiles)
+      .getOrElse(Nil)
 
-      // Large by default.  Devs have beefy laptops
-      val runArgs = userConfig.containerSize match {
-        case Some(Small) => smallContainerRunArgs
-        case _           => largeContainerRunArgs
-      }
-
-      projectConfig.copy(
-        plugins = mergedPlugins,
-        onCreateCommand = projectConfig.onCreateCommand,
-        postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand,
-        postStartCommand = projectConfig.postStartCommand,
-        runArgs = runArgs ++ projectConfig.runArgs
-      )
+    // Large by default.  Devs have beefy laptops
+    val runArgs = maybeUserConfig.flatMap(_.containerSize) match {
+      case Some(Small) => smallContainerRunArgs
+      case _           => largeContainerRunArgs
     }
+
+    projectConfig.copy(
+      plugins = mergedPlugins,
+      onCreateCommand = projectConfig.onCreateCommand,
+      postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand,
+      postStartCommand = projectConfig.postStartCommand,
+      runArgs = runArgs ++ projectConfig.runArgs
+    )
+  }
 
   def configAsJson(projectConfig: ProjectConfig, modules: List[Module]): Try[Json] =
     // Start by applying requested modules, then put explicit configuration on top of that
