@@ -2,7 +2,7 @@ name: Release
 
 # This workflow creates a draft GitHub Release with native binaries.
 #
-# Steps: 
+# Steps:
 # 1. Generates a version based on the current date and time (appends -dev for non-default branches)
 # 2. Builds native binaries for macOS (ARM64) and Linux (AMD64)
 # 3. Signs and notarizes the macOS binary using an Apple Developer ID Application certificate
