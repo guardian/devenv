@@ -274,6 +274,7 @@ case class DevEnvPaths(
     sharedDevcontainerFile: Path,
     gitignoreFile: Path,
     devenvFile: Path,
+    readmeFile: Path,
     escapeHatch: Path
 )
 
@@ -294,7 +295,8 @@ case class InitResult(
     userStatus: FileSystemStatus,
     sharedStatus: FileSystemStatus,
     gitignoreStatus: GitignoreStatus,
-    devenvStatus: FileSystemStatus
+    devenvStatus: FileSystemStatus,
+    readmeStatus: FileSystemStatus
 )
 
 enum GenerateResult(val successful: Boolean) {

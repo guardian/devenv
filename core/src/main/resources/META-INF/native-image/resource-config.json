@@ -1,7 +1,8 @@
 {
   "resources": {
     "includes": [
-      { "pattern": "com/gu/devenv/modules/[^/]+\\.sh" }
+      { "pattern": "com/gu/devenv/modules/[^/]+\\.sh" },
+      { "pattern": "com/gu/devenv/README.included.md" }
     ]
   }
 }
