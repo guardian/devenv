@@ -12,36 +12,20 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
     - name: Setup Java and sbt
-      uses: guardian/setup-scala@v1
+      uses: guardian/setup-scala@cc7b39e238d789370aa98fa5f07e609b6527657d # v1.1.0
 
     # Required by the docker tests
     - name: Set up Docker
-      uses: docker/setup-docker-action@v4
+      uses: docker/setup-docker-action@b2189fbf2a6592b51fee7cdd93ee2bfaeba733db # v5.1.0
 
     # The docker tests use `npx` to execute the devcontainers-cli package
-    - uses: actions/setup-node@v6
+    - name: Set up node
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
       with:
-        node-version: 24
-
-      # the devcontainer.json file needs to be kept in sync with the devenv configuration
-    - name: Check devenv config
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        # download and install the latest devenv release
-        OS=$(echo "${{ runner.os }}" | tr '[:upper:]' '[:lower:]')
-        ARCH=$(echo "${{ runner.arch }}" | tr '[:upper:]' '[:lower:]' | sed 's/x64/amd64/')
-        gh release download --repo guardian/devenv --pattern "devenv-*-${OS}-${ARCH}" --output /usr/local/bin/devenv
-        chmod +x /usr/local/bin/devenv
-
-        # debug
-        devenv --version
-
-        # check config files
-        devenv check
+        node-version-file: .tool-versions
 
     - name: Test and package
       run: sbt scalafmtCheckAll test cli/universal:packageBin
@@ -59,7 +43,7 @@ jobs:
         echo "package_name=$(basename $PACKAGE_FILE)" >> $GITHUB_OUTPUT
 
     - name: Upload package artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: devenv-package
         path: ${{ steps.find-package.outputs.package_file }}
@@ -77,4 +61,3 @@ jobs:
       env:
         DEVENV_BIN: ${{ env.DEVENV_BIN }}
       run: ./run-tests.sh
-
