@@ -1,9 +1,11 @@
 package com.gu.devenv
 
-import java.nio.file.{Files, Path, StandardOpenOption}
-import scala.jdk.CollectionConverters.given
-import scala.util.Try
 import com.gu.devenv.modules.Modules.Module
+
+import java.nio.file.{Files, Path, StandardOpenOption}
+import scala.io.Source
+import scala.jdk.CollectionConverters.given
+import scala.util.{Try, Using}
 
 object Filesystem {
   val PLACEHOLDER_PROJECT_NAME = "CHANGE_ME"
@@ -19,6 +21,7 @@ object Filesystem {
       sharedDevcontainerFile = sharedDir.resolve("devcontainer.json"),
       gitignoreFile = devcontainerDir.resolve(".gitignore"),
       devenvFile = devcontainerDir.resolve("devenv.yaml"),
+      readmeFile = devcontainerDir.resolve("README.md"),
       escapeHatch = devcontainerDir.resolve("escapehatch.json")
     )
   }
@@ -103,6 +106,16 @@ object Filesystem {
       FileSystemStatus.AlreadyExists
     }
   }
+
+  def setupReadme(readmeFile: Path): Try[FileSystemStatus] =
+    if (Files.exists(readmeFile)) {
+      Try(FileSystemStatus.AlreadyExists)
+    } else {
+      Using(Source.fromResource("com/gu/devenv/README.included.md"))(_.mkString).map { contents =>
+        Files.write(readmeFile, contents.getBytes, StandardOpenOption.CREATE_NEW)
+        FileSystemStatus.Created
+      }
+    }
 
   private val gitignoreContents =
     """|# User-specific devcontainer directory with merged personal preferences
