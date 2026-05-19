@@ -28,7 +28,7 @@ jobs:
         node-version-file: .tool-versions
 
     - name: Test and package
-      run: sbt scalafmtCheckAll test cli/universal:packageBin
+      run: sbt scalafmtCheckAll scalafmtSbtCheck test cli/universal:packageBin
 
     - name: Find package file
       id: find-package
