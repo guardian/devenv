@@ -16,8 +16,9 @@ private[modules] val dockerInDocker =
     contribution = ModuleContribution(
       features = Map(
         "ghcr.io/devcontainers/features/docker-in-docker:2" -> Json.obj(
-          "version"                  -> Json.fromString("latest"),
-          "moby"                     -> Json.fromBoolean(true),
+          "version" -> Json.fromString("latest"),
+          // Must be false since Ubuntu 26.04
+          "moby"                     -> Json.fromBoolean(false),
           "dockerDashComposeVersion" -> Json.fromString("v2")
         )
       ),
