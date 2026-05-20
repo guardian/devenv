@@ -15,7 +15,7 @@ import scala.util.Try
 object Config {
   given Configuration = Configuration.default.withDefaults
 
-  private[devenv] val fixedImage      = "mcr.microsoft.com/devcontainers/base:ubuntu-24.04"
+  private[devenv] val fixedImage      = "mcr.microsoft.com/devcontainers/base:ubuntu26.04"
   private[devenv] val fixedRemoteUser = "vscode"
 
   /** `image` and `RemoteUser` are fixed until we have a requirement to support other values.
