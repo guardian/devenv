@@ -14,7 +14,7 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
   "init" - {
     "initializing an empty (non-existent) directory" - {
-      "should create all required directories and files" in {
+      "should create all required directories and files" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -34,9 +34,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           Files.exists(devcontainerDir.resolve("devenv.yaml")) shouldBe true
           Files.exists(devcontainerDir.resolve("README.md")) shouldBe true
         }
-      }
 
-      "should create .gitignore with user/ entry" in {
+      "should create .gitignore with user/ entry" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -46,9 +45,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           gitignoreContent should include("user/")
           gitignoreContent should include("User-specific devcontainer directory")
         }
-      }
 
-      "should create devenv.yaml with placeholder name" in {
+      "should create devenv.yaml with placeholder name" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -58,11 +56,10 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           devenvContent should include("name: \"CHANGE_ME\"")
           devenvContent should include("modules:")
         }
-      }
     }
 
     "initializing an already initialized directory" - {
-      "should report all items as already existing" in {
+      "should report all items as already existing" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -79,9 +76,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           result.devenvStatus shouldBe FileSystemStatus.AlreadyExists
           result.readmeStatus shouldBe FileSystemStatus.AlreadyExists
         }
-      }
 
-      "should not modify existing files" in {
+      "should not modify existing files" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -99,11 +95,10 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           // File should still have custom content
           Files.readString(devenvFile) shouldBe customContent
         }
-      }
     }
 
     "initializing a directory with a .gitignore file that does not include user/ entry" - {
-      "should update the .gitignore file with user/ entry" in {
+      "should update the .gitignore file with user/ entry" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
@@ -122,9 +117,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           updatedContent should include("user/")
           updatedContent should include("User-specific devcontainer directory")
         }
-      }
 
-      "should preserve existing .gitignore content when updating" in {
+      "should preserve existing .gitignore content when updating" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
@@ -140,11 +134,10 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           updatedContent should include("target/")
           updatedContent should include("# My custom gitignore")
         }
-      }
     }
 
     "initializing a directory with a .gitignore file that already includes user/ entry" - {
-      "should report gitignore as already existing with exclusion" in {
+      "should report gitignore as already existing with exclusion" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
@@ -157,9 +150,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           result.gitignoreStatus shouldBe GitignoreStatus.AlreadyExistsWithExclusion
         }
-      }
 
-      "should not modify the existing .gitignore file" in {
+      "should not modify the existing .gitignore file" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
@@ -172,9 +164,8 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           Files.readString(gitignoreFile) shouldBe existingContent
         }
-      }
 
-      "should recognize user/ entry with whitespace" in {
+      "should recognize user/ entry with whitespace" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
@@ -187,11 +178,10 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           result.gitignoreStatus shouldBe GitignoreStatus.AlreadyExistsWithExclusion
         }
-      }
     }
 
     "initializing a directory with partial initialization" - {
-      "should create missing directories and files only" in {
+      "should create missing directories and files only" in
         (tempDir, testModules).tupled.run { (rootDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
           Files.createDirectories(devcontainerDir)
@@ -205,7 +195,6 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           result.gitignoreStatus shouldBe GitignoreStatus.Created
           result.devenvStatus shouldBe FileSystemStatus.Created
         }
-      }
     }
   }
 }

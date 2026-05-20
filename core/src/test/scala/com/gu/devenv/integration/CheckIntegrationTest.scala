@@ -14,7 +14,7 @@ import java.nio.file.Files
 class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
   "check" - {
-    "returns NotInitialized from an uninitialized directory" in {
+    "returns NotInitialized from an uninitialized directory" in
       (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
         val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -22,9 +22,8 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
         result shouldBe CheckResult.NotInitialized
       }
-    }
 
-    "returns NotInitialized with the placeholder project name" in {
+    "returns NotInitialized with the placeholder project name" in
       (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
         val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -35,10 +34,9 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
         result shouldBe CheckResult.NotInitialized
       }
-    }
 
     "checking when no devcontainer files exist" - {
-      "should return Mismatch for both files" in {
+      "should return Mismatch for both files" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -63,9 +61,8 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got NotInitialized")
           }
         }
-      }
 
-      "should include correct file paths in mismatch" in {
+      "should include correct file paths in mismatch" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -89,11 +86,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got NotInitialized")
           }
         }
-      }
     }
 
     "checking when files match configuration" - {
-      "should return Match result" in {
+      "should return Match result" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -117,9 +113,8 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Match result but got NotInitialized")
           }
         }
-      }
 
-      "should include correct file paths in match" in {
+      "should include correct file paths in match" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -144,11 +139,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Match result but got NotInitialized")
           }
         }
-      }
     }
 
     "checking when only user file is out of date" - {
-      "should return Mismatch with only user diff" in {
+      "should return Mismatch with only user diff" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -176,9 +170,8 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got NotInitialized")
           }
         }
-      }
 
-      "should include the modified file path" in {
+      "should include the modified file path" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -203,7 +196,6 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got NotInitialized")
           }
         }
-      }
 
       /** This test supports the behaviour of running "devenv check" in CI.
         *
@@ -212,7 +204,7 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
         * "generally" by accepting that without a user config, there's no obligation for a user
         * devcontainer file to exist.
         */
-      "allows a missing user devcontainer file if no user config exists" in {
+      "allows a missing user devcontainer file if no user config exists" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -244,11 +236,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Match result but got NotInitialized")
           }
         }
-      }
     }
 
     "checking when only shared file is out of date" - {
-      "should return Mismatch with only shared diff" in {
+      "should return Mismatch with only shared diff" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -276,9 +267,8 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got NotInitialized")
           }
         }
-      }
 
-      "should include the modified file path" in {
+      "should include the modified file path" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -303,11 +293,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got NotInitialized")
           }
         }
-      }
     }
 
     "checking when both files are out of date" - {
-      "should return Mismatch with both diffs" in {
+      "should return Mismatch with both diffs" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -337,11 +326,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got NotInitialized")
           }
         }
-      }
     }
 
     "checking after config change" - {
-      "should detect mismatch when config changes" in {
+      "should detect mismatch when config changes" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -366,9 +354,8 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got NotInitialized")
           }
         }
-      }
 
-      "should show Match after regenerating" in {
+      "should show Match after regenerating" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -396,11 +383,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Match result but got NotInitialized")
           }
         }
-      }
     }
 
     "checking with user config" - {
-      "should match when user config is present" in {
+      "should match when user config is present" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -428,9 +414,8 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Match result but got NotInitialized")
           }
         }
-      }
 
-      "should detect mismatch when user config changes" in {
+      "should detect mismatch when user config changes" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -462,9 +447,8 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got NotInitialized")
           }
         }
-      }
 
-      "should deep merge with a valid escapehatch.json" in {
+      "should deep merge with a valid escapehatch.json" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -502,9 +486,8 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got NotInitialized")
           }
         }
-      }
 
-      "should error on deep merge with an invalid escapehatch.json" in {
+      "should error on deep merge with an invalid escapehatch.json" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -526,7 +509,6 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           val result = Devenv.check(devcontainerDir, userConfigDir, modules)
           result.isFailure shouldBe true
         }
-      }
     }
   }
 }

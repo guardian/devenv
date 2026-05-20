@@ -11,7 +11,7 @@ import java.nio.file.Files
 class FilesystemTest extends AnyFreeSpec with Matchers with TryValues {
 
   "setupReadme" - {
-    "should create a README.md from the template" in {
+    "should create a README.md from the template" in
       tempDir.run { rootDir =>
         val readmeFile = rootDir.resolve("README.md")
 
@@ -21,9 +21,8 @@ class FilesystemTest extends AnyFreeSpec with Matchers with TryValues {
         Files.exists(readmeFile) shouldBe true
         Files.readString(readmeFile) should include("# Dev container config")
       }
-    }
 
-    "should not overwrite an existing README.md" in {
+    "should not overwrite an existing README.md" in
       tempDir.run { rootDir =>
         val readmeFile     = rootDir.resolve("README.md")
         val customContents = "# My custom readme\n"
@@ -34,6 +33,5 @@ class FilesystemTest extends AnyFreeSpec with Matchers with TryValues {
         result shouldBe FileSystemStatus.AlreadyExists
         Files.readString(readmeFile) shouldBe customContents
       }
-    }
   }
 }
