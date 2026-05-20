@@ -1,5 +1,8 @@
 java corretto-21
 sbt 1
-graalvm 21
 aqua:aws/aws-cli 2
 node 24
+
+# GraalVM is only used in CI where we install it pinned.  Should you wish to check the release can build in docker
+# you will need to use version which supports your architecture at that version.  This is not needed for normal dev.
+#graalvm 21
