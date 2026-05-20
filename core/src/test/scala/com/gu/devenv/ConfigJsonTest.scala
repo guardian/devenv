@@ -16,33 +16,30 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
   "Config.configAsJson" - {
     "fixed fields" - {
-      "Image appears in JSON image field" in {
+      "Image appears in JSON image field" in
         forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { name =>
           val config = ProjectConfig(name = name)
           val json   = Config.configAsJson(config, Nil).get
 
           json.hcursor.downField("image").as[String] shouldBe Right(Config.fixedImage)
         }
-      }
-      "Remote User appears in JSON remoteUser field" in {
+      "Remote User appears in JSON remoteUser field" in
         forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { name =>
           val config = ProjectConfig(name = name)
           val json   = Config.configAsJson(config, Nil).get
 
           json.hcursor.downField("remoteUser").as[String] shouldBe Right(Config.fixedRemoteUser)
         }
-      }
     }
 
     "base fields" - {
-      "name appears in JSON name field" in {
+      "name appears in JSON name field" in
         forAll(Gen.alphaNumStr.suchThat(_.nonEmpty)) { name =>
           val config = ProjectConfig(name = name)
           val json   = Config.configAsJson(config, Nil).get
 
           json.hcursor.downField("name").as[String] shouldBe Right(name)
         }
-      }
     }
 
     "features field" - {
@@ -61,7 +58,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         )
       } yield keys.zip(values).toMap
 
-      "appears in JSON features object" in {
+      "appears in JSON features object" in
         forAll(genFeatures) { features =>
           val config = ProjectConfig(name = "test", features = features)
           val json   = Config.configAsJson(config, Nil).get
@@ -74,7 +71,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
             json.hcursor.downField("features").downField(key).as[Json] shouldBe Right(value)
           }
         }
-      }
 
       "is omitted when empty" in {
         val config = ProjectConfig(name = "test", features = Map.empty)
@@ -96,7 +92,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
       val genMounts: Gen[List[Mount]] = Gen.nonEmptyListOf(genMount)
 
-      "appears in JSON mounts array" in {
+      "appears in JSON mounts array" in
         forAll(genMounts) { mounts =>
           val config = ProjectConfig(name = "test", mounts = mounts)
           val json   = Config.configAsJson(config, Nil).get
@@ -105,7 +101,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
           mountsJson shouldBe a[Right[_, _]]
           mountsJson.map(_.size) shouldBe Right(mounts.size)
         }
-      }
 
       "short mount appears as string in JSON" in {
         val mount  = Mount.ShortMount("source:/target")
@@ -139,7 +134,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       val genVscodePlugins: Gen[List[String]] =
         Gen.nonEmptyListOf(Gen.alphaNumStr.suchThat(_.nonEmpty))
 
-      "appears in customizations.vscode.extensions array" in {
+      "appears in customizations.vscode.extensions array" in
         forAll(genVscodePlugins) { plugins =>
           val config =
             ProjectConfig(name = "test", plugins = Plugins(vscode = plugins, intellij = Nil))
@@ -153,7 +148,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
           extensionsJson shouldBe Right(plugins)
         }
-      }
 
       "is empty array when no plugins specified" in {
         val config = ProjectConfig(name = "test", plugins = Plugins.empty)
@@ -173,7 +167,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       val genIntellijPlugins: Gen[List[String]] =
         Gen.nonEmptyListOf(Gen.alphaNumStr.suchThat(_.nonEmpty))
 
-      "appears in customizations.jetbrains.plugins array" in {
+      "appears in customizations.jetbrains.plugins array" in
         forAll(genIntellijPlugins) { plugins =>
           val config =
             ProjectConfig(name = "test", plugins = Plugins(vscode = Nil, intellij = plugins))
@@ -187,7 +181,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
           pluginsJson shouldBe Right(plugins)
         }
-      }
 
       "is empty array when no plugins specified" in {
         val config = ProjectConfig(name = "test", plugins = Plugins.empty)
@@ -211,7 +204,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
       val genEnvList: Gen[List[Env]] = Gen.nonEmptyListOf(genEnv).map(_.distinctBy(_.name))
 
-      "appears in JSON containerEnv object" in {
+      "appears in JSON containerEnv object" in
         forAll(genEnvList) { envVars =>
           val config = ProjectConfig(name = "test", containerEnv = envVars)
           val json   = Config.configAsJson(config, Nil).get
@@ -226,7 +219,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
             )
           }
         }
-      }
 
       "is omitted when empty" in {
         val config = ProjectConfig(name = "test", containerEnv = Nil)
@@ -244,7 +236,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
       val genEnvUniqueList: Gen[List[Env]] = Gen.nonEmptyListOf(genEnv).map(_.distinctBy(_.name))
 
-      "appears in JSON remoteEnv object" in {
+      "appears in JSON remoteEnv object" in
         forAll(genEnvUniqueList) { envVars =>
           val config = ProjectConfig(name = "test", remoteEnv = envVars)
           val json   = Config.configAsJson(config, Nil).get
@@ -259,7 +251,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
             )
           }
         }
-      }
 
       "is omitted when empty" in {
         val config = ProjectConfig(name = "test", remoteEnv = Nil)
@@ -277,7 +268,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
       val genCommands: Gen[List[Command]] = Gen.nonEmptyListOf(genCommand)
 
-      "appears as combined string in JSON" in {
+      "appears as combined string in JSON" in
         forAll(genCommands) { commands =>
           val config = ProjectConfig(name = "test", onCreateCommand = commands)
           val json   = Config.configAsJson(config, Nil).get
@@ -294,7 +285,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
             commandJson.map(_.contains(cmd.workingDirectory)) shouldBe Right(true)
           }
         }
-      }
 
       "combines multiple commands with && separator" in {
         val commands = List(
@@ -346,7 +336,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
       val genCommands: Gen[List[Command]] = Gen.nonEmptyListOf(genCommand)
 
-      "appears as combined string in JSON" in {
+      "appears as combined string in JSON" in
         forAll(genCommands) { commands =>
           val config = ProjectConfig(name = "test", postCreateCommand = commands)
           val json   = Config.configAsJson(config, Nil).get
@@ -363,7 +353,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
             commandJson.map(_.contains(cmd.workingDirectory)) shouldBe Right(true)
           }
         }
-      }
 
       "combines multiple commands with && separator" in {
         val commands = List(
@@ -415,7 +404,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
       val genCommands: Gen[List[Command]] = Gen.nonEmptyListOf(genCommand)
 
-      "appears as combined string in JSON" in {
+      "appears as combined string in JSON" in
         forAll(genCommands) { commands =>
           val config = ProjectConfig(name = "test", postStartCommand = commands)
           val json   = Config.configAsJson(config, Nil).get
@@ -429,7 +418,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
             commandJson.map(_.contains(cmd.workingDirectory)) shouldBe Right(true)
           }
         }
-      }
 
       "combines multiple commands with && separator" in {
         val commands = List(
@@ -484,7 +472,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       val genForwardPort: Gen[ForwardPort]        = Gen.oneOf(genSamePort, genDifferentPorts)
       val genForwardPorts: Gen[List[ForwardPort]] = Gen.listOf(genForwardPort)
 
-      "appears in JSON forwardPorts array" in {
+      "appears in JSON forwardPorts array" in
         forAll(genForwardPorts) { ports =>
           val config = ProjectConfig(name = "test", forwardPorts = ports)
           val json   = Config.configAsJson(config, Nil).get
@@ -493,7 +481,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
           portsJson shouldBe a[Right[_, _]]
           portsJson.map(_.size) shouldBe Right(ports.size)
         }
-      }
 
       "SamePort appears as integer in JSON" in {
         val port   = ForwardPort.SamePort(8080)
@@ -526,7 +513,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       val genCapAdd: Gen[List[String]] =
         Gen.nonEmptyListOf(Gen.alphaNumStr.suchThat(_.nonEmpty))
 
-      "appears in JSON capAdd array" in {
+      "appears in JSON capAdd array" in
         forAll(genCapAdd) { capabilities =>
           val config = ProjectConfig(name = "test", capAdd = capabilities)
           val json   = Config.configAsJson(config, Nil).get
@@ -534,7 +521,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
           val capAddJson = json.hcursor.downField("capAdd").as[List[String]]
           capAddJson shouldBe Right(capabilities)
         }
-      }
 
       "is omitted when empty" in {
         val config = ProjectConfig(name = "test", capAdd = Nil)
@@ -548,7 +534,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       val genRunArgs: Gen[List[String]] =
         Gen.nonEmptyListOf(Gen.alphaNumStr.suchThat(_.nonEmpty))
 
-      "appears in JSON runArgs array" in {
+      "appears in JSON runArgs array" in
         forAll(genRunArgs) { runArgs =>
           val config = ProjectConfig(name = "test", runArgs = runArgs)
           val json   = Config.configAsJson(config, Nil).get
@@ -556,7 +542,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
           val runArgsJson = json.hcursor.downField("runArgs").as[List[String]]
           runArgsJson shouldBe Right(runArgs)
         }
-      }
 
       "is omitted when empty" in {
         val config = ProjectConfig(name = "test", runArgs = Nil)
@@ -570,7 +555,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
       val genSecurityOpt: Gen[List[String]] =
         Gen.nonEmptyListOf(Gen.alphaNumStr.suchThat(_.nonEmpty))
 
-      "appears in JSON securityOpt array" in {
+      "appears in JSON securityOpt array" in
         forAll(genSecurityOpt) { securityOptions =>
           val config = ProjectConfig(name = "test", securityOpt = securityOptions)
           val json   = Config.configAsJson(config, Nil).get
@@ -578,7 +563,6 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
           val securityOptJson = json.hcursor.downField("securityOpt").as[List[String]]
           securityOptJson shouldBe Right(securityOptions)
         }
-      }
 
       "is omitted when empty" in {
         val config = ProjectConfig(name = "test", securityOpt = Nil)

@@ -24,7 +24,7 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
   "generate" - {
     "generating for an uninitialized directory" - {
-      "should return NotInitialized result" in {
+      "should return NotInitialized result" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -32,9 +32,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           result shouldBe GenerateResult.NotInitialized
         }
-      }
 
-      "should not create any files" in {
+      "should not create any files" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -42,11 +41,10 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           Files.exists(devcontainerDir) shouldBe false
         }
-      }
     }
 
     "generating with placeholder project name" - {
-      "should return ConfigNotCustomized result" in {
+      "should return ConfigNotCustomized result" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -56,9 +54,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           result shouldBe GenerateResult.ConfigNotCustomized
         }
-      }
 
-      "should not create devcontainer.json files" in {
+      "should not create devcontainer.json files" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -69,11 +66,10 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           Files.exists(devcontainerDir.resolve("user/devcontainer.json")) shouldBe false
           Files.exists(devcontainerDir.resolve("shared/devcontainer.json")) shouldBe false
         }
-      }
     }
 
     "generating a basic project config" - {
-      "should create both devcontainer.json files" in {
+      "should create both devcontainer.json files" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -94,9 +90,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           Files.exists(devcontainerDir.resolve("user/devcontainer.json")) shouldBe true
           Files.exists(devcontainerDir.resolve("shared/devcontainer.json")) shouldBe true
         }
-      }
 
-      "should generate valid JSON devcontainer files" in {
+      "should generate valid JSON devcontainer files" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -111,9 +106,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           parse(userJson).isRight shouldBe true
           parse(sharedJson).isRight shouldBe true
         }
-      }
 
-      "should include project name in generated files" in {
+      "should include project name in generated files" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -128,9 +122,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           userJson should include("\"My Test Project\"")
           sharedJson should include("\"My Test Project\"")
         }
-      }
 
-      "should update existing devcontainer files on subsequent generation" in {
+      "should update existing devcontainer files on subsequent generation" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -163,11 +156,10 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           secondUserJson should not include "My Test Project"
           firstUserJson should not equal secondUserJson
         }
-      }
     }
 
     "generating a project config merged with a user config" - {
-      "should merge user plugins into project plugins" in {
+      "should merge user plugins into project plugins" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -185,9 +177,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           userJson should include("user-plugin-1")
           userJson should include("user-plugin-2")
         }
-      }
 
-      "should not include user plugins in shared devcontainer" in {
+      "should not include user plugins in shared devcontainer" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -205,9 +196,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           sharedJson should not include "user-plugin-1"
           sharedJson should not include "user-plugin-2"
         }
-      }
 
-      "should merge user dotfiles into user devcontainer" in {
+      "should merge user dotfiles into user devcontainer" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -222,9 +212,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           userJson should include("dotfiles")
           userJson should include("github.com/myuser/dotfiles")
         }
-      }
 
-      "should not include dotfiles in shared devcontainer" in {
+      "should not include dotfiles in shared devcontainer" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -238,11 +227,10 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           sharedJson should not include "dotfiles"
         }
-      }
     }
 
     "generating a project that includes modules" - {
-      "should apply mise module features" in {
+      "should apply mise module features" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -263,9 +251,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           getBase64StringsDecoded(devcontainerDir, "shared/devcontainer.json")
             .exists(_.contains("mise install")) shouldBe true
         }
-      }
 
-      "should apply multiple modules" in {
+      "should apply multiple modules" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -281,9 +268,8 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
             .exists(_.contains("mise install")) shouldBe true
 
         }
-      }
 
-      "should fail with unknown module" in {
+      "should fail with unknown module" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -297,11 +283,10 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           result.isFailure shouldBe true
         }
-      }
     }
 
     "generating a complex project with modules and user config" - {
-      "should merge all configurations correctly" in {
+      "should merge all configurations correctly" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -334,7 +319,6 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           userJson should include("hverlin.mise-vscode")
           userJson should include("com.github.l34130.mise")
         }
-      }
     }
 
     /** Debug helper: prints generated devcontainer.json for manual inspection.
@@ -342,7 +326,7 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
       * To use, change `ignore` to `in` and run: sbt "core/testOnly *GenerateIntegrationTest -- -z
       * \"print generated devcontainer\""
       */
-    "print generated devcontainer for debugging" ignore {
+    "print generated devcontainer for debugging" ignore
       (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
         val devcontainerDir = rootDir.resolve(".devcontainer")
 
@@ -360,6 +344,5 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
         println("\n=== Shared devcontainer.json ===")
         println(sharedJson)
       }
-    }
   }
 }
