@@ -15,7 +15,8 @@ private[modules] val dockerInDocker =
     enabledByDefault = false,
     contribution = ModuleContribution(
       features = Map(
-        "ghcr.io/devcontainers/features/docker-in-docker:2" -> Json.obj(
+        // Monitor https://github.com/devcontainers/features for latest major release
+        "ghcr.io/devcontainers/features/docker-in-docker:3" -> Json.obj(
           "version" -> Json.fromString("latest"),
           // Must be false since Ubuntu 26.04
           "moby"                     -> Json.fromBoolean(false),
