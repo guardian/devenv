@@ -17,7 +17,7 @@ object Main {
       case Some("check")    => check()
       case Some("update")   => update()
       case Some("help" | "--help" | "-h") =>
-        printUsage()
+        printPlainUsage()
         ExitCode.Success
       case Some("version" | "--version" | "-v") =>
         printVersion()
@@ -143,52 +143,81 @@ object Main {
     }
   }
 
-  private def printUsage(): Unit = {
-    val header = s"${Bold.On("Usage:")} devenv <command>"
-    // devenv commands
-    val commandsTitle = Bold.On("Commands:")
-    val initCmd       = Bold.On(Color.Cyan("init"))
-    val generateCmd   = Bold.On(Color.Cyan("generate"))
-    val checkCmd      = Bold.On(Color.Cyan("check"))
-    val versionCmd    = Bold.On(Color.Cyan("version"))
-    val updateCmd     = Bold.On(Color.Cyan("update"))
-    val helpCmd       = Bold.On(Color.Cyan("help"))
-    // version information
-    val versionTitle   = Bold.On("Version:")
+  /** Renders usage text with optional formatting applied to section titles and command names.
+    *
+    * @param title
+    *   formats a section heading (e.g. bold)
+    * @param cmd
+    *   formats a command name (e.g. bold + cyan)
+    */
+  private def usageText(title: String => String, cmd: String => String): String = {
     val releaseLineStr = s"  release   ${Version.release}"
     val archLineStr    = Version.architecture.map(a => s"  arch      $a")
     val branchLineStr  = Version.branch.map(b => s"  branch    $b")
     val devModeNoteStr =
-      if (Version.architecture.isEmpty && Version.branch.isEmpty) {
+      if (Version.architecture.isEmpty && Version.branch.isEmpty)
         Some("  (running in development mode)")
-      } else {
+      else
         None
-      }
     val versionInfoString =
       List(Some(releaseLineStr), archLineStr, branchLineStr, devModeNoteStr).flatten
         .mkString("\n")
 
-    println(
-      s"""$header
-         |
-         |Generates user-specific and shared devcontainer.json files from
-         |devenv.yaml configuration files.
-         |
-         |$commandsTitle
-         |  $initCmd      Initialize .devcontainer directory structure
-         |  $generateCmd  Generate devcontainer.json files from devenv config
-         |  $checkCmd     Ensure devcontainer.json files match current config
-         |
-         |  $versionCmd   Show devenv's version
-         |  $updateCmd    Check for updates to devenv's CLI
-         |
-         |  $helpCmd      Show this help text
-         |
-         |$versionTitle
-         |$versionInfoString
-         |""".stripMargin
-    )
+    s"""${title("Usage:")} devenv <command>
+       |
+       |A CLI tool for managing devcontainer configurations for your projects.
+       |Generates user-specific and shared devcontainer.json files from
+       |devenv.yaml configuration files, separating team-wide project settings
+       |from personal user preferences.
+       |
+       |${title("Commands:")}
+       |  ${cmd("init")}      Initialize .devcontainer directory structure
+       |  ${cmd("generate")}  Generate devcontainer.json files from devenv config
+       |  ${cmd("check")}     Ensure devcontainer.json files match current config
+       |
+       |  ${cmd("version")}   Show devenv's version
+       |  ${cmd("update")}    Check for updates to devenv's CLI
+       |
+       |  ${cmd("help")}      Show this help text (aliases: --help, -h)
+       |
+       |${title("Typical workflow:")}
+       |  1. Run 'devenv init' from the root of a repository to create the initial
+       |     config file for your project
+       |  2. Edit .devcontainer/devenv.yaml to set your project settings
+       |  3. Optionally create ~/.config/devenv/devenv.yaml for personal preferences
+       |     (dotfiles, additional IDE plugins)
+       |  4. Run 'devenv generate' to create the devcontainer.json files
+       |  5. Open the project in your IDE and select the appropriate devcontainer
+       |     configuration (user for your personalised environment, shared for the
+       |     standard project setup)
+       |  6. Run 'devenv check' in CI to verify generated files are up to date
+       |
+       |${title("Configuration:")}
+       |  Project config:  .devcontainer/devenv.yaml
+       |    Project-specific settings (name, ports, IDE plugins, commands, modules).
+       |    Checked into version control.
+       |
+       |  User config:     ~/.config/devenv/devenv.yaml
+       |    Personal preferences (dotfiles, additional IDE plugins).
+       |    Merged with project config for the user-specific devcontainer.
+       |
+       |${title("Output files:")}
+       |  .devcontainer/shared/devcontainer.json  Project-only config (checked in)
+       |  .devcontainer/user/devcontainer.json    Merged config with personal settings
+       |                                          (excluded via .gitignore)
+       |
+       |${title("Version:")}
+       |$versionInfoString
+       |""".stripMargin
   }
+
+  /** Coloured output for human use */
+  private def printUsage(): Unit =
+    println(usageText(s => Bold.On(s).toString, s => Bold.On(Color.Cyan(s)).toString))
+
+  /** Plain text output for agent/tool use */
+  private def printPlainUsage(): Unit =
+    println(usageText(identity, identity))
 
   private def printVersion(): Unit = {
     // these properties are set at build time via environment variables
