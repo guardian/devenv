@@ -188,34 +188,57 @@ object Main {
       List(Some(releaseLineStr), archLineStr, branchLineStr, devModeNoteStr).flatten
         .mkString("\n")
 
-    s"""${title("Usage:")} devenv <command>
+    s"""${title("Usage:")} devenv <command> [--help]
        |
        |A CLI tool for managing devcontainer configurations for your projects.
        |Generates user-specific and shared devcontainer.json files from
        |devenv.yaml configuration files, separating team-wide project settings
        |from personal user preferences.
        |
+       |Run 'devenv <command> --help' (or -h or help) for help on any command.
+       |
        |${title("Commands:")}
-       |  ${cmd("init")}      Initialize .devcontainer directory structure
-       |  ${cmd("generate")}  Generate devcontainer.json files from devenv config
-       |  ${cmd("check")}     Ensure devcontainer.json files match current config
        |
-       |  ${cmd("version")}   Show devenv's version
-       |  ${cmd("update")}    Check for updates to devenv's CLI
+       |  ${cmd("init")}
+       |    Initialises the .devcontainer directory structure for a project.
+       |    Run this once from the root of a repository before using 'generate'.
+       |    Reads:   nothing (uses built-in defaults)
+       |    Writes:  .devcontainer/devenv.yaml        (project config template)
+       |             .devcontainer/.gitignore         (excludes user/ directory)
+       |             .devcontainer/README.md          (usage guidance)
+       |             .devcontainer/shared/            (directory, populated by 'generate')
+       |             .devcontainer/user/              (directory, populated by 'generate')
        |
-       |  ${cmd("help")}      Show this help text (aliases: --help, -h)
+       |  ${cmd("generate")}
+       |    Generates devcontainer.json files from the current devenv configuration.
+       |    Run this after editing devenv.yaml to apply your changes.
+       |    Reads:   .devcontainer/devenv.yaml        (project config, required)
+       |             ~/.config/devenv/devenv.yaml     (user config, optional)
+       |    Writes:  .devcontainer/shared/devcontainer.json  (project-only, check in)
+       |             .devcontainer/user/devcontainer.json    (merged with user prefs)
        |
-       |${title("Typical workflow:")}
-       |  1. Run 'devenv init' from the root of a repository to create the initial
-       |     config file for your project
-       |  2. Edit .devcontainer/devenv.yaml to set your project settings
-       |  3. Optionally create ~/.config/devenv/devenv.yaml for personal preferences
-       |     (dotfiles, additional IDE plugins)
-       |  4. Run 'devenv generate' to create the devcontainer.json files
-       |  5. Open the project in your IDE and select the appropriate devcontainer
-       |     configuration (user for your personalised environment, shared for the
-       |     standard project setup)
-       |  6. Run 'devenv check' in CI to verify generated files are up to date
+       |  ${cmd("check")}
+       |    Verifies that the saved devcontainer.json files match what 'generate'
+       |    would produce from the current configuration. Exits non-zero if they
+       |    differ. Use in CI to ensure configs are not stale.
+       |    Reads:   .devcontainer/devenv.yaml
+       |             ~/.config/devenv/devenv.yaml     (user config, optional)
+       |             .devcontainer/shared/devcontainer.json
+       |             .devcontainer/user/devcontainer.json
+       |    Writes:  nothing
+       |
+       |  ${cmd("version")}
+       |    Prints the current devenv release version, architecture, and branch.
+       |    Aliases: --version, -v
+       |
+       |  ${cmd("update")}
+       |    Checks GitHub releases for a newer version of devenv and prints
+       |    download instructions if one is available.
+       |
+       |  ${cmd("help")}
+       |    Prints this help text.
+       |    Aliases: --help, -h
+       |    Any command also accepts --help/-h as a second argument.
        |
        |${title("Configuration:")}
        |  Project config:  .devcontainer/devenv.yaml
@@ -226,10 +249,11 @@ object Main {
        |    Personal preferences (dotfiles, additional IDE plugins).
        |    Merged with project config for the user-specific devcontainer.
        |
-       |${title("Output files:")}
-       |  .devcontainer/shared/devcontainer.json  Project-only config (checked in)
-       |  .devcontainer/user/devcontainer.json    Merged config with personal settings
-       |                                          (excluded via .gitignore)
+       |${title("Typical workflow:")}
+       |  1. devenv init       -- create initial config file
+       |  2. edit .devcontainer/devenv.yaml
+       |  3. devenv generate   -- produce devcontainer.json files
+       |  4. devenv check      -- verify in CI that files are up to date
        |
        |${title("Version:")}
        |$versionInfoString
