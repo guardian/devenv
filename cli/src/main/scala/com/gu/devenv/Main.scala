@@ -10,23 +10,48 @@ import scala.util.{Failure, Success}
 /** Natively compiled tool that wraps the Scala logic in a CLI program.
   */
 object Main {
+  enum Command {
+    case Init, Generate, Check, Update, Version
+    case Help
+    case Unknown(name: String)
+    case NoCommand
+  }
+
+  private val helpFlags = Set("help", "--help", "-h")
+
+  /** Parses args into a Command, treating any help flag as a request for help regardless of
+    * position.
+    */
+  def parseCommand(args: Seq[String]): Command =
+    (args.headOption, args.lift(1)) match {
+      case (Some(_), Some(flag)) if helpFlags.contains(flag) => Command.Help
+      case (Some(cmd), _) if helpFlags.contains(cmd)         => Command.Help
+      case (Some("init"), _)                                 => Command.Init
+      case (Some("generate"), _)                             => Command.Generate
+      case (Some("check"), _)                                => Command.Check
+      case (Some("update"), _)                               => Command.Update
+      case (Some("version" | "--version" | "-v"), _)         => Command.Version
+      case (Some(unknown), _)                                => Command.Unknown(unknown)
+      case (None, _)                                         => Command.NoCommand
+    }
+
   def main(args: Array[String]): Unit = {
-    val exitCode = args.headOption match {
-      case Some("init")     => init()
-      case Some("generate") => generate()
-      case Some("check")    => check()
-      case Some("update")   => update()
-      case Some("help" | "--help" | "-h") =>
-        printPlainUsage()
-        ExitCode.Success
-      case Some("version" | "--version" | "-v") =>
+    val exitCode = parseCommand(args.toSeq) match {
+      case Command.Init     => init()
+      case Command.Generate => generate()
+      case Command.Check    => check()
+      case Command.Update   => update()
+      case Command.Version =>
         printVersion()
         ExitCode.Success
-      case Some(unknown) =>
-        System.err.println(Color.Red(s"Unknown command: $unknown"))
+      case Command.Help =>
+        printPlainUsage()
+        ExitCode.Success
+      case Command.Unknown(name) =>
+        System.err.println(Color.Red(s"Unknown command: $name"))
         printUsage()
         ExitCode.InvalidUsage
-      case None =>
+      case Command.NoCommand =>
         printUsage()
         ExitCode.InvalidUsage
     }
