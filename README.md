@@ -36,7 +36,11 @@ will generate two devcontainer.json files:
 
 You can then use your IDE (VSCode or IntelliJ) to launch into the `user` configuration for a fully personalized development environment, or the `shared` configuration for a standard project setup. The latter ensures that cloud-based IDEs like GitHub Codespaces can use the (checked-in) shared configuration to provide a simple and consistent development environment.
 
-## Installation
+### Quick Installation
+
+The quickest installation process is to add `github:guardian/devenv ${{ needs.generate-version.outputs.version }}` to `.tool-versions` and execute `mise install` or your preferred tooling manager.
+
+## Manual Installation
 
 Download the latest binary for your architecture from the [latest release](https://github.com/guardian/devenv/releases/latest) on GitHub and place it somewhere on your `PATH`. Each release includes its install commands, which will look like this:
 
