@@ -10,23 +10,48 @@ import scala.util.{Failure, Success}
 /** Natively compiled tool that wraps the Scala logic in a CLI program.
   */
 object Main {
+  enum Command {
+    case Init, Generate, Check, Update, Version
+    case Help
+    case Unknown(name: String)
+    case NoCommand
+  }
+
+  private val helpFlags = Set("help", "--help", "-h")
+
+  /** Parses args into a Command, treating any help flag as a request for help regardless of
+    * position.
+    */
+  def parseCommand(args: Seq[String]): Command =
+    (args.headOption, args.lift(1)) match {
+      case (Some(_), Some(flag)) if helpFlags.contains(flag) => Command.Help
+      case (Some(cmd), _) if helpFlags.contains(cmd)         => Command.Help
+      case (Some("init"), _)                                 => Command.Init
+      case (Some("generate"), _)                             => Command.Generate
+      case (Some("check"), _)                                => Command.Check
+      case (Some("update"), _)                               => Command.Update
+      case (Some("version" | "--version" | "-v"), _)         => Command.Version
+      case (Some(unknown), _)                                => Command.Unknown(unknown)
+      case (None, _)                                         => Command.NoCommand
+    }
+
   def main(args: Array[String]): Unit = {
-    val exitCode = args.headOption match {
-      case Some("init")     => init()
-      case Some("generate") => generate()
-      case Some("check")    => check()
-      case Some("update")   => update()
-      case Some("help" | "--help" | "-h") =>
-        printUsage()
-        ExitCode.Success
-      case Some("version" | "--version" | "-v") =>
+    val exitCode = parseCommand(args.toSeq) match {
+      case Command.Init     => init()
+      case Command.Generate => generate()
+      case Command.Check    => check()
+      case Command.Update   => update()
+      case Command.Version =>
         printVersion()
         ExitCode.Success
-      case Some(unknown) =>
-        System.err.println(Color.Red(s"Unknown command: $unknown"))
+      case Command.Help =>
+        printPlainUsage()
+        ExitCode.Success
+      case Command.Unknown(name) =>
+        System.err.println(Color.Red(s"Unknown command: $name"))
         printUsage()
         ExitCode.InvalidUsage
-      case None =>
+      case Command.NoCommand =>
         printUsage()
         ExitCode.InvalidUsage
     }
@@ -143,52 +168,105 @@ object Main {
     }
   }
 
-  private def printUsage(): Unit = {
-    val header = s"${Bold.On("Usage:")} devenv <command>"
-    // devenv commands
-    val commandsTitle = Bold.On("Commands:")
-    val initCmd       = Bold.On(Color.Cyan("init"))
-    val generateCmd   = Bold.On(Color.Cyan("generate"))
-    val checkCmd      = Bold.On(Color.Cyan("check"))
-    val versionCmd    = Bold.On(Color.Cyan("version"))
-    val updateCmd     = Bold.On(Color.Cyan("update"))
-    val helpCmd       = Bold.On(Color.Cyan("help"))
-    // version information
-    val versionTitle   = Bold.On("Version:")
+  /** Renders usage text with optional formatting applied to section titles and command names.
+    *
+    * @param title
+    *   formats a section heading (e.g. bold)
+    * @param cmd
+    *   formats a command name (e.g. bold + cyan)
+    */
+  private def usageText(title: String => String, cmd: String => String): String = {
     val releaseLineStr = s"  release   ${Version.release}"
     val archLineStr    = Version.architecture.map(a => s"  arch      $a")
     val branchLineStr  = Version.branch.map(b => s"  branch    $b")
     val devModeNoteStr =
-      if (Version.architecture.isEmpty && Version.branch.isEmpty) {
+      if (Version.architecture.isEmpty && Version.branch.isEmpty)
         Some("  (running in development mode)")
-      } else {
+      else
         None
-      }
     val versionInfoString =
       List(Some(releaseLineStr), archLineStr, branchLineStr, devModeNoteStr).flatten
         .mkString("\n")
 
-    println(
-      s"""$header
-         |
-         |Generates user-specific and shared devcontainer.json files from
-         |devenv.yaml configuration files.
-         |
-         |$commandsTitle
-         |  $initCmd      Initialize .devcontainer directory structure
-         |  $generateCmd  Generate devcontainer.json files from devenv config
-         |  $checkCmd     Ensure devcontainer.json files match current config
-         |
-         |  $versionCmd   Show devenv's version
-         |  $updateCmd    Check for updates to devenv's CLI
-         |
-         |  $helpCmd      Show this help text
-         |
-         |$versionTitle
-         |$versionInfoString
-         |""".stripMargin
-    )
+    s"""${title("Usage:")} devenv <command> [--help]
+       |
+       |A CLI tool for managing devcontainer configurations for your projects.
+       |Generates user-specific and shared devcontainer.json files from
+       |devenv.yaml configuration files, separating team-wide project settings
+       |from personal user preferences.
+       |
+       |Run 'devenv <command> --help' (or -h or help) for help on any command.
+       |
+       |${title("Commands:")}
+       |
+       |  ${cmd("init")}
+       |    Initialises the .devcontainer directory structure for a project.
+       |    Run this once from the root of a repository before using 'generate'.
+       |    Reads:   nothing (uses built-in defaults)
+       |    Writes:  .devcontainer/devenv.yaml        (project config template)
+       |             .devcontainer/.gitignore         (excludes user/ directory)
+       |             .devcontainer/README.md          (usage guidance)
+       |             .devcontainer/shared/            (directory, populated by 'generate')
+       |             .devcontainer/user/              (directory, populated by 'generate')
+       |
+       |  ${cmd("generate")}
+       |    Generates devcontainer.json files from the current devenv configuration.
+       |    Run this after editing devenv.yaml to apply your changes.
+       |    Reads:   .devcontainer/devenv.yaml        (project config, required)
+       |             ~/.config/devenv/devenv.yaml     (user config, optional)
+       |    Writes:  .devcontainer/shared/devcontainer.json  (project-only, check in)
+       |             .devcontainer/user/devcontainer.json    (merged with user prefs)
+       |
+       |  ${cmd("check")}
+       |    Verifies that the saved devcontainer.json files match what 'generate'
+       |    would produce from the current configuration. Exits non-zero if they
+       |    differ. Use in CI to ensure configs are not stale.
+       |    Reads:   .devcontainer/devenv.yaml
+       |             ~/.config/devenv/devenv.yaml     (user config, optional)
+       |             .devcontainer/shared/devcontainer.json
+       |             .devcontainer/user/devcontainer.json
+       |    Writes:  nothing
+       |
+       |  ${cmd("version")}
+       |    Prints the current devenv release version, architecture, and branch.
+       |    Aliases: --version, -v
+       |
+       |  ${cmd("update")}
+       |    Checks GitHub releases for a newer version of devenv and prints
+       |    download instructions if one is available.
+       |
+       |  ${cmd("help")}
+       |    Prints this help text.
+       |    Aliases: --help, -h
+       |    Any command also accepts --help/-h as a second argument.
+       |
+       |${title("Configuration:")}
+       |  Project config:  .devcontainer/devenv.yaml
+       |    Project-specific settings (name, ports, IDE plugins, commands, modules).
+       |    Checked into version control.
+       |
+       |  User config:     ~/.config/devenv/devenv.yaml
+       |    Personal preferences (dotfiles, additional IDE plugins).
+       |    Merged with project config for the user-specific devcontainer.
+       |
+       |${title("Typical workflow:")}
+       |  1. devenv init       -- create initial config file
+       |  2. edit .devcontainer/devenv.yaml
+       |  3. devenv generate   -- produce devcontainer.json files
+       |  4. devenv check      -- verify in CI that files are up to date
+       |
+       |${title("Version:")}
+       |$versionInfoString
+       |""".stripMargin
   }
+
+  /** Coloured output for human use */
+  private def printUsage(): Unit =
+    println(usageText(s => Bold.On(s).toString, s => Bold.On(Color.Cyan(s)).toString))
+
+  /** Plain text output for agent/tool use */
+  private def printPlainUsage(): Unit =
+    println(usageText(identity, identity))
 
   private def printVersion(): Unit = {
     // these properties are set at build time via environment variables
