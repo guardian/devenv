@@ -26,7 +26,7 @@ val circeVersion         = "0.14.15"
 val sttpVersion          = "4.0.23"
 val scalatestVersion     = "3.2.20"
 val scalaCheckVersion    = "1.19.0"
-val scalatestPlusVersion = "3.2.19.0"
+val scalatestPlusVersion = "3.2.20.0"
 
 // empty root project to aggregate all subprojects
 lazy val root = (project in file("."))
