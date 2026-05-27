@@ -1,4 +1,5 @@
 # devenv
+[![GitHub release](https://img.shields.io/github/v/release/guardian/devenv)](https://github.com/guardian/devenv/releases)
 [![Scala Steward badge](https://img.shields.io/badge/Scala_Steward-helping-blue.svg?style=flat&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAQCAMAAAARSr4IAAAAVFBMVEUAAACHjojlOy5NWlrKzcYRKjGFjIbp293YycuLa3pYY2LSqql4f3pCUFTgSjNodYRmcXUsPD/NTTbjRS+2jomhgnzNc223cGvZS0HaSD0XLjbaSjElhIr+AAAAAXRSTlMAQObYZgAAAHlJREFUCNdNyosOwyAIhWHAQS1Vt7a77/3fcxxdmv0xwmckutAR1nkm4ggbyEcg/wWmlGLDAA3oL50xi6fk5ffZ3E2E3QfZDCcCN2YtbEWZt+Drc6u6rlqv7Uk0LdKqqr5rk2UCRXOk0vmQKGfc94nOJyQjouF9H/wCc9gECEYfONoAAAAASUVORK5CYII=)](https://scala-steward.org)
 
 A CLI tool for managing [devcontainer](./docs/containerised-development/containerised-development.md) configurations for your projects.
@@ -35,7 +36,13 @@ will generate two devcontainer.json files:
 
 You can then use your IDE (VSCode or IntelliJ) to launch into the `user` configuration for a fully personalized development environment, or the `shared` configuration for a standard project setup. The latter ensures that cloud-based IDEs like GitHub Codespaces can use the (checked-in) shared configuration to provide a simple and consistent development environment.
 
-## Installation
+### Quick Installation
+
+The quickest installation process is to add `github:guardian/devenv <version>` to `.tool-versions` and execute `mise install` or your preferred tooling manager.
+
+Available versions can be listed with `mise ls-remote github:guardian/devenv`
+
+## Manual Installation
 
 Download the latest binary for your architecture from the [latest release](https://github.com/guardian/devenv/releases/latest) on GitHub and place it somewhere on your `PATH`. Each release includes its install commands, which will look like this:
 

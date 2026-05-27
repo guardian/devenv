@@ -104,7 +104,7 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           val result = Devenv.check(devcontainerDir, userConfigDir, modules).success.value
 
           result match {
-            case CheckResult.Match(_, _) => succeed
+            case CheckResult.Match(_, _)                                  => succeed
             case CheckResult.Mismatch(userMismatch, sharedMismatch, _, _) =>
               fail(
                 s"Expected Match result but got Mismatch (user: ${userMismatch.isDefined}, shared: ${sharedMismatch.isDefined})"
@@ -348,7 +348,7 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
           result match {
             case CheckResult.Mismatch(_, _, _, _) => succeed
-            case CheckResult.Match(_, _) =>
+            case CheckResult.Match(_, _)          =>
               fail("Expected Mismatch result but got Match (config was changed)")
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
@@ -374,7 +374,7 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           val result = Devenv.check(devcontainerDir, userConfigDir, modules).success.value
 
           result match {
-            case CheckResult.Match(_, _) => succeed
+            case CheckResult.Match(_, _)                                  => succeed
             case CheckResult.Mismatch(userMismatch, sharedMismatch, _, _) =>
               fail(
                 s"Expected Match result but got Mismatch after regenerating (user: ${userMismatch.isDefined}, shared: ${sharedMismatch.isDefined})"
@@ -405,7 +405,7 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           val result = Devenv.check(devcontainerDir, userConfigDir, modules).success.value
 
           result match {
-            case CheckResult.Match(_, _) => succeed
+            case CheckResult.Match(_, _)                                  => succeed
             case CheckResult.Mismatch(userMismatch, sharedMismatch, _, _) =>
               fail(
                 s"Expected Match result but got Mismatch with user config (user: ${userMismatch.isDefined}, shared: ${sharedMismatch.isDefined})"
@@ -463,7 +463,7 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           Files.writeString(userConfigFile, userConfigWithPlugins)
           Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-          val escapeHatch = devcontainerDir.resolve("escapehatch.json")
+          val escapeHatch     = devcontainerDir.resolve("escapehatch.json")
           val escapeHatchJson = Json
             .fromJsonObject(
               JsonObject.empty.add("remoteUser", "not-vscode".asJson)

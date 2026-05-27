@@ -233,7 +233,11 @@ jobs:
           
           This release was built from the `${{ github.ref_name }}` branch.
           
-          ### Installation
+          ### Quick Installation
+
+          The quickest installation process is to add `github:guardian/devenv ${{ needs.generate-version.outputs.version }}` to `.tool-versions` and execute `mise install` or your preferred tooling manager.
+
+          ### Manual Installation
           
           The release includes native binaries for macOS and Linux architectures.
           

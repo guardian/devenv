@@ -1,5 +1,5 @@
 java corretto-21
 sbt 1
-graalvm 21
+graalvm 25
 aqua:aws/aws-cli 2
 node 24

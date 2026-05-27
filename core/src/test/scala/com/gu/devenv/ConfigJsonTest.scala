@@ -44,8 +44,8 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
     "features field" - {
       val genFeatures: Gen[Map[String, Json]] = for {
-        size <- Gen.choose(1, 5)
-        keys <- Gen.listOfN(size, Gen.alphaNumStr.suchThat(_.nonEmpty)).map(_.distinct)
+        size   <- Gen.choose(1, 5)
+        keys   <- Gen.listOfN(size, Gen.alphaNumStr.suchThat(_.nonEmpty)).map(_.distinct)
         values <- Gen.listOfN(
           keys.size,
           Gen.oneOf(
@@ -462,8 +462,8 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
     }
 
     "forwardPorts field" - {
-      val genPort: Gen[Int]                      = Gen.choose(1, 65535)
-      val genSamePort: Gen[ForwardPort.SamePort] = genPort.map(ForwardPort.SamePort(_))
+      val genPort: Gen[Int]                                  = Gen.choose(1, 65535)
+      val genSamePort: Gen[ForwardPort.SamePort]             = genPort.map(ForwardPort.SamePort(_))
       val genDifferentPorts: Gen[ForwardPort.DifferentPorts] = for {
         hostPort      <- genPort
         containerPort <- genPort

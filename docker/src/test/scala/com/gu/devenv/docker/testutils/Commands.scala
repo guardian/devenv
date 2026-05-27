@@ -6,8 +6,8 @@ object CommandRunner {
 
   /** Runs a shell command and captures stdout, stderr, and exit code */
   def run(command: String): CommandResult = {
-    val stdout = new StringBuilder
-    val stderr = new StringBuilder
+    val stdout        = new StringBuilder
+    val stderr        = new StringBuilder
     val processLogger = ProcessLogger(
       line => stdout.append(line).append("\n"): Unit,
       line => stderr.append(line).append("\n"): Unit

@@ -96,7 +96,7 @@ class ConfigTest
     }
 
     "parses an empty user config file" in {
-      val emptyConfig = ""
+      val emptyConfig         = ""
       val Success(userConfig) =
         Config.parseUserConfig(emptyConfig).success
       userConfig shouldBe UserConfig.empty

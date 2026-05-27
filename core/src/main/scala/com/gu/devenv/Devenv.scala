@@ -68,8 +68,8 @@ object Devenv {
         projectConfig.name == PLACEHOLDER_PROJECT_NAME,
         GenerateResult.ConfigNotCustomized
       )
-      maybeUserConfig <- Config.loadUserConfig(userPaths.devenvConf).liftF
-      escapeHatch     <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
+      maybeUserConfig        <- Config.loadUserConfig(userPaths.devenvConf).liftF
+      escapeHatch            <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
       (userJson, sharedJson) <- Config
         .generateConfigs(projectConfig, maybeUserConfig, modules, escapeHatch)
         .liftF
