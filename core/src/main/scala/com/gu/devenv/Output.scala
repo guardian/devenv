@@ -148,7 +148,7 @@ object Output {
           Color.Green("All devcontainer files match the current configuration.")
         )
       case None =>
-        val line = s"  ⊘ ${Color.LightGray("user configuration skipped")}"
+        val line   = s"  ⊘ ${Color.LightGray("user configuration skipped")}"
         val status =
           s"""|${Color.Green("devcontainer files match the current configuration.")}
               |

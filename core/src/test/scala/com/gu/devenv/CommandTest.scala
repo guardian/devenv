@@ -119,28 +119,28 @@ class CommandTest extends AnyFreeSpec with Matchers with TryValues {
   "renderCommandWithLogging" - {
     "should render the command in brackets with logging" in {
       val commandRendered = Command.renderCommandWithLogging(Command("ls 1", ".", Some("one")))
-      val pattern =
+      val pattern         =
         "\\(printf .* Starting one.* && \\(cd . && ls 1 && printf .* Finished one.*\\) \\|\\| printf .* Errored! one.*\\)".r
       pattern.matches(commandRendered) shouldBe (true)
     }
 
     "should sanitise the log label in logging" in {
       val commandRendered = Command.renderCommandWithLogging(Command("ls 1", ".", Some("$`()")))
-      val pattern =
+      val pattern         =
         "\\(printf .* Starting unknown.* && \\(cd . && ls 1 && printf .* Finished unknown.*\\) \\|\\| printf .* Errored! unknown.*\\)".r
       pattern.matches(commandRendered) shouldBe (true)
     }
 
     "should sanitise the log label (even if it becomes empty) in logging" in {
       val commandRendered = Command.renderCommandWithLogging(Command("ls 1", ".", Some("one$`()")))
-      val pattern =
+      val pattern         =
         "\\(printf .* Starting one.* && \\(cd . && ls 1 && printf .* Finished one.*\\) \\|\\| printf .* Errored! one.*\\)".r
       pattern.matches(commandRendered) shouldBe (true)
     }
 
     "should handle missing log label in logging" in {
       val commandRendered = Command.renderCommandWithLogging(Command("ls 1", "."))
-      val pattern =
+      val pattern         =
         "\\(printf .* Starting unknown.* && \\(cd . && ls 1 && printf .* Finished unknown.*\\) \\|\\| printf .* Errored! unknown.*\\)".r
       pattern.matches(commandRendered) shouldBe (true)
     }

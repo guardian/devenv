@@ -41,7 +41,7 @@ object Main {
       case Command.Generate => generate()
       case Command.Check    => check()
       case Command.Update   => update()
-      case Command.Version =>
+      case Command.Version  =>
         printVersion()
         ExitCode.Success
       case Command.Help =>
@@ -76,7 +76,7 @@ object Main {
     */
   private def init(): ExitCode = {
     val devcontainerDir = Paths.get(".devcontainer")
-    val tryResult = for {
+    val tryResult       = for {
       modules <- Modules.builtInModules(moduleConfig)
       result  <- Devenv.init(devcontainerDir, modules)
     } yield result
@@ -101,7 +101,7 @@ object Main {
   private def generate(): ExitCode = {
     val devcontainerDir = Paths.get(".devcontainer")
     val userConfigPath  = Paths.get(System.getProperty("user.home"), ".config", "devenv")
-    val tryResult = for {
+    val tryResult       = for {
       modules <- Modules.builtInModules(moduleConfig)
       result  <- Devenv.generate(devcontainerDir, userConfigPath, modules)
     } yield result
@@ -126,7 +126,7 @@ object Main {
   private def check(): ExitCode = {
     val devcontainerDir = Paths.get(".devcontainer")
     val userConfigPath  = Paths.get(System.getProperty("user.home"), ".config", "devenv")
-    val tryResult = for {
+    val tryResult       = for {
       modules <- Modules.builtInModules(moduleConfig)
       result  <- Devenv.check(devcontainerDir, userConfigPath, modules)
     } yield result

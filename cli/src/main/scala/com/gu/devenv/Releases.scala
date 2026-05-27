@@ -17,8 +17,8 @@ import scala.util.{Failure, Success, Try}
   * See https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28
   */
 object Releases {
-  private val OWNER = "guardian"
-  private val REPO  = "devenv"
+  private val OWNER   = "guardian"
+  private val REPO    = "devenv"
   private val API_URL =
     s"https://api.github.com/repos/$OWNER/$REPO/releases/latest"
 
@@ -119,7 +119,7 @@ object Releases {
         val divider = Color.Red("━" * 60)
         val notice  = Color.Yellow(s"An update is available:")
         val update  = s"$currentVersion → ${Bold.On(newerRelease.tagName)}"
-        val detail = Color.Red(
+        val detail  = Color.Red(
           s"No compatible download was found for: ${Bold.On(architecture.getOrElse("unknown"))}"
         )
         val release = Color.Cyan(newerRelease.htmlUrl)
@@ -140,7 +140,7 @@ object Releases {
         val divider = Color.Red("━" * 60)
         val notice  = Color.Yellow(s"An update is available:")
         val update  = s"$currentVersion → ${Bold.On(newerRelease.tagName)}"
-        val detail = Color.Yellow(
+        val detail  = Color.Yellow(
           s"""CPU architecture information for your current version is not available.
              |Cannot check for a compatible download.""".stripMargin
         )
