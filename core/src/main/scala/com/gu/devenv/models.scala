@@ -116,7 +116,7 @@ object ForwardPort {
       )
 
   given Encoder[ForwardPort] = Encoder.instance {
-    case SamePort(port) => Json.fromInt(port)
+    case SamePort(port)                          => Json.fromInt(port)
     case DifferentPorts(hostPort, containerPort) =>
       Json.fromString(s"$hostPort:$containerPort")
   }
@@ -199,10 +199,10 @@ object Command {
     }
   }
 
-  private val blue  = "\\033[1;34m[setup]"
-  private val green = "\\033[1;32m[setup]"
-  private val red   = "\\033[1;31m[setup]"
-  private val reset = "\\033[0m"
+  private val blue                                       = "\\033[1;34m[setup]"
+  private val green                                      = "\\033[1;32m[setup]"
+  private val red                                        = "\\033[1;31m[setup]"
+  private val reset                                      = "\\033[0m"
   def renderCommandWithLogging(command: Command): String = {
     val l = command.logLine
       .map(_.replaceAll("[^a-zA-Z0-9._]", "")) // sanitize
@@ -233,7 +233,7 @@ object Mount {
   given Decoder[Mount] = Decoder.instance { c =>
     c.as[String].map(ShortMount(_)) match {
       case Right(shortMount) => Right(shortMount)
-      case Left(_) =>
+      case Left(_)           =>
         for {
           source    <- c.downField("source").as[String]
           target    <- c.downField("target").as[String]
@@ -243,7 +243,7 @@ object Mount {
   }
 
   implicit val encodeMountEncoder: Encoder[Mount] = Encoder.instance {
-    case ShortMount(mount) => Json.fromString(mount)
+    case ShortMount(mount)                        => Json.fromString(mount)
     case ExplicitMount(source, target, mountType) =>
       Json.obj(
         "source" -> Json.fromString(source),

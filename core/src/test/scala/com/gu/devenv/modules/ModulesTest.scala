@@ -14,8 +14,8 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
     "features field" - {
       val genFeatures: Gen[Map[String, Json]] = for {
-        size <- Gen.choose(0, 5)
-        keys <- Gen.listOfN(size, Gen.alphaNumStr.suchThat(_.nonEmpty))
+        size   <- Gen.choose(0, 5)
+        keys   <- Gen.listOfN(size, Gen.alphaNumStr.suchThat(_.nonEmpty))
         values <- Gen.listOfN(
           size,
           Gen.oneOf(

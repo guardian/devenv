@@ -12,7 +12,7 @@ import java.nio.file.Path
   */
 class DevcontainerRunner(workspaceDir: Path) {
   private val workspacePath = workspaceDir.toAbsolutePath.toString
-  private val configPath =
+  private val configPath    =
     workspaceDir.resolve(".devcontainer/shared/devcontainer.json").toAbsolutePath.toString
   private val devcontainer = "npx --yes @devcontainers/cli"
 
