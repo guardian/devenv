@@ -78,14 +78,17 @@ The user config (`~/.config/devenv/devenv.yaml`) supports the following (optiona
 
 ### Dotfiles Configuration
 
-The `dotfiles` field in the user config allows you to specify a GitHub repository containing your personal dotfiles to
-be cloned and installed into the devcontainer. All three fields are required.
+The `dotfiles` field allows you to specify a GitHub repository containing your personal dotfiles to be cloned and
+installed into the devcontainer. All three fields are required.  
+The dotfiles setup runs after project/container setup
+to avoid interfering with shared configuration. The repository is cloned into the container at the specified path and
+the `installCommand` is executed from there.
 
-| Field            | Description                                                 |
-|------------------|-------------------------------------------------------------|
-| `repository`     | GitHub repository (format: `username/repo`)                 |
-| `targetPath`     | Path where dotfiles will be cloned in the container         |
-| `installCommand` | Script to run for installation (executed from `targetPath`) |
+| Field            | Description                                                             |
+|------------------|-------------------------------------------------------------------------|
+| `repository`     | Full GitHub repository URL (eg. `https://github.com/username/dotfiles`) |
+| `targetPath`     | Path where dotfiles will be cloned in the container                     |
+| `installCommand` | Script to run for installation (executed from `targetPath`)             |
 
 ### Example
 
@@ -95,9 +98,9 @@ plugins:
     - usernamehw.errorlens
     - eamodio.gitlens
 dotfiles:
-  repository: "your-github-id/your-dotfiles-repo"
+  repository: "https://github.com/username/dotfiles"
   targetPath: "~/dotfiles"
-  installCommand: "install.sh"
+  installCommand: "./install.sh"
 ```
 
 ## Escape Hatch Spec
@@ -167,20 +170,6 @@ modules:
   - docker-in-docker  # Now enabled
 ```
 
-## Dotfiles
-
-You can configure personal dotfiles in your user config (`~/.config/devenv/devenv.yaml`) to automatically clone and
-install them during container creation:
-
-```yaml
-dotfiles:
-  repository: "your-github-id/your-dotfiles-repo"
-  targetPath: "~/dotfiles"
-  installCommand: "install.sh"
-```
-
-The dotfiles setup runs after project/container setup to avoid interfering with shared configuration. The repository is
-cloned into the container at the specified path, and the `installCommand` is executed from there.
 
 ## Container Size
 
