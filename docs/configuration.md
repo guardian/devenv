@@ -170,6 +170,10 @@ modules:
   - docker-in-docker  # Now enabled
 ```
 
+### Adding a new module
+
+See the [Adding a Module](contributing/adding-a-module.md) guide for a full walkthrough of how to
+implement, test and document a new built-in module.
 
 ## Container Size
 

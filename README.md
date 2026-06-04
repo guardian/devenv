@@ -131,17 +131,7 @@ You can also run `devenv check` to verify that the generated devcontainer.json f
 
 ## Configuration
 
-**Project config**: `.devcontainer/devenv.yaml` - Project-specific settings (name, ports, IDE plugins, commands, etc). Checked into version control.
-
-**User config**: `~/.config/devenv/devenv.yaml` - Personal preferences (dotfiles, additional IDE plugins). Merged with project config for the user-specific devcontainer.
-
-Two devcontainer files are generated:
-- `.devcontainer/user/devcontainer.json` - Merged config with your personal settings
-- `.devcontainer/shared/devcontainer.json` - Project-only config for team use
-
-Your user-specific file is excluded from the Git repository with a .gitignore entry. The general project file can be checked in to provide a project environment for cloud-based editors.
-
-For detailed configuration specifications, see the [Configuration Reference](docs/configuration.md).
+For detailed configuration specifications, including all supported fields, modules and the escape hatch, see the [Configuration Reference](docs/configuration.md).
 
 ## Development
 
@@ -168,6 +158,13 @@ The project also includes generation tests that validate the real program output
 ```bash
 ./generation-tests/run-tests.sh
 ```
+
+### Contributing
+
+#### Adding a module
+
+See [docs/contributing/adding-a-module.md](docs/contributing/adding-a-module.md) 
+for a guide on implementing, testing and documenting a new built-in module.
 
 ### Release
 
