@@ -22,11 +22,10 @@ log "Updating mise if needed."
 mise self-update --yes || warn "Skipping mise self-update - you may be offline."
 
 # Set a minimum release age so mise only installs tool versions that have existed for a while.
-# This guards against very freshly published versions that have not yet had time for issues to
-# surface. We write it to a repo-local mise.toml (settings live alongside any .tool-versions file).
 # See: https://mise.jdx.dev/configuration/settings.html#minimum_release_age
+# We write it to a repo-local mise.toml (settings live alongside any .tool-versions file).
 MISE_MINIMUM_RELEASE_AGE="7d"
-log "Adding a ${MISE_MINIMUM_RELEASE_AGE} minimum release age to mise.toml..."
+log "Adding a mise.toml file with ${MISE_MINIMUM_RELEASE_AGE} minimum release age setting..."
 if [[ -f mise.toml ]]; then
   if grep -q 'minimum_release_age' mise.toml; then
     log "minimum_release_age already configured in mise.toml; leaving it unchanged."

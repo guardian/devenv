@@ -135,11 +135,10 @@ list.
 ### Available Modules
 
 - **`mise`** - Installs and configures [mise](https://mise.jdx.dev/) for version management of languages and tools.
-  Enabled by default.
-  At container creation the module writes a repo-local `mise.toml` setting a 
-  [`minimum_release_age`](https://mise.jdx.dev/configuration/settings.html#minimum_release_age), so mise only installs 
-  tool versions that have existed for a while. This guards against very freshly published versions that have not yet had
-  time for issues to surface. The file is only created if a `mise.toml` does not already exist, so it sits alongside any
+  Enabled by default.  
+  At container creation the module writes a repo-local `mise.toml` file containing a 
+  [`minimum_release_age`](https://mise.jdx.dev/configuration/settings.html#minimum_release_age). 
+  The file is only created if a `mise.toml` does not already exist so it sits alongside any
   `.tool-versions` file without disturbing existing mise configuration.
 
 - **`docker-in-docker`** - Enables running Docker containers within the devcontainer. Uses an isolated Docker daemon (
