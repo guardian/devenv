@@ -52,6 +52,31 @@ Create `core/src/main/scala/com/gu/devenv/modules/<name>.scala`.
 
 Use `private[modules]` visibility so the module is only directly accessible within the `modules` package.
 
+### Choosing `enabledByDefault`
+
+Set `enabledByDefault = true` only for modules that are broadly useful to all projects (for example
+`mise`, which most projects will want). For opt-in tools (language runtimes, specialised plugins,
+etc.) use `enabledByDefault = false`.
+
+This value has a direct, visible effect on users: when they run `devenv init`, the tool generates a
+`devenv.yaml` template that lists every registered module. Modules with `enabledByDefault = true`
+appear as active entries; modules with `enabledByDefault = false` appear commented out so users know
+they exist but must opt in explicitly:
+
+```yaml
+# Modules: Built-in functionality
+# - my-tool: Set up My Tool inside the devcontainer
+# To disable, comment out or remove items from the list below
+modules:
+  # - my-tool  # (disabled by default)
+```
+
+The template is generated dynamically from the registered
+module list every time `devenv init` is run, so registering a module ([Step 3](#step-3-register-the-module)) is all that is needed
+to include it in the template.
+
+---
+
 **Pattern A -- plain `val` (no script):**
 
 ```scala
@@ -145,7 +170,7 @@ Follow the scripting conventions documented in
 Add the new module to the `builtInModules` function in
 [Modules.scala](../../core/src/main/scala/com/gu/devenv/modules/Modules.scala).
 
-**If the module is a plain `val`**, append it to the returned `List`:
+If the module is a plain `val`, append it to the returned list:
 
 ```scala
 def builtInModules(moduleConfig: ModuleConfig): Try[List[Module]] =
@@ -161,7 +186,7 @@ def builtInModules(moduleConfig: ModuleConfig): Try[List[Module]] =
   )
 ```
 
-**If the module returns a `Try[Module]`**, add a `for`-comprehension binding and include it in the list:
+If the module returns a `Try[Module]`, add a for-comprehension binding and include it in the list:
 
 ```scala
 def builtInModules(moduleConfig: ModuleConfig): Try[List[Module]] =
@@ -247,7 +272,23 @@ Build and run the CLI in JVM mode:
 sbt cli/stage
 ```
 
-Create a temporary `devenv.yaml` that includes your new module name:
+### 6a: Verify the init template
+
+Run `devenv init` in a temporary directory and inspect the generated `devenv.yaml`:
+
+```bash
+mkdir /tmp/devenv-smoke && cd /tmp/devenv-smoke
+<path-to-repo>/cli/target/universal/stage/bin/devenv init
+cat .devcontainer/devenv.yaml
+```
+
+Confirm that your new module appears in the file. If `enabledByDefault = false`, it should appear
+as a commented-out entry with the `(disabled by default)` annotation. If `enabledByDefault = true`,
+it should appear as an active, uncommented entry.
+
+### 6b: Verify the generated devcontainer output
+
+Create or update the `devenv.yaml` to include your module:
 
 ```yaml
 name: smoke-test
@@ -255,7 +296,7 @@ modules:
   - my-tool
 ```
 
-Run the generate command against it:
+Run the generate command:
 
 ```bash
 cli/target/universal/stage/bin/devenv generate
@@ -264,7 +305,7 @@ cli/target/universal/stage/bin/devenv generate
 Inspect the generated `.devcontainer/shared/devcontainer.json` and verify it contains the plugins,
 features, mounts and env vars the module is expected to contribute.
 
-See the [JVM Build documentation](../../README.md#jvm-build) for further info.
+See the [JVM build documentation](../../README.md#jvm-build) for further info.
 
 ---
 
@@ -276,15 +317,15 @@ Build the native binary:
 ./scripts/build-native-binary.sh
 ```
 
-The resulting binary is at `cli/target/graalvm-native-image/devenv`. Repeat the same verification
-steps as Step 6 using this binary.
+The resulting binary is at `cli/target/graalvm-native-image/devenv`. Repeat both sub-steps from
+Step 6 (init template check and generate check) using this binary.
 
 Native image compilation is the most important smoke test for modules that load scripts via
 `Command.fromResourceScript` because GraalVM must be able to locate the classpath resource at
 compile time. A failure here typically means the resource path is incorrect or the resource is not
 on the native image classpath.
 
-See the [Native Image Build documentation](../../README.md#native-image-build) for further info.
+See the [Native image build documentation](../../README.md#native-image-build) for further info.
 
 ---
 
@@ -292,10 +333,11 @@ See the [Native Image Build documentation](../../README.md#native-image-build) f
 
 | Step | Task                                                                                                |
 |------|-----------------------------------------------------------------------------------------------------|
-| 1    | Create `core/src/main/scala/com/gu/devenv/modules/<name>.scala`                                     |
+| 1    | Create `core/src/main/scala/com/gu/devenv/modules/<name>.scala`; choose `enabledByDefault`         |
 | 2    | Create `core/src/main/resources/com/gu/devenv/modules/<name><lifecycleStage>Command.sh` (if needed) |
 | 3    | Register in [Modules.builtInModules](../../core/src/main/scala/com/gu/devenv/modules/Modules.scala) |
 | 4    | Add unit tests in `core/src/test/scala/com/gu/devenv/modules/<Name>ModuleTest.scala`                |
 | 5    | Add user-facing entry to [docs/configuration.md](../../docs/configuration.md)                       |
-| 6    | Smoke-test with `sbt cli/stage` and the JVM binary                                                  |
-| 7    | Smoke-test with `./scripts/build-native-binary.sh` and the native binary                            |
+| 6a   | Run `devenv init` with the JVM binary and confirm the module appears correctly in `devenv.yaml`     |
+| 6b   | Run `devenv generate` with the JVM binary and confirm the generated `devcontainer.json` is correct  |
+| 7    | Repeat steps 6a and 6b with the native binary from `./scripts/build-native-binary.sh`              |
