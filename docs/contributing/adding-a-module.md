@@ -145,7 +145,8 @@ Load it in the module definition with:
 Command.fromResourceScript("<name><lifecycleStage>Command.sh")
 ```
 
-This base64-encodes the script for portability; it is decoded and piped to bash at container
+This base64-encodes the script so that it can easily be combined with other scripts 
+and merged into a single-line command.  It is decoded and piped to bash at container
 creation time:
 
 ```
