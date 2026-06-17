@@ -1,4 +1,4 @@
-ThisBuild / scalaVersion := "3.3.7" // latest LTS
+ThisBuild / scalaVersion := "3.3.8" // latest LTS
 ThisBuild / organization := "com.gu"
 ThisBuild / scalacOptions ++= Seq(
   "-encoding",
