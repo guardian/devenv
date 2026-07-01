@@ -68,7 +68,7 @@ jobs:
     - name: Setup Java and sbt
       uses: guardian/setup-scala@v1
 
-    - uses: graalvm/setup-graalvm@bef4b0e916c7dd079bf60fb95d49139f67e32c5f # v1.5.3
+    - uses: graalvm/setup-graalvm@6f3fa030c4b8f77c1f554a860f593a654538fa38 # v1.5.6
       with:
         java-version: '21'
         distribution: 'graalvm'
@@ -218,7 +218,7 @@ jobs:
         path: .
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+      uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
       with:
         tag_name: ${{ needs.generate-version.outputs.version }}
         name: devenv ${{ needs.generate-version.outputs.version }}
