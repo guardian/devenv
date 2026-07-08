@@ -22,7 +22,7 @@ val cliJvmOptions = Seq(
 )
 
 // shared library versions
-val circeVersion         = "0.14.15"
+val circeVersion         = "0.14.16"
 val sttpVersion          = "4.0.25"
 val scalatestVersion     = "3.2.20"
 val scalaCheckVersion    = "1.19.0"
