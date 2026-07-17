@@ -112,6 +112,8 @@ trait DevcontainerTestSupport extends TryValues with BeforeAndAfterEach with Bef
         Left("devenv not initialized: .devcontainer/devenv.yaml not found")
       case scala.util.Success(GenerateResult.ConfigNotCustomized) =>
         Left("devenv.yaml has not been customized (still using placeholder name)")
+      case scala.util.Success(GenerateResult.InvalidModules(error)) =>
+        Left(s"Invalid module configuration: ${error.message}")
       case scala.util.Failure(err) =>
         Left(s"Generation failed: ${err.getMessage}")
     }

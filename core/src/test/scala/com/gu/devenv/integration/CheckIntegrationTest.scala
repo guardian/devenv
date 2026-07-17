@@ -2,6 +2,7 @@ package com.gu.devenv.integration
 
 import cats.syntax.all.*
 import com.gu.devenv.integration.IntegrationTestHelpers.*
+import com.gu.devenv.modules.Modules.ModuleResolutionError
 import com.gu.devenv.{CheckResult, Devenv}
 import io.circe.syntax.*
 import io.circe.{Json, JsonObject}
@@ -35,6 +36,23 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
         result shouldBe CheckResult.NotInitialized
       }
 
+    "fails when a module dependency is not enabled" in
+      (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
+        val devcontainerDir = rootDir.resolve(".devcontainer")
+
+        Devenv.init(devcontainerDir, modules).success.value
+        Files.writeString(
+          devcontainerDir.resolve("devenv.yaml"),
+          projectConfigWithMissingModuleDependency
+        )
+
+        val result = Devenv.check(devcontainerDir, userConfigDir, modules).success.value
+
+        result shouldBe CheckResult.InvalidModules(
+          ModuleResolutionError.DependencyNotEnabled("github-copilot", "mise")
+        )
+      }
+
     "checking when no devcontainer files exist" - {
       "should return Mismatch for both files" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
@@ -59,6 +77,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               )
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
 
@@ -84,6 +106,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got Match")
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
     }
@@ -111,6 +137,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               )
             case CheckResult.NotInitialized =>
               fail("Expected Match result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
 
@@ -137,6 +167,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               )
             case CheckResult.NotInitialized =>
               fail("Expected Match result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
     }
@@ -168,6 +202,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got Match (user file was modified)")
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
 
@@ -194,6 +232,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got Match")
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
 
@@ -234,6 +276,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               )
             case CheckResult.NotInitialized =>
               fail("Expected Match result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
     }
@@ -265,6 +311,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got Match (shared file was modified)")
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
 
@@ -291,6 +341,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got Match")
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
     }
@@ -324,6 +378,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got Match (both files were modified)")
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
     }
@@ -352,6 +410,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got Match (config was changed)")
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
 
@@ -381,6 +443,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               )
             case CheckResult.NotInitialized =>
               fail("Expected Match result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
     }
@@ -412,6 +478,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               )
             case CheckResult.NotInitialized =>
               fail("Expected Match result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
 
@@ -445,6 +515,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               fail("Expected Mismatch result but got Match (user config was changed)")
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
 
@@ -484,6 +558,10 @@ class CheckIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
               )
             case CheckResult.NotInitialized =>
               fail("Expected Mismatch result but got NotInitialized")
+            case CheckResult.InvalidModules(error) =>
+              fail(
+                s"Expected a file comparison result but module resolution failed: ${error.message}"
+              )
           }
         }
 

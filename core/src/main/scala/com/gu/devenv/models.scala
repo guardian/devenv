@@ -3,6 +3,7 @@ package com.gu.devenv
 import cats.*
 import cats.syntax.all.*
 import com.gu.devenv.Filesystem.{FileSystemStatus, GitignoreStatus}
+import com.gu.devenv.modules.Modules.ModuleResolutionError
 import io.circe.{Decoder, DecodingFailure, Encoder, Json}
 
 import java.nio.charset.StandardCharsets.UTF_8
@@ -308,6 +309,8 @@ enum GenerateResult(val successful: Boolean) {
   case NotInitialized extends GenerateResult(successful = false)
 
   case ConfigNotCustomized extends GenerateResult(successful = false)
+
+  case InvalidModules(error: ModuleResolutionError) extends GenerateResult(successful = false)
 }
 
 enum CheckResult(val successful: Boolean) {
@@ -324,4 +327,6 @@ enum CheckResult(val successful: Boolean) {
   ) extends CheckResult(successful = false)
 
   case NotInitialized extends CheckResult(successful = false)
+
+  case InvalidModules(error: ModuleResolutionError) extends CheckResult(successful = false)
 }

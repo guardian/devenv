@@ -1,7 +1,7 @@
 package com.gu.devenv.modules
 
 import com.gu.devenv.*
-import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
+import com.gu.devenv.modules.Modules.{Module, ModuleContribution, ModuleResolutionError}
 import io.circe.Json
 
 import org.scalacheck.Gen
@@ -10,6 +10,68 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
 class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
+
+  def testModule(name: String, dependsOn: List[String] = Nil): Module =
+    Module(
+      name = name,
+      summary = s"$name module",
+      enabledByDefault = false,
+      contribution = ModuleContribution(),
+      dependsOn = dependsOn
+    )
+
+  "Modules.applyModules" - {
+    "leaves the project config unchanged when there are no resolved modules" in {
+      val config = ProjectConfig(name = "test", features = Map("explicit" -> Json.True))
+
+      Modules.applyModules(config, Modules.ResolvedModules.empty) shouldBe config
+    }
+
+    "applies every resolved module contribution" in {
+      val a = testModule("a").copy(
+        contribution = ModuleContribution(features = Map("a" -> Json.True))
+      )
+      val b = testModule("b").copy(
+        contribution = ModuleContribution(features = Map("b" -> Json.True))
+      )
+      val resolvedModules = Modules.resolveModules(List("a", "b"), List(a, b)).toOption.get
+
+      val result = Modules.applyModules(ProjectConfig(name = "test"), resolvedModules)
+
+      result.features shouldBe Map("a" -> Json.True, "b" -> Json.True)
+    }
+
+    "gives later configured modules precedence over earlier modules" in {
+      val earlier = testModule("earlier").copy(
+        contribution = ModuleContribution(features = Map("shared" -> Json.fromString("earlier")))
+      )
+      val later = testModule("later").copy(
+        contribution = ModuleContribution(features = Map("shared" -> Json.fromString("later")))
+      )
+      val resolvedModules =
+        Modules.resolveModules(List("earlier", "later"), List(earlier, later)).toOption.get
+
+      val result = Modules.applyModules(ProjectConfig(name = "test"), resolvedModules)
+
+      result.features("shared") shouldBe Json.fromString("later")
+    }
+
+    "gives explicit project config precedence over module contributions" in {
+      val configured = testModule("configured").copy(
+        contribution = ModuleContribution(features = Map("shared" -> Json.fromString("module")))
+      )
+      val resolvedModules =
+        Modules.resolveModules(List("configured"), List(configured)).toOption.get
+      val config = ProjectConfig(
+        name = "test",
+        features = Map("shared" -> Json.fromString("explicit"))
+      )
+
+      val result = Modules.applyModules(config, resolvedModules)
+
+      result.features("shared") shouldBe Json.fromString("explicit")
+    }
+  }
 
   "Modules.applyModuleContribution" - {
 
@@ -331,78 +393,93 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     }
   }
 
+  "Modules.resolveModules" - {
+    "resolves an empty list" in {
+      val result = Modules.resolveModules(Nil, Nil)
+
+      result.toOption.get.modules shouldBe Nil
+    }
+
+    "resolves configured IDs to modules in configured order" in {
+      val a      = testModule("a")
+      val b      = testModule("b")
+      val unused = testModule("unused")
+
+      val result = Modules.resolveModules(List("b", "a"), List(a, unused, b))
+
+      result.toOption.get.modules shouldBe List(b, a)
+    }
+
+    "fails when a configured module ID is unknown" in {
+      val result = Modules.resolveModules(List("missing"), List(testModule("available")))
+
+      result shouldBe Left(ModuleResolutionError.UnknownModule("missing"))
+    }
+
+    "fails when resolved module dependencies are invalid" in {
+      val a      = testModule("a")
+      val b      = testModule("b", dependsOn = List("a"))
+      val result = Modules.resolveModules(List("b"), List(a, b))
+
+      result shouldBe Left(ModuleResolutionError.DependencyNotEnabled("b", "a"))
+    }
+  }
+
   "Modules.validateDependencies" - {
-    def module(name: String, dependsOn: List[String] = Nil): Module =
-      Module(
-        name = name,
-        summary = s"$name module",
-        enabledByDefault = false,
-        contribution = ModuleContribution(),
-        dependsOn = dependsOn
-      )
 
     "success cases" - {
       "succeeds with empty project and available module lists" in {
-        Modules.validateDependencies(Nil, Nil).isSuccess shouldBe true
+        Modules.validateDependencies(Nil, Nil) shouldBe Right(())
       }
 
       "succeeds when no module has dependencies" in {
-        val a         = module("a")
-        val b         = module("b")
+        val a         = testModule("a")
+        val b         = testModule("b")
         val available = List(a, b)
 
-        Modules.validateDependencies(List(a, b), available).isSuccess shouldBe true
+        Modules.validateDependencies(List(a, b), available) shouldBe Right(())
       }
 
       "succeeds when a dependency is enabled and appears earlier in the list" in {
-        val a         = module("a")
-        val b         = module("b", dependsOn = List("a"))
+        val a         = testModule("a")
+        val b         = testModule("b", dependsOn = List("a"))
         val available = List(a, b)
 
-        Modules.validateDependencies(List(a, b), available).isSuccess shouldBe true
+        Modules.validateDependencies(List(a, b), available) shouldBe Right(())
       }
 
       "succeeds with a chain of dependencies in order" in {
-        val a         = module("a")
-        val b         = module("b", dependsOn = List("a"))
-        val c         = module("c", dependsOn = List("a", "b"))
+        val a         = testModule("a")
+        val b         = testModule("b", dependsOn = List("a"))
+        val c         = testModule("c", dependsOn = List("a", "b"))
         val available = List(a, b, c)
 
-        Modules.validateDependencies(List(a, b, c), available).isSuccess shouldBe true
+        Modules.validateDependencies(List(a, b, c), available) shouldBe Right(())
       }
     }
 
     "error cases" - {
       "fails when a module depends on an unknown module" in {
-        val a      = module("a", dependsOn = List("missing"))
+        val a      = testModule("a", dependsOn = List("missing"))
         val result = Modules.validateDependencies(List(a), List(a))
 
-        result.isFailure shouldBe true
-        result.failed.get.getMessage should include(
-          "Module 'a' depends on unknown module 'missing'"
-        )
+        result shouldBe Left(ModuleResolutionError.UnknownDependency("a", "missing"))
       }
 
       "fails when a dependency exists but is not enabled in the project" in {
-        val a      = module("a")
-        val b      = module("b", dependsOn = List("a"))
+        val a      = testModule("a")
+        val b      = testModule("b", dependsOn = List("a"))
         val result = Modules.validateDependencies(List(b), List(a, b))
 
-        result.isFailure shouldBe true
-        result.failed.get.getMessage should include(
-          "Module 'b' depends on 'a', but it is not enabled in the project"
-        )
+        result shouldBe Left(ModuleResolutionError.DependencyNotEnabled("b", "a"))
       }
 
       "fails when a dependency is enabled but appears after the dependent module" in {
-        val a      = module("a")
-        val b      = module("b", dependsOn = List("a"))
+        val a      = testModule("a")
+        val b      = testModule("b", dependsOn = List("a"))
         val result = Modules.validateDependencies(List(b, a), List(a, b))
 
-        result.isFailure shouldBe true
-        result.failed.get.getMessage should include(
-          "Module 'b' depends on 'a', so it must appear before 'b' in the project modules list"
-        )
+        result shouldBe Left(ModuleResolutionError.DependencyOutOfOrder("b", "a"))
       }
     }
   }

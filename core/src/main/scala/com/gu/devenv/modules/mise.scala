@@ -30,6 +30,5 @@ private[modules] def mise: Try[Module] =
         intellij = List("com.github.l34130.mise"),
         vscode = List("hverlin.mise-vscode")
       )
-    ),
-    dependsOn = List("mise")
+    )
   )

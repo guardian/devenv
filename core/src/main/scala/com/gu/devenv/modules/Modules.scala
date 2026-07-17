@@ -4,9 +4,29 @@ import cats.implicits.*
 import com.gu.devenv.*
 import io.circe.Json
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object Modules {
+  enum ModuleResolutionError {
+    case UnknownModule(name: String)
+    case UnknownDependency(module: String, dependency: String)
+    case DependencyNotEnabled(module: String, dependency: String)
+    case DependencyOutOfOrder(module: String, dependency: String)
+
+    def message: String = this match {
+      case UnknownModule(name) =>
+        s"Unknown module: '$name'"
+      case UnknownDependency(module, dependency) =>
+        s"Module '$module' depends on unknown module '$dependency'"
+      case DependencyNotEnabled(module, dependency) =>
+        s"Module '$module' depends on '$dependency', but it is not enabled in the project"
+      case DependencyOutOfOrder(module, dependency) =>
+        s"Module '$module' depends on '$dependency', so it must appear before '$module' in the project modules list"
+    }
+  }
+
+  private type ResolutionResult[A] = Either[ModuleResolutionError, A]
+
   // all registered modules are here
   // In the future we might provide ways to register custom modules but this is fine for now
   def builtInModules(moduleConfig: ModuleConfig): Try[List[Module]] =
@@ -29,6 +49,14 @@ object Modules {
       contribution: ModuleContribution,
       dependsOn: List[String] = Nil
   )
+
+  /** Project modules that have been looked up and whose dependencies have been validated. */
+  final class ResolvedModules private[Modules] (val modules: List[Module])
+
+  object ResolvedModules {
+    val empty: ResolvedModules = new ResolvedModules(Nil)
+  }
+
   case class ModuleContribution(
       features: Map[String, Json] = Map.empty,
       mounts: List[Mount] = Nil,
@@ -45,17 +73,32 @@ object Modules {
       mountKey: String // allows test modules to use unique mount names
   )
 
-  /** Apply modules to a project config, merging their contributions. Explicit config takes
-    * precedence over module defaults. Returns a Failure if any unknown modules are specified.
+  /** Resolve configured module names and validate their dependencies.
+    *
+    * The configured order is preserved because it determines both dependency ordering and the order
+    * in which contributions are applied.
     */
-  def applyModules(config: ProjectConfig, modules: List[Module]): Try[ProjectConfig] =
-    config.modules
-      .traverse(getModuleContribution(modules)) // lookup requested modules to check we support them
-      .map { moduleContributions =>
-        moduleContributions.foldRight(config)((contribution, cfg) =>
-          applyModuleContribution(cfg, contribution)
-        )
+  def resolveModules(
+      moduleNames: List[String],
+      availableModules: List[Module]
+  ): Either[ModuleResolutionError, ResolvedModules] =
+    moduleNames
+      .traverse(getModule(availableModules))
+      .flatMap { projectModules =>
+        validateDependencies(projectModules, availableModules)
+          .as(new ResolvedModules(projectModules))
       }
+
+  /** Apply resolved modules to a project config, merging their contributions. Explicit config takes
+    * precedence over module defaults.
+    */
+  private[devenv] def applyModules(
+      config: ProjectConfig,
+      resolvedModules: ResolvedModules
+  ): ProjectConfig =
+    resolvedModules.modules.foldRight(config)((module, cfg) =>
+      applyModuleContribution(cfg, module.contribution)
+    )
 
   /** Apply a single module contribution to a project config. Module contributions are prepended to
     * explicit config, so explicit config takes precedence.
@@ -79,49 +122,43 @@ object Modules {
       securityOpt = contribution.securityOpt ++ config.securityOpt
     )
 
-  private def getModuleContribution(modules: List[Module])(
-      moduleName: String
-  ): Try[ModuleContribution] =
+  private def getModule(
+      modules: List[Module]
+  )(moduleName: String): Either[ModuleResolutionError, Module] =
     modules.find(_.name == moduleName) match {
-      case Some(module) => Success(module.contribution)
-      case None         => Failure(new IllegalArgumentException(s"Unknown module: '$moduleName'"))
+      case Some(module) => Right(module)
+      case None         => Left(ModuleResolutionError.UnknownModule(moduleName))
     }
 
   /** For each module, checks that its dependencies are present, and that those modules are earlier
     * in the list.
     *
-    * Returns a Failure if any dependencies are missing, invalid, or out of order.
+    * Returns a typed error if any dependencies are missing, invalid, or out of order.
     */
   def validateDependencies(
       projectModules: List[Module],
       availableModules: List[Module]
-  ): Try[Unit] = {
+  ): Either[ModuleResolutionError, Unit] = {
     val projectModuleNames   = projectModules.map(_.name)
     val availableModuleNames = availableModules.map(_.name)
 
     projectModules
-      .foldM[Try, Set[String]](Set.empty) { (accNames, module) =>
+      .foldM[ResolutionResult, Set[String]](Set.empty) { (accNames, module) =>
         module.dependsOn
-          .traverse_[Try, Unit] { dependency =>
+          .traverse_[ResolutionResult, Unit] { dependency =>
             if (!availableModuleNames.contains(dependency))
-              Failure(
-                new IllegalArgumentException(
-                  s"Module '${module.name}' depends on unknown module '$dependency'"
-                )
+              Left(
+                ModuleResolutionError.UnknownDependency(module.name, dependency)
               )
             else if (!projectModuleNames.contains(dependency))
-              Failure(
-                new IllegalArgumentException(
-                  s"Module '${module.name}' depends on '$dependency', but it is not enabled in the project"
-                )
+              Left(
+                ModuleResolutionError.DependencyNotEnabled(module.name, dependency)
               )
             else if (!accNames.contains(dependency))
-              Failure(
-                new IllegalArgumentException(
-                  s"Module '${module.name}' depends on '$dependency', so it must appear before '${module.name}' in the project modules list"
-                )
+              Left(
+                ModuleResolutionError.DependencyOutOfOrder(module.name, dependency)
               )
-            else Success(())
+            else Right(())
           }
           .as(accNames + module.name)
       }

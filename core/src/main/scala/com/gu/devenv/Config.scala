@@ -2,7 +2,7 @@ package com.gu.devenv
 
 import com.gu.devenv.ContainerSize.Small
 import com.gu.devenv.modules.Modules
-import com.gu.devenv.modules.Modules.Module
+import com.gu.devenv.modules.Modules.ResolvedModules
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto.*
 import io.circe.syntax.*
@@ -72,6 +72,7 @@ object Config {
   private[devenv] val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1")
   private[devenv] val largeContainerRunArgs: List[String] =
     List("--memory=16g", "--cpus=8", "--shm-size=512m")
+
   def mergeConfigs(
       projectConfig: ProjectConfig,
       maybeUserConfig: Option[UserConfig]
@@ -100,88 +101,88 @@ object Config {
     )
   }
 
-  def configAsJson(projectConfig: ProjectConfig, modules: List[Module]): Try[Json] =
+  def configAsJson(projectConfig: ProjectConfig, modules: ResolvedModules): Json = {
     // Start by applying requested modules, then put explicit configuration on top of that
-    Modules.applyModules(projectConfig, modules).map { config =>
-      val customizations = JsonObject(
-        "vscode" -> Json.obj(
-          "extensions" -> config.plugins.vscode.asJson
+    val config         = Modules.applyModules(projectConfig, modules)
+    val customizations = JsonObject(
+      "vscode" -> Json.obj(
+        "extensions" -> config.plugins.vscode.asJson
+      ),
+      "jetbrains" -> Json.obj(
+        "plugins" -> config.plugins.intellij.asJson
+      )
+    )
+
+    val commands = JsonObject.fromIterable(
+      List(
+        "onCreateCommand" -> combineCommands(
+          config.onCreateCommand,
+          s"/var/log/$onCreateLogName"
         ),
-        "jetbrains" -> Json.obj(
-          "plugins" -> config.plugins.intellij.asJson
+        "postCreateCommand" -> combineCommands(
+          config.postCreateCommand,
+          s"/var/log/$postCreateLogName"
+        ),
+        "postStartCommand" -> combineCommands(
+          config.postStartCommand,
+          s"/var/log/$postStartLogName"
         )
-      )
+      ).collect { case (key, Some(value)) =>
+        key -> Json.fromString(value)
+      }
+    )
 
-      val commands = JsonObject.fromIterable(
-        List(
-          "onCreateCommand" -> combineCommands(
-            config.onCreateCommand,
-            s"/var/log/$onCreateLogName"
-          ),
-          "postCreateCommand" -> combineCommands(
-            config.postCreateCommand,
-            s"/var/log/$postCreateLogName"
-          ),
-          "postStartCommand" -> combineCommands(
-            config.postStartCommand,
-            s"/var/log/$postStartLogName"
-          )
-        ).collect { case (key, Some(value)) =>
-          key -> Json.fromString(value)
-        }
-      )
+    val baseConfig = fixedConfig deepMerge JsonObject(
+      "name"           -> config.name.asJson,
+      "customizations" -> customizations.asJson,
+      "forwardPorts"   -> config.forwardPorts.asJson
+    )
 
-      val baseConfig = fixedConfig deepMerge JsonObject(
-        "name"           -> config.name.asJson,
-        "customizations" -> customizations.asJson,
-        "forwardPorts"   -> config.forwardPorts.asJson
-      )
+    // Add optional fields if they exist
+    val withFeatures = if (config.features.nonEmpty) {
+      baseConfig.add("features", config.features.asJson)
+    } else baseConfig
 
-      // Add optional fields if they exist
-      val withFeatures = if (config.features.nonEmpty) {
-        baseConfig.add("features", config.features.asJson)
-      } else baseConfig
+    val withMounts = if (config.mounts.nonEmpty) {
+      withFeatures.add("mounts", config.mounts.asJson)
+    } else withFeatures
 
-      val withMounts = if (config.mounts.nonEmpty) {
-        withFeatures.add("mounts", config.mounts.asJson)
-      } else withFeatures
+    val withContainerEnv = if (config.containerEnv.nonEmpty) {
+      withMounts.add("containerEnv", envListToJson(config.containerEnv))
+    } else withMounts
 
-      val withContainerEnv = if (config.containerEnv.nonEmpty) {
-        withMounts.add("containerEnv", envListToJson(config.containerEnv))
-      } else withMounts
+    val withRemoteEnv = if (config.remoteEnv.nonEmpty) {
+      withContainerEnv.add("remoteEnv", envListToJson(config.remoteEnv))
+    } else withContainerEnv
 
-      val withRemoteEnv = if (config.remoteEnv.nonEmpty) {
-        withContainerEnv.add("remoteEnv", envListToJson(config.remoteEnv))
-      } else withContainerEnv
+    val withCapAdd = if (config.capAdd.nonEmpty) {
+      withRemoteEnv.add("capAdd", config.capAdd.asJson)
+    } else withRemoteEnv
 
-      val withCapAdd = if (config.capAdd.nonEmpty) {
-        withRemoteEnv.add("capAdd", config.capAdd.asJson)
-      } else withRemoteEnv
+    val withSecurityOpt = if (config.securityOpt.nonEmpty) {
+      withCapAdd.add("securityOpt", config.securityOpt.asJson)
+    } else withCapAdd
 
-      val withSecurityOpt = if (config.securityOpt.nonEmpty) {
-        withCapAdd.add("securityOpt", config.securityOpt.asJson)
-      } else withCapAdd
+    val withRunArgs = if (config.runArgs.nonEmpty) {
+      withSecurityOpt.add("runArgs", config.runArgs.asJson)
+    } else withSecurityOpt
 
-      val withRunArgs = if (config.runArgs.nonEmpty) {
-        withSecurityOpt.add("runArgs", config.runArgs.asJson)
-      } else withSecurityOpt
-
-      commands.deepMerge(withRunArgs).asJson
-    }
+    commands.deepMerge(withRunArgs).asJson
+  }
 
   def generateConfigs(
       projectConfig: ProjectConfig,
       maybeUserConfig: Option[UserConfig],
-      modules: List[Module],
+      modules: ResolvedModules,
       escapeHatch: Option[Json]
-  ): Try[(String, String)] = {
-    val mergedUserConfig = Config.mergeConfigs(projectConfig, maybeUserConfig)
-    for {
-      userJson <- Config.configAsJson(mergedUserConfig, modules)
-      userJsonWithEscapeHatch = escapeHatch.fold(userJson)(userJson deepMerge _)
-      sharedJson <- Config.configAsJson(projectConfig, modules)
-      sharedJsonWithEscapeHatch = escapeHatch.fold(sharedJson)(sharedJson deepMerge _)
-    } yield (userJsonWithEscapeHatch.spaces2, sharedJsonWithEscapeHatch.spaces2)
+  ): Try[(String, String)] = Try {
+    val mergedUserConfig   = Config.mergeConfigs(projectConfig, maybeUserConfig)
+    val userJson           = Config.configAsJson(mergedUserConfig, modules)
+    val sharedJson         = Config.configAsJson(projectConfig, modules)
+    val resolvedUserJson   = escapeHatch.fold(userJson)(userJson deepMerge _)
+    val resolvedSharedJson = escapeHatch.fold(sharedJson)(sharedJson deepMerge _)
+
+    (resolvedUserJson.spaces2, resolvedSharedJson.spaces2)
   }
 
   /** Compares the expected devcontainer.json content with the actual discovered content.

@@ -55,6 +55,14 @@ object Utils {
       EitherT.liftF(ta)
   }
 
+  /** Convert a typed domain result into a step that either produces its parsed value or exits with
+    * an expected program result.
+    */
+  extension [Error, A](result: Either[Error, A]) {
+    def orExit[Res](toResult: Error => Res): EitherT[Try, Res, A] =
+      EitherT.fromEither[Try](result.left.map(toResult))
+  }
+
   /** This is needed to allow for-comps to use withFilter on EitherT steps (e.g. to unpack tuples).
     *
     * {{{

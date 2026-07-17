@@ -75,6 +75,12 @@ object IntegrationTestHelpers {
        |  - unknown-module
        |""".stripMargin
 
+  val projectConfigWithMissingModuleDependency: String =
+    """|name: "Project With Missing Module Dependency"
+       |modules:
+       |  - github-copilot
+       |""".stripMargin
+
   val complexProjectConfig: String =
     """|name: "Complex Project"
        |modules:

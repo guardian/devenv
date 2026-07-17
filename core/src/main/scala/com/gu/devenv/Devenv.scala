@@ -69,10 +69,13 @@ object Devenv {
         projectConfig.name == PLACEHOLDER_PROJECT_NAME,
         GenerateResult.ConfigNotCustomized
       )
+      resolvedModules <- Modules
+        .resolveModules(projectConfig.modules, modules)
+        .orExit(GenerateResult.InvalidModules.apply)
       maybeUserConfig        <- Config.loadUserConfig(userPaths.devenvConf).liftF
       escapeHatch            <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
       (userJson, sharedJson) <- Config
-        .generateConfigs(projectConfig, maybeUserConfig, modules, escapeHatch)
+        .generateConfigs(projectConfig, maybeUserConfig, resolvedModules, escapeHatch)
         .liftF
       userDevcontainerStatus <- Filesystem
         .updateFile(devEnvPaths.userDevcontainerFile, userJson)
@@ -117,15 +120,13 @@ object Devenv {
         projectConfig.name == PLACEHOLDER_PROJECT_NAME,
         CheckResult.NotInitialized
       )
+      resolvedModules <- Modules
+        .resolveModules(projectConfig.modules, modules)
+        .orExit(CheckResult.InvalidModules.apply)
       maybeUserConfig <- Config.loadUserConfig(userPaths.devenvConf).liftF
       escapeHatch     <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
       (expectedUserJson, expectedSharedJson) <- Config
-        .generateConfigs(
-          projectConfig,
-          maybeUserConfig,
-          modules,
-          escapeHatch
-        )
+        .generateConfigs(projectConfig, maybeUserConfig, resolvedModules, escapeHatch)
         .liftF
       actualUserJson <- Filesystem
         .readFile(devEnvPaths.userDevcontainerFile)
