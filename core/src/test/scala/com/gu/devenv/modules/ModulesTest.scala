@@ -1,8 +1,9 @@
 package com.gu.devenv.modules
 
 import com.gu.devenv.*
-import com.gu.devenv.modules.Modules.ModuleContribution
+import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
 import io.circe.Json
+
 import org.scalacheck.Gen
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.freespec.AnyFreeSpec
@@ -327,6 +328,82 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
           // Module security options should come first
           result.securityOpt shouldBe (moduleSecurityOpt ++ existingSecurityOpt)
         }
+    }
+  }
+
+  "Modules.validateDependencies" - {
+    def module(name: String, dependsOn: List[String] = Nil): Module =
+      Module(
+        name = name,
+        summary = s"$name module",
+        enabledByDefault = false,
+        contribution = ModuleContribution(),
+        dependsOn = dependsOn
+      )
+
+    "success cases" - {
+      "succeeds with empty project and available module lists" in {
+        Modules.validateDependencies(Nil, Nil).isSuccess shouldBe true
+      }
+
+      "succeeds when no module has dependencies" in {
+        val a         = module("a")
+        val b         = module("b")
+        val available = List(a, b)
+
+        Modules.validateDependencies(List(a, b), available).isSuccess shouldBe true
+      }
+
+      "succeeds when a dependency is enabled and appears earlier in the list" in {
+        val a         = module("a")
+        val b         = module("b", dependsOn = List("a"))
+        val available = List(a, b)
+
+        Modules.validateDependencies(List(a, b), available).isSuccess shouldBe true
+      }
+
+      "succeeds with a chain of dependencies in order" in {
+        val a         = module("a")
+        val b         = module("b", dependsOn = List("a"))
+        val c         = module("c", dependsOn = List("a", "b"))
+        val available = List(a, b, c)
+
+        Modules.validateDependencies(List(a, b, c), available).isSuccess shouldBe true
+      }
+    }
+
+    "error cases" - {
+      "fails when a module depends on an unknown module" in {
+        val a      = module("a", dependsOn = List("missing"))
+        val result = Modules.validateDependencies(List(a), List(a))
+
+        result.isFailure shouldBe true
+        result.failed.get.getMessage should include(
+          "Module 'a' depends on unknown module 'missing'"
+        )
+      }
+
+      "fails when a dependency exists but is not enabled in the project" in {
+        val a      = module("a")
+        val b      = module("b", dependsOn = List("a"))
+        val result = Modules.validateDependencies(List(b), List(a, b))
+
+        result.isFailure shouldBe true
+        result.failed.get.getMessage should include(
+          "Module 'b' depends on 'a', but it is not enabled in the project"
+        )
+      }
+
+      "fails when a dependency is enabled but appears after the dependent module" in {
+        val a      = module("a")
+        val b      = module("b", dependsOn = List("a"))
+        val result = Modules.validateDependencies(List(b, a), List(a, b))
+
+        result.isFailure shouldBe true
+        result.failed.get.getMessage should include(
+          "Module 'b' depends on 'a', so it must appear before 'b' in the project modules list"
+        )
+      }
     }
   }
 }

@@ -26,7 +26,8 @@ object Modules {
       name: String,
       summary: String,
       enabledByDefault: Boolean,
-      contribution: ModuleContribution
+      contribution: ModuleContribution,
+      dependsOn: List[String] = Nil
   )
   case class ModuleContribution(
       features: Map[String, Json] = Map.empty,
@@ -85,4 +86,45 @@ object Modules {
       case Some(module) => Success(module.contribution)
       case None         => Failure(new IllegalArgumentException(s"Unknown module: '$moduleName'"))
     }
+
+  /** For each module, checks that its dependencies are present, and that those modules are earlier
+    * in the list.
+    *
+    * Returns a Failure if any dependencies are missing, invalid, or out of order.
+    */
+  def validateDependencies(
+      projectModules: List[Module],
+      availableModules: List[Module]
+  ): Try[Unit] = {
+    val projectModuleNames   = projectModules.map(_.name)
+    val availableModuleNames = availableModules.map(_.name)
+
+    projectModules
+      .foldM[Try, Set[String]](Set.empty) { (accNames, module) =>
+        module.dependsOn
+          .traverse_[Try, Unit] { dependency =>
+            if (!availableModuleNames.contains(dependency))
+              Failure(
+                new IllegalArgumentException(
+                  s"Module '${module.name}' depends on unknown module '$dependency'"
+                )
+              )
+            else if (!projectModuleNames.contains(dependency))
+              Failure(
+                new IllegalArgumentException(
+                  s"Module '${module.name}' depends on '$dependency', but it is not enabled in the project"
+                )
+              )
+            else if (!accNames.contains(dependency))
+              Failure(
+                new IllegalArgumentException(
+                  s"Module '${module.name}' depends on '$dependency', so it must appear before '${module.name}' in the project modules list"
+                )
+              )
+            else Success(())
+          }
+          .as(accNames + module.name)
+      }
+      .void
+  }
 }

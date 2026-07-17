@@ -3,6 +3,7 @@ package com.gu.devenv
 import cats.*
 import com.gu.devenv.Filesystem.PLACEHOLDER_PROJECT_NAME
 import com.gu.devenv.Utils.*
+import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.Module
 
 import java.nio.file.{NoSuchFileException, Path}
