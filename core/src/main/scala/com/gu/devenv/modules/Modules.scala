@@ -11,15 +11,15 @@ object Modules {
   // In the future we might provide ways to register custom modules but this is fine for now
   def builtInModules(moduleConfig: ModuleConfig): Try[List[Module]] =
     for {
-      miseModule  <- mise
-      scalaModule <- scalaLang(moduleConfig.mountKey)
-      ghCopilotModule <- ghCopilot
+      miseModule           <- mise
+      scalaModule          <- scalaLang(moduleConfig.mountKey)
+      githubCopilotModule  <- githubCopilot
     } yield List(
       miseModule,
       dockerInDocker,
       scalaModule,
       nodeLang,
-      ghCopilotModule
+      githubCopilotModule
     )
 
   case class Module(

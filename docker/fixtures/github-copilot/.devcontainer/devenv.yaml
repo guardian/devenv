@@ -1,0 +1,7 @@
+name: "github-copilot-test"
+
+modules:
+  - mise
+  - github-copilot
+
+image: "mcr.microsoft.com/devcontainers/base:ubuntu26.04"

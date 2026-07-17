@@ -19,16 +19,16 @@ import scala.util.Try
   * We expect this to be very widely required, so installation is handled via a module that is on by
   * default.
   */
-private[modules] def ghCopilot: Try[Module] =
+private[modules] def githubCopilot: Try[Module] =
   for {
     encodedPostCreateScript <- Command.fromResourceScript("githubCopilotPostCreate.sh")
   } yield Module(
-    name = "github-cli",
-    summary = "Installs the GitHub Copilot CLI (requires the mise module)",
+    name = "github-copilot",
+    summary = "Sets up GitHub Copilot for IDE and CLI use (requires the mise module)",
     enabledByDefault = true,
     contribution = ModuleContribution(
       postCreateCommands = List(encodedPostCreateScript),
-      // Also provides IDE integration for GitHub Copilot
+      // IDE integration for GitHub Copilot
       plugins = Plugins(
         intellij = List("GitHub.copilot"),
         vscode = List("com.github.copilot")
