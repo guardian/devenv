@@ -13,11 +13,13 @@ object Modules {
     for {
       miseModule  <- mise
       scalaModule <- scalaLang(moduleConfig.mountKey)
+      ghCopilotModule <- ghCopilot
     } yield List(
       miseModule,
       dockerInDocker,
       scalaModule,
-      nodeLang
+      nodeLang,
+      ghCopilotModule
     )
 
   case class Module(
