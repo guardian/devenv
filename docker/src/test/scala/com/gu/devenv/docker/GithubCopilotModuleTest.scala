@@ -48,4 +48,3 @@ class GithubCopilotModuleTest extends AnyFreeSpec with Matchers with Devcontaine
     }
   }
 }
-

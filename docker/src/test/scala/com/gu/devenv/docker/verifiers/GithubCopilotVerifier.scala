@@ -23,7 +23,9 @@ object GithubCopilotVerifier {
   private def checkCopilotCliInstalled(runner: DevcontainerRunner): Either[String, Unit] = {
     val result = runner.exec("copilot --version")
     if (result.succeeded) Right(())
-    else Left(s"GitHub Copilot CLI (copilot) is not installed or not on PATH: ${result.combinedOutput}")
+    else
+      Left(
+        s"GitHub Copilot CLI (copilot) is not installed or not on PATH: ${result.combinedOutput}"
+      )
   }
 }
-
