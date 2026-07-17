@@ -139,6 +139,9 @@ list.
 
 - **`mise`** - Installs and configures [mise](https://mise.jdx.dev/) for version management of languages and tools.
   Enabled by default.
+- **`github-copilot`** - Sets up [GitHub Copilot](https://github.com/features/copilot) for both IDE and CLI use. Adds
+  the Copilot plugins for VS Code and IntelliJ and installs the GitHub CLI (`gh`) and GitHub Copilot CLI (`copilot`) via
+  mise. Enabled by default. Requires the `mise` module.
 - **`docker-in-docker`** - Enables running Docker containers within the devcontainer. Uses an isolated Docker daemon (
   not host socket) with minimal capabilities for better security. Disabled by default.
     - Image storage is ephemeral (lost on container rebuild)
@@ -155,6 +158,7 @@ list.
 # In .devcontainer/devenv.yaml
 modules:
   - mise
+  - github-copilot  # Sets up GitHub Copilot (IDE + CLI)
   - scala  # Enable Scala IDE plugins
   # - node  # Enable Node.js IDE plugins (if needed)
   # - docker-in-docker  # Enable Docker-in-Docker (if needed)
@@ -165,6 +169,7 @@ To enable docker-in-docker or other modules, uncomment them:
 ```yaml
 modules:
   - mise
+  - github-copilot
   - scala
   # - node
   - docker-in-docker  # Now enabled
