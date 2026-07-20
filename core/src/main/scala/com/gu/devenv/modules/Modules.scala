@@ -121,8 +121,6 @@ object Modules {
 
   /** For each module, checks that its dependencies are present, and that those modules are earlier
     * in the list.
-    *
-    * Returns a typed error if any dependencies are missing, invalid, or out of order.
     */
   def validateDependencies(
       projectModules: List[Module],
@@ -134,7 +132,7 @@ object Modules {
     projectModules
       .foldM[ResolutionResult, Set[String]](Set.empty) { (accNames, module) =>
         module.dependsOn
-          .traverse_[ResolutionResult, Unit] { dependency =>
+          .traverse { dependency =>
             if (!availableModuleNames.contains(dependency))
               Left(
                 ModuleResolutionError.UnknownDependency(module.name, dependency)
