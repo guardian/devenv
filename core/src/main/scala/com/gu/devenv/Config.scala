@@ -175,12 +175,12 @@ object Config {
       maybeUserConfig: Option[UserConfig],
       modules: ResolvedModules,
       escapeHatch: Option[Json]
-  ): Try[(String, String)] = Try {
+  ): (String, String) = {
     val mergedUserConfig   = Config.mergeConfigs(projectConfig, maybeUserConfig)
     val userJson           = Config.configAsJson(mergedUserConfig, modules)
     val sharedJson         = Config.configAsJson(projectConfig, modules)
-    val resolvedUserJson   = escapeHatch.fold(userJson)(userJson deepMerge _)
-    val resolvedSharedJson = escapeHatch.fold(sharedJson)(sharedJson deepMerge _)
+    val resolvedUserJson   = escapeHatch.fold(userJson)(userJson.deepMerge)
+    val resolvedSharedJson = escapeHatch.fold(sharedJson)(sharedJson.deepMerge)
 
     (resolvedUserJson.spaces2, resolvedSharedJson.spaces2)
   }

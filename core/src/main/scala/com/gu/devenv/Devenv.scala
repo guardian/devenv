@@ -72,17 +72,20 @@ object Devenv {
       resolvedModules <- Modules
         .resolveModules(projectConfig.modules, modules)
         .orExit(GenerateResult.InvalidModules.apply)
-      maybeUserConfig        <- Config.loadUserConfig(userPaths.devenvConf).liftF
-      escapeHatch            <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
-      (userJson, sharedJson) <- Config
-        .generateConfigs(projectConfig, maybeUserConfig, resolvedModules, escapeHatch)
-        .liftF
+      maybeUserConfig <- Config.loadUserConfig(userPaths.devenvConf).liftF
+      escapeHatch     <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
+      (userJson, sharedJson) = Config.generateConfigs(
+        projectConfig,
+        maybeUserConfig,
+        resolvedModules,
+        escapeHatch
+      )
       userDevcontainerStatus <- Filesystem
         .updateFile(devEnvPaths.userDevcontainerFile, userJson)
-        .liftF
+        .liftF[GenerateResult]
       sharedDevcontainerStatus <- Filesystem
         .updateFile(devEnvPaths.sharedDevcontainerFile, sharedJson)
-        .liftF
+        .liftF[GenerateResult]
     } yield GenerateResult.Success(
       userDevcontainerStatus,
       sharedDevcontainerStatus
@@ -125,18 +128,21 @@ object Devenv {
         .orExit(CheckResult.InvalidModules.apply)
       maybeUserConfig <- Config.loadUserConfig(userPaths.devenvConf).liftF
       escapeHatch     <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
-      (expectedUserJson, expectedSharedJson) <- Config
-        .generateConfigs(projectConfig, maybeUserConfig, resolvedModules, escapeHatch)
-        .liftF
+      (expectedUserJson, expectedSharedJson) = Config.generateConfigs(
+        projectConfig,
+        maybeUserConfig,
+        resolvedModules,
+        escapeHatch
+      )
       actualUserJson <- Filesystem
         .readFile(devEnvPaths.userDevcontainerFile)
         .map(Some(_))
         .recover { case _: NoSuchFileException => None }
-        .liftF
+        .liftF[CheckResult]
       actualSharedJson <- Filesystem
         .readFile(devEnvPaths.sharedDevcontainerFile)
         .recover { case _ => "" }
-        .liftF
+        .liftF[CheckResult]
     } yield Config.compareDevcontainerFiles(
       expectedUserJson,
       actualUserJson,
