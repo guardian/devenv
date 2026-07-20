@@ -3,6 +3,7 @@ package com.gu.devenv.integration
 import cats.syntax.all.*
 import com.gu.devenv.Filesystem.FileSystemStatus
 import com.gu.devenv.integration.IntegrationTestHelpers.*
+import com.gu.devenv.modules.Modules.ModuleResolutionError
 import com.gu.devenv.{Devenv, GenerateResult}
 import io.circe.parser.*
 import org.scalatest.TryValues
@@ -279,9 +280,30 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
             projectConfigWithUnknownModule
           )
 
-          val result = Devenv.generate(devcontainerDir, userConfigDir, modules)
+          val result = Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 
-          result.isFailure shouldBe true
+          result shouldBe GenerateResult.InvalidModules(
+            ModuleResolutionError.UnknownModule("unknown-module")
+          )
+        }
+
+      "should fail before writing files when a module dependency is not enabled" in
+        (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
+
+          Devenv.init(devcontainerDir, modules).success.value
+          Files.writeString(
+            devcontainerDir.resolve("devenv.yaml"),
+            projectConfigWithMissingModuleDependency
+          )
+
+          val result = Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+
+          result shouldBe GenerateResult.InvalidModules(
+            ModuleResolutionError.DependencyNotEnabled("github-copilot", "mise")
+          )
+          Files.exists(devcontainerDir.resolve("user/devcontainer.json")) shouldBe false
+          Files.exists(devcontainerDir.resolve("shared/devcontainer.json")) shouldBe false
         }
     }
 

@@ -3,6 +3,7 @@ package com.gu.devenv
 import cats.*
 import com.gu.devenv.Filesystem.PLACEHOLDER_PROJECT_NAME
 import com.gu.devenv.Utils.*
+import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.Module
 
 import java.nio.file.{NoSuchFileException, Path}
@@ -68,17 +69,23 @@ object Devenv {
         projectConfig.name == PLACEHOLDER_PROJECT_NAME,
         GenerateResult.ConfigNotCustomized
       )
-      maybeUserConfig        <- Config.loadUserConfig(userPaths.devenvConf).liftF
-      escapeHatch            <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
-      (userJson, sharedJson) <- Config
-        .generateConfigs(projectConfig, maybeUserConfig, modules, escapeHatch)
-        .liftF
+      resolvedModules <- Modules
+        .resolveModules(projectConfig.modules, modules)
+        .orExit(GenerateResult.InvalidModules.apply)
+      maybeUserConfig <- Config.loadUserConfig(userPaths.devenvConf).liftF
+      escapeHatch     <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
+      (userJson, sharedJson) = Config.generateConfigs(
+        projectConfig,
+        maybeUserConfig,
+        resolvedModules,
+        escapeHatch
+      )
       userDevcontainerStatus <- Filesystem
         .updateFile(devEnvPaths.userDevcontainerFile, userJson)
-        .liftF
+        .liftF[GenerateResult]
       sharedDevcontainerStatus <- Filesystem
         .updateFile(devEnvPaths.sharedDevcontainerFile, sharedJson)
-        .liftF
+        .liftF[GenerateResult]
     } yield GenerateResult.Success(
       userDevcontainerStatus,
       sharedDevcontainerStatus
@@ -116,25 +123,26 @@ object Devenv {
         projectConfig.name == PLACEHOLDER_PROJECT_NAME,
         CheckResult.NotInitialized
       )
+      resolvedModules <- Modules
+        .resolveModules(projectConfig.modules, modules)
+        .orExit(CheckResult.InvalidModules.apply)
       maybeUserConfig <- Config.loadUserConfig(userPaths.devenvConf).liftF
       escapeHatch     <- Config.loadEscapeHatch(devEnvPaths.escapeHatch).liftF
-      (expectedUserJson, expectedSharedJson) <- Config
-        .generateConfigs(
-          projectConfig,
-          maybeUserConfig,
-          modules,
-          escapeHatch
-        )
-        .liftF
+      (expectedUserJson, expectedSharedJson) = Config.generateConfigs(
+        projectConfig,
+        maybeUserConfig,
+        resolvedModules,
+        escapeHatch
+      )
       actualUserJson <- Filesystem
         .readFile(devEnvPaths.userDevcontainerFile)
         .map(Some(_))
         .recover { case _: NoSuchFileException => None }
-        .liftF
+        .liftF[CheckResult]
       actualSharedJson <- Filesystem
         .readFile(devEnvPaths.sharedDevcontainerFile)
         .recover { case _ => "" }
-        .liftF
+        .liftF[CheckResult]
     } yield Config.compareDevcontainerFiles(
       expectedUserJson,
       actualUserJson,

@@ -1,6 +1,7 @@
 package com.gu.devenv
 
 import com.gu.devenv.Filesystem.FileSystemStatus
+import com.gu.devenv.modules.Modules.ModuleResolutionError
 import fansi.*
 
 object Output {
@@ -40,6 +41,9 @@ object Output {
 
       case GenerateResult.ConfigNotCustomized =>
         buildConfigNotCustomizedMessage()
+
+      case GenerateResult.InvalidModules(error) =>
+        buildInvalidModulesMessage(error)
     }
 
   def checkResultMessage(result: CheckResult): String =
@@ -50,6 +54,8 @@ object Output {
         buildCheckMismatchMessage(userMismatch, sharedMismatch, userPath, sharedPath)
       case CheckResult.NotInitialized =>
         buildNotInitializedMessage()
+      case CheckResult.InvalidModules(error) =>
+        buildInvalidModulesMessage(error)
     }
 
   // Init message builders (called by initResultMessage)
@@ -128,6 +134,29 @@ object Output {
        |  ${Bold.On(Color.Green("name: \"Your Project Name\""))}
        |
        |Then run ${Bold.On(Color.Cyan("devenv generate"))} again.""".stripMargin
+  }
+
+  private def buildInvalidModulesMessage(error: ModuleResolutionError): String = {
+    val header       = Bold.On(Color.Red("Invalid module configuration"))
+    val divider      = Color.Red("━" * 60)
+    val errorMessage = error match {
+      case ModuleResolutionError.UnknownModule(name) =>
+        s"Unknown module: '$name'"
+      case ModuleResolutionError.UnknownDependency(module, dependency) =>
+        s"Module '$module' depends on unknown module '$dependency'"
+      case ModuleResolutionError.DependencyNotEnabled(module, dependency) =>
+        s"Module '$module' depends on '$dependency', but it is not enabled in the project"
+      case ModuleResolutionError.DependencyOutOfOrder(module, dependency) =>
+        s"Module '$module' depends on '$dependency', so it must appear before '$module' in the project modules list"
+    }
+
+    s"""$header
+       |$divider
+       |${Color.Yellow(errorMessage)}
+       |
+       |Please update the ${Color.Cyan("modules")} list in ${Color.Cyan(
+        ".devcontainer/devenv.yaml"
+      )} and try again.""".stripMargin
   }
 
   private def buildGenerateNextSteps(): String =
