@@ -12,17 +12,6 @@ object Modules {
     case UnknownDependency(module: String, dependency: String)
     case DependencyNotEnabled(module: String, dependency: String)
     case DependencyOutOfOrder(module: String, dependency: String)
-
-    def message: String = this match {
-      case UnknownModule(name) =>
-        s"Unknown module: '$name'"
-      case UnknownDependency(module, dependency) =>
-        s"Module '$module' depends on unknown module '$dependency'"
-      case DependencyNotEnabled(module, dependency) =>
-        s"Module '$module' depends on '$dependency', but it is not enabled in the project"
-      case DependencyOutOfOrder(module, dependency) =>
-        s"Module '$module' depends on '$dependency', so it must appear before '$module' in the project modules list"
-    }
   }
 
   private type ResolutionResult[A] = Either[ModuleResolutionError, A]

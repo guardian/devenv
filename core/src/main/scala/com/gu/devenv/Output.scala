@@ -139,10 +139,20 @@ object Output {
   private def buildInvalidModulesMessage(error: ModuleResolutionError): String = {
     val header  = Bold.On(Color.Red("Invalid module configuration"))
     val divider = Color.Red("━" * 60)
+    val errorMessage = error match {
+      case ModuleResolutionError.UnknownModule(name) =>
+        s"Unknown module: '$name'"
+      case ModuleResolutionError.UnknownDependency(module, dependency) =>
+        s"Module '$module' depends on unknown module '$dependency'"
+      case ModuleResolutionError.DependencyNotEnabled(module, dependency) =>
+        s"Module '$module' depends on '$dependency', but it is not enabled in the project"
+      case ModuleResolutionError.DependencyOutOfOrder(module, dependency) =>
+        s"Module '$module' depends on '$dependency', so it must appear before '$module' in the project modules list"
+    }
 
     s"""$header
        |$divider
-       |${Color.Yellow(error.message)}
+       |${Color.Yellow(errorMessage)}
        |
        |Please update the ${Color.Cyan("modules")} list in ${Color.Cyan(
         ".devcontainer/devenv.yaml"

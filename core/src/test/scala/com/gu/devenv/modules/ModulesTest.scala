@@ -20,59 +20,6 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       dependsOn = dependsOn
     )
 
-  "Modules.applyModules" - {
-    "leaves the project config unchanged when there are no resolved modules" in {
-      val config = ProjectConfig(name = "test", features = Map("explicit" -> Json.True))
-
-      Modules.applyModules(config, Modules.ResolvedModules.empty) shouldBe config
-    }
-
-    "applies every resolved module contribution" in {
-      val a = testModule("a").copy(
-        contribution = ModuleContribution(features = Map("a" -> Json.True))
-      )
-      val b = testModule("b").copy(
-        contribution = ModuleContribution(features = Map("b" -> Json.True))
-      )
-      val resolvedModules = Modules.resolveModules(List("a", "b"), List(a, b)).toOption.get
-
-      val result = Modules.applyModules(ProjectConfig(name = "test"), resolvedModules)
-
-      result.features shouldBe Map("a" -> Json.True, "b" -> Json.True)
-    }
-
-    "gives later configured modules precedence over earlier modules" in {
-      val earlier = testModule("earlier").copy(
-        contribution = ModuleContribution(features = Map("shared" -> Json.fromString("earlier")))
-      )
-      val later = testModule("later").copy(
-        contribution = ModuleContribution(features = Map("shared" -> Json.fromString("later")))
-      )
-      val resolvedModules =
-        Modules.resolveModules(List("earlier", "later"), List(earlier, later)).toOption.get
-
-      val result = Modules.applyModules(ProjectConfig(name = "test"), resolvedModules)
-
-      result.features("shared") shouldBe Json.fromString("later")
-    }
-
-    "gives explicit project config precedence over module contributions" in {
-      val configured = testModule("configured").copy(
-        contribution = ModuleContribution(features = Map("shared" -> Json.fromString("module")))
-      )
-      val resolvedModules =
-        Modules.resolveModules(List("configured"), List(configured)).toOption.get
-      val config = ProjectConfig(
-        name = "test",
-        features = Map("shared" -> Json.fromString("explicit"))
-      )
-
-      val result = Modules.applyModules(config, resolvedModules)
-
-      result.features("shared") shouldBe Json.fromString("explicit")
-    }
-  }
-
   "Modules.applyModuleContribution" - {
 
     "features field" - {
@@ -390,6 +337,59 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
           // Module security options should come first
           result.securityOpt shouldBe (moduleSecurityOpt ++ existingSecurityOpt)
         }
+    }
+  }
+
+  "Modules.applyModules" - {
+    "leaves the project config unchanged when there are no resolved modules" in {
+      val config = ProjectConfig(name = "test", features = Map("explicit" -> Json.True))
+
+      Modules.applyModules(config, Modules.ResolvedModules.empty) shouldBe config
+    }
+
+    "applies every resolved module contribution" in {
+      val a = testModule("a").copy(
+        contribution = ModuleContribution(features = Map("a" -> Json.True))
+      )
+      val b = testModule("b").copy(
+        contribution = ModuleContribution(features = Map("b" -> Json.True))
+      )
+      val resolvedModules = Modules.resolveModules(List("a", "b"), List(a, b)).toOption.get
+
+      val result = Modules.applyModules(ProjectConfig(name = "test"), resolvedModules)
+
+      result.features shouldBe Map("a" -> Json.True, "b" -> Json.True)
+    }
+
+    "gives later configured modules precedence over earlier modules" in {
+      val earlier = testModule("earlier").copy(
+        contribution = ModuleContribution(features = Map("shared" -> Json.fromString("earlier")))
+      )
+      val later = testModule("later").copy(
+        contribution = ModuleContribution(features = Map("shared" -> Json.fromString("later")))
+      )
+      val resolvedModules =
+        Modules.resolveModules(List("earlier", "later"), List(earlier, later)).toOption.get
+
+      val result = Modules.applyModules(ProjectConfig(name = "test"), resolvedModules)
+
+      result.features("shared") shouldBe Json.fromString("later")
+    }
+
+    "gives explicit project config precedence over module contributions" in {
+      val configured = testModule("configured").copy(
+        contribution = ModuleContribution(features = Map("shared" -> Json.fromString("module")))
+      )
+      val resolvedModules =
+        Modules.resolveModules(List("configured"), List(configured)).toOption.get
+      val config = ProjectConfig(
+        name = "test",
+        features = Map("shared" -> Json.fromString("explicit"))
+      )
+
+      val result = Modules.applyModules(config, resolvedModules)
+
+      result.features("shared") shouldBe Json.fromString("explicit")
     }
   }
 
