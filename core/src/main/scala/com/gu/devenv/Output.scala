@@ -137,8 +137,8 @@ object Output {
   }
 
   private def buildInvalidModulesMessage(error: ModuleResolutionError): String = {
-    val header  = Bold.On(Color.Red("Invalid module configuration"))
-    val divider = Color.Red("━" * 60)
+    val header       = Bold.On(Color.Red("Invalid module configuration"))
+    val divider      = Color.Red("━" * 60)
     val errorMessage = error match {
       case ModuleResolutionError.UnknownModule(name) =>
         s"Unknown module: '$name'"
