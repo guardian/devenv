@@ -14,8 +14,6 @@ object Modules {
     case DependencyOutOfOrder(module: String, dependency: String)
   }
 
-  private type ResolutionResult[A] = Either[ModuleResolutionError, A]
-
   // all registered modules are here
   // In the future we might provide ways to register custom modules but this is fine for now
   def builtInModules(moduleConfig: ModuleConfig): Try[List[Module]] =
@@ -130,24 +128,25 @@ object Modules {
     val availableModuleNames = availableModules.map(_.name)
 
     projectModules
-      .foldM[ResolutionResult, Set[String]](Set.empty) { (accNames, module) =>
-        module.dependsOn
-          .traverse { dependency =>
-            if (!availableModuleNames.contains(dependency))
-              Left(
-                ModuleResolutionError.UnknownDependency(module.name, dependency)
-              )
-            else if (!projectModuleNames.contains(dependency))
-              Left(
-                ModuleResolutionError.DependencyNotEnabled(module.name, dependency)
-              )
-            else if (!accNames.contains(dependency))
-              Left(
-                ModuleResolutionError.DependencyOutOfOrder(module.name, dependency)
-              )
-            else Right(())
-          }
-          .as(accNames + module.name)
+      .foldM[[A] =>> Either[ModuleResolutionError, A], Set[String]](Set.empty) {
+        (accNames, module) =>
+          module.dependsOn
+            .traverse { dependency =>
+              if (!availableModuleNames.contains(dependency))
+                Left(
+                  ModuleResolutionError.UnknownDependency(module.name, dependency)
+                )
+              else if (!projectModuleNames.contains(dependency))
+                Left(
+                  ModuleResolutionError.DependencyNotEnabled(module.name, dependency)
+                )
+              else if (!accNames.contains(dependency))
+                Left(
+                  ModuleResolutionError.DependencyOutOfOrder(module.name, dependency)
+                )
+              else Right(())
+            }
+            .as(accNames + module.name)
       }
       .void
   }
