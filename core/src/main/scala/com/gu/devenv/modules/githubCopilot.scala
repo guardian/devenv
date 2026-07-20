@@ -34,5 +34,5 @@ private[modules] def githubCopilot: Try[Module] =
         vscode = List("com.github.copilot")
       )
     ),
-    dependsOn = List("mise")
+    dependsOn = Set("mise")
   )

@@ -29,6 +29,7 @@ class ConfigTest
 
       projectConfig should have(
         "name" as "Scala SBT Development Container",
+        "modules" as List("mise"),
         "forwardPorts" as List(
           ForwardPort.SamePort(8080),
           ForwardPort.DifferentPorts(8000, 9000)

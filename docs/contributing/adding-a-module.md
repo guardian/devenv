@@ -15,9 +15,13 @@ case class Module(
     name: String,           // the string users write in devenv.yaml, e.g. "scala"
     summary: String,        // one-line description shown in help output
     enabledByDefault: Boolean,
-    contribution: ModuleContribution
+    contribution: ModuleContribution,
+    dependsOn: Set[String] = Set.empty
 )
 ```
+
+`dependsOn` names any modules that must also be enabled. A module's dependencies must appear before
+it does in the ordered `modules` list in a project's `devenv.yaml`.
 
 `ModuleContribution` holds everything the module injects into the generated `devcontainer.json`:
 

@@ -34,7 +34,7 @@ object Modules {
       summary: String,
       enabledByDefault: Boolean,
       contribution: ModuleContribution,
-      dependsOn: List[String] = Nil
+      dependsOn: Set[String] = Set.empty
   )
 
   /** Project modules that have been looked up and whose dependencies have been validated. */
@@ -130,20 +130,14 @@ object Modules {
     projectModules
       .foldM[[A] =>> Either[ModuleResolutionError, A], Set[String]](Set.empty) {
         (accNames, module) =>
-          module.dependsOn
+          module.dependsOn.toList
             .traverse { dependency =>
               if (!availableModuleNames.contains(dependency))
-                Left(
-                  ModuleResolutionError.UnknownDependency(module.name, dependency)
-                )
+                Left(ModuleResolutionError.UnknownDependency(module.name, dependency))
               else if (!projectModuleNames.contains(dependency))
-                Left(
-                  ModuleResolutionError.DependencyNotEnabled(module.name, dependency)
-                )
+                Left(ModuleResolutionError.DependencyNotEnabled(module.name, dependency))
               else if (!accNames.contains(dependency))
-                Left(
-                  ModuleResolutionError.DependencyOutOfOrder(module.name, dependency)
-                )
+                Left(ModuleResolutionError.DependencyOutOfOrder(module.name, dependency))
               else Right(())
             }
             .as(accNames + module.name)

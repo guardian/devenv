@@ -11,7 +11,7 @@ import org.scalatest.matchers.should.Matchers
 
 class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
 
-  def testModule(name: String, dependsOn: List[String] = Nil): Module =
+  def testModule(name: String, dependsOn: Set[String] = Set.empty): Module =
     Module(
       name = name,
       summary = s"$name module",
@@ -418,7 +418,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
     "fails when resolved module dependencies are invalid" in {
       val a      = testModule("a")
-      val b      = testModule("b", dependsOn = List("a"))
+      val b      = testModule("b", dependsOn = Set("a"))
       val result = Modules.resolveModules(List("b"), List(a, b))
 
       result shouldBe Left(ModuleResolutionError.DependencyNotEnabled("b", "a"))
@@ -442,7 +442,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "succeeds when a dependency is enabled and appears earlier in the list" in {
         val a         = testModule("a")
-        val b         = testModule("b", dependsOn = List("a"))
+        val b         = testModule("b", dependsOn = Set("a"))
         val available = List(a, b)
 
         Modules.validateDependencies(List(a, b), available) shouldBe Right(())
@@ -450,8 +450,8 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "succeeds with a chain of dependencies in order" in {
         val a         = testModule("a")
-        val b         = testModule("b", dependsOn = List("a"))
-        val c         = testModule("c", dependsOn = List("a", "b"))
+        val b         = testModule("b", dependsOn = Set("a"))
+        val c         = testModule("c", dependsOn = Set("a", "b"))
         val available = List(a, b, c)
 
         Modules.validateDependencies(List(a, b, c), available) shouldBe Right(())
@@ -460,7 +460,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
     "error cases" - {
       "fails when a module depends on an unknown module" in {
-        val a      = testModule("a", dependsOn = List("missing"))
+        val a      = testModule("a", dependsOn = Set("missing"))
         val result = Modules.validateDependencies(List(a), List(a))
 
         result shouldBe Left(ModuleResolutionError.UnknownDependency("a", "missing"))
@@ -468,7 +468,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "fails when a dependency exists but is not enabled in the project" in {
         val a      = testModule("a")
-        val b      = testModule("b", dependsOn = List("a"))
+        val b      = testModule("b", dependsOn = Set("a"))
         val result = Modules.validateDependencies(List(b), List(a, b))
 
         result shouldBe Left(ModuleResolutionError.DependencyNotEnabled("b", "a"))
@@ -476,7 +476,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
       "fails when a dependency is enabled but appears after the dependent module" in {
         val a      = testModule("a")
-        val b      = testModule("b", dependsOn = List("a"))
+        val b      = testModule("b", dependsOn = Set("a"))
         val result = Modules.validateDependencies(List(b, a), List(a, b))
 
         result shouldBe Left(ModuleResolutionError.DependencyOutOfOrder("b", "a"))
