@@ -23,7 +23,7 @@ class GithubCopilotModuleTest
     "should provide IDE plugins for GitHub Copilot" in {
       val module = githubCopilot.success.value
 
-      module.contribution.plugins.vscode should contain("github.copilot")
+      module.contribution.plugins.vscode should contain("GitHub.copilot")
       module.contribution.plugins.intellij should contain("com.github.copilot")
     }
   }
