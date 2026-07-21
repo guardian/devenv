@@ -3,7 +3,7 @@ plugins:
     - "com.github.copilot"
     - "com.github.gtache.lsp"
   vscode:
-    - "GitHub.copilot"
+    - "github.copilot"
 dotfiles:
   repository: "https://github.com/example/dotfiles.git"
   targetPath: "~"
