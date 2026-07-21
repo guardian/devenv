@@ -30,7 +30,7 @@ private[modules] def githubCopilot: Try[Module] =
       postCreateCommands = List(encodedPostCreateScript),
       // IDE integration for GitHub Copilot
       plugins = Plugins(
-        vscode = List("github.copilot"),
+        vscode = List("GitHub.copilot"),
         intellij = List("com.github.copilot")
       )
     ),
