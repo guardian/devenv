@@ -6,14 +6,14 @@
         "hverlin.mise-vscode",
         "scala-lang.scala",
         "scalameta.metals",
-        "com.github.copilot"
+        "GitHub.copilot"
       ]
     },
     "jetbrains" : {
       "plugins" : [
         "com.github.l34130.mise",
         "org.intellij.scala",
-        "GitHub.copilot"
+        "com.github.copilot"
       ]
     }
   },
