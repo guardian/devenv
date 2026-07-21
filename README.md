@@ -24,9 +24,9 @@ dotfiles:
   installCommand: ./install.sh
 plugins:
   vscode:
-    - "com.github.copilot"
+    - "github.copilot"
   intellij:
-    - "GitHub.copilot"
+    - "com.github.copilot"
     - "com.mallowigi"
 ```
 

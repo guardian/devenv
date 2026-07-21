@@ -80,7 +80,7 @@ class ConfigTest
         "plugins" as Some(
           Plugins(
             List("com.github.copilot", "com.github.gtache.lsp"),
-            List("GitHub.copilot")
+            List("github.copilot")
           )
         ),
         "dotfiles" as Some(
@@ -135,7 +135,7 @@ class ConfigTest
           "com.github.gtache.lsp",
           "com.github.copilot"
         ),
-        "vscode" as List("scalameta.metals", "scala-lang.scala", "GitHub.copilot")
+        "vscode" as List("scalameta.metals", "scala-lang.scala", "github.copilot")
       )
 
       merged.onCreateCommand should have length 1
