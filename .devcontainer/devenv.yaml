@@ -7,3 +7,4 @@ name: "devenv"
 modules:
   - mise
   - scala
+  - github-copilot
