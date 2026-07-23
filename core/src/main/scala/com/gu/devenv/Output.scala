@@ -146,8 +146,9 @@ object Output {
         s"Module '$module' depends on unknown module '$dependency'"
       case ModuleResolutionError.DependencyNotEnabled(module, dependency) =>
         s"Module '$module' depends on '$dependency', but it is not enabled in the project"
-      case ModuleResolutionError.DependencyOutOfOrder(module, dependency) =>
-        s"Module '$module' depends on '$dependency', so it must appear before '$module' in the project modules list"
+      case ModuleResolutionError.DependencyCycle(modules) =>
+        s"A dependency cycle was detected among modules: ${modules.mkString(", ")}"
+
     }
 
     s"""$header
