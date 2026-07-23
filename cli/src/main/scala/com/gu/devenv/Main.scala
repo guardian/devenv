@@ -195,6 +195,11 @@ object Main {
        |devenv.yaml configuration files, separating team-wide project settings
        |from personal user preferences.
        |
+       |${title("Important:")} Run all commands from the root of your project.
+       |The .devcontainer configuration is created and updated in the current
+       |working directory so running elsewhere will place files in the wrong
+       |location.
+       |
        |Run 'devenv <command> --help' (or -h or help) for help on any command.
        |
        |${title("Commands:")}
