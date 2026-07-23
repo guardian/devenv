@@ -4,6 +4,7 @@ import cats.implicits.*
 import com.gu.devenv.*
 import io.circe.Json
 
+import scala.annotation.tailrec
 import scala.util.Try
 
 object Modules {
@@ -11,7 +12,7 @@ object Modules {
     case UnknownModule(name: String)
     case UnknownDependency(module: String, dependency: String)
     case DependencyNotEnabled(module: String, dependency: String)
-    case DependencyOutOfOrder(module: String, dependency: String)
+    case DependencyCycle(modules: Set[String])
   }
 
   // all registered modules are here
@@ -60,21 +61,19 @@ object Modules {
       mountKey: String // allows test modules to use unique mount names
   )
 
-  /** Resolve configured module names and validate their dependencies.
+  /** Resolve configured module names, validate their dependencies and sort into dependency order.
     *
-    * The configured order is preserved because it determines both dependency ordering and the order
-    * in which contributions are applied.
+    * The resulting order ensures every dependency appears before the module that needs it.
     */
   def resolveModules(
       moduleNames: List[String],
       availableModules: List[Module]
   ): Either[ModuleResolutionError, ResolvedModules] =
-    moduleNames
-      .traverse(getModule(availableModules))
-      .flatMap { projectModules =>
-        validateDependencies(projectModules, availableModules)
-          .as(new ResolvedModules(projectModules))
-      }
+    for {
+      projectModules <- moduleNames.traverse(getModule(availableModules))
+      _              <- validateDependencies(projectModules, availableModules)
+      sorted         <- topoSort(projectModules)
+    } yield new ResolvedModules(sorted)
 
   /** Apply resolved modules to a project config, merging their contributions. Explicit config takes
     * precedence over module defaults.
@@ -117,9 +116,7 @@ object Modules {
       case None         => Left(ModuleResolutionError.UnknownModule(moduleName))
     }
 
-  /** For each module, checks that its dependencies are present, and that those modules are earlier
-    * in the list.
-    */
+  /** Checks that each module's dependencies are known and enabled in the project. */
   def validateDependencies(
       projectModules: List[Module],
       availableModules: List[Module]
@@ -127,21 +124,37 @@ object Modules {
     val projectModuleNames   = projectModules.map(_.name)
     val availableModuleNames = availableModules.map(_.name)
 
-    projectModules
-      .foldM[[A] =>> Either[ModuleResolutionError, A], Set[String]](Set.empty) {
-        (accNames, module) =>
-          module.dependsOn.toList
-            .traverse { dependency =>
-              if (!availableModuleNames.contains(dependency))
-                Left(ModuleResolutionError.UnknownDependency(module.name, dependency))
-              else if (!projectModuleNames.contains(dependency))
-                Left(ModuleResolutionError.DependencyNotEnabled(module.name, dependency))
-              else if (!accNames.contains(dependency))
-                Left(ModuleResolutionError.DependencyOutOfOrder(module.name, dependency))
-              else Right(())
-            }
-            .as(accNames + module.name)
+    projectModules.traverse_ { module =>
+      module.dependsOn.toList.traverse_ { dependency =>
+        if (!availableModuleNames.contains(dependency))
+          Left(ModuleResolutionError.UnknownDependency(module.name, dependency))
+        else if (!projectModuleNames.contains(dependency))
+          Left(ModuleResolutionError.DependencyNotEnabled(module.name, dependency))
+        else Right(())
       }
-      .void
+    }
+  }
+
+  /** Topological sort of modules so that every dependency appears before the module that requires
+    * it.
+    *
+    * Returns a [[ModuleResolutionError.DependencyCycle]] if a cycle is detected.
+    */
+  private[modules] def topoSort(
+      modules: List[Module]
+  ): Either[ModuleResolutionError, List[Module]] = {
+    @tailrec
+    def go(
+        remaining: List[Module],
+        placed: Set[String],
+        acc: Vector[Module]
+    ): Either[ModuleResolutionError, List[Module]] =
+      if (remaining.isEmpty) Right(acc.toList)
+      else {
+        val (ready, notReady) = remaining.partition(m => m.dependsOn.subsetOf(placed))
+        if (ready.isEmpty) Left(ModuleResolutionError.DependencyCycle(notReady.map(_.name).toSet))
+        else go(notReady, placed ++ ready.map(_.name), acc ++ ready)
+      }
+    go(modules, Set.empty, Vector.empty)
   }
 }

@@ -1,7 +1,12 @@
 package com.gu.devenv.modules
 
 import com.gu.devenv.*
-import com.gu.devenv.modules.Modules.{Module, ModuleContribution, ModuleResolutionError}
+import com.gu.devenv.modules.Modules.{
+  Module,
+  ModuleContribution,
+  ModuleResolutionError,
+  ResolvedModules
+}
 import io.circe.Json
 
 import org.scalacheck.Gen
@@ -400,7 +405,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       result.toOption.get.modules shouldBe Nil
     }
 
-    "resolves configured IDs to modules in configured order" in {
+    "resolves configured IDs to modules regardless of declaration order" in {
       val a      = testModule("a")
       val b      = testModule("b")
       val unused = testModule("unused")
@@ -410,18 +415,48 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       result.toOption.get.modules shouldBe List(b, a)
     }
 
-    "fails when a configured module ID is unknown" in {
-      val result = Modules.resolveModules(List("missing"), List(testModule("available")))
+    "sorts modules so dependencies appear before the modules that need them" in {
+      val a = testModule("a")
+      val b = testModule("b", dependsOn = Set("a", "c"))
+      val c = testModule("c", dependsOn = Set("a"))
 
-      result shouldBe Left(ModuleResolutionError.UnknownModule("missing"))
+      val result = Modules.resolveModules(List("b", "a", "c"), List(a, b, c))
+
+      result.toOption.get.modules shouldBe List(a, c, b)
     }
 
-    "fails when resolved module dependencies are invalid" in {
-      val a      = testModule("a")
-      val b      = testModule("b", dependsOn = Set("a"))
-      val result = Modules.resolveModules(List("b"), List(a, b))
+    "error cases" - {
+      "fails when a configured module ID is unknown" in {
+        val result = Modules.resolveModules(List("missing"), List(testModule("available")))
 
-      result shouldBe Left(ModuleResolutionError.DependencyNotEnabled("b", "a"))
+        result shouldBe Left(ModuleResolutionError.UnknownModule("missing"))
+      }
+
+      "fails when resolved module dependencies are invalid" in {
+        val a      = testModule("a")
+        val b      = testModule("b", dependsOn = Set("a"))
+        val result = Modules.resolveModules(List("b"), List(a, b))
+
+        result shouldBe Left(ModuleResolutionError.DependencyNotEnabled("b", "a"))
+      }
+
+      "fails when modules form a dependency cycle" in {
+        val a      = testModule("a", dependsOn = Set("b"))
+        val b      = testModule("b", dependsOn = Set("a"))
+        val result = Modules.resolveModules(List("a", "b"), List(a, b))
+
+        result shouldBe Left(ModuleResolutionError.DependencyCycle(Set("a", "b")))
+      }
+
+      "reports only the modules involved in the cycle, not those that can be placed" in {
+        val standalone = testModule("standalone")
+        val b          = testModule("b", dependsOn = Set("c"))
+        val c          = testModule("c", dependsOn = Set("b"))
+        val result     =
+          Modules.resolveModules(List("standalone", "b", "c"), List(standalone, b, c))
+
+        result shouldBe Left(ModuleResolutionError.DependencyCycle(Set("b", "c")))
+      }
     }
   }
 
@@ -430,22 +465,6 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     "success cases" - {
       "succeeds with empty project and available module lists" in {
         Modules.validateDependencies(Nil, Nil) shouldBe Right(())
-      }
-
-      "succeeds when no module has dependencies" in {
-        val a         = testModule("a")
-        val b         = testModule("b")
-        val available = List(a, b)
-
-        Modules.validateDependencies(List(a, b), available) shouldBe Right(())
-      }
-
-      "succeeds when a dependency is enabled and appears earlier in the list" in {
-        val a         = testModule("a")
-        val b         = testModule("b", dependsOn = Set("a"))
-        val available = List(a, b)
-
-        Modules.validateDependencies(List(a, b), available) shouldBe Right(())
       }
 
       "succeeds with a chain of dependencies in order" in {
@@ -473,13 +492,53 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
         result shouldBe Left(ModuleResolutionError.DependencyNotEnabled("b", "a"))
       }
+    }
+  }
 
-      "fails when a dependency is enabled but appears after the dependent module" in {
-        val a      = testModule("a")
-        val b      = testModule("b", dependsOn = Set("a"))
-        val result = Modules.validateDependencies(List(b, a), List(a, b))
+  "Modules.topoSort" - {
+    "returns an empty list for no modules" in {
+      Modules.topoSort(Nil) shouldBe Right(Nil)
+    }
 
-        result shouldBe Left(ModuleResolutionError.DependencyOutOfOrder("b", "a"))
+    "leaves independent modules in their original order" in {
+      val a = testModule("a")
+      val b = testModule("b")
+      val c = testModule("c")
+
+      Modules.topoSort(List(a, b, c)) shouldBe Right(List(a, b, c))
+    }
+
+    "places a dependency before the module that requires it" in {
+      val a = testModule("a", dependsOn = Set("b"))
+      val b = testModule("b")
+
+      Modules.topoSort(List(a, b)) shouldBe Right(List(b, a))
+    }
+
+    "orders a multi-level dependency chain from dependencies to dependents" in {
+      val a = testModule("a")
+      val b = testModule("b", dependsOn = Set("a", "c"))
+      val c = testModule("c", dependsOn = Set("a"))
+
+      Modules.topoSort(List(b, a, c)) shouldBe Right(List(a, c, b))
+    }
+
+    "error cases" - {
+      "detects a direct cycle between two modules" in {
+        val a = testModule("a", dependsOn = Set("b"))
+        val b = testModule("b", dependsOn = Set("a"))
+
+        Modules.topoSort(List(a, b)) shouldBe
+          Left(ModuleResolutionError.DependencyCycle(Set("a", "b")))
+      }
+
+      "reports only the modules involved in the cycle, not those that can be placed" in {
+        val standalone = testModule("standalone")
+        val b          = testModule("b", dependsOn = Set("c"))
+        val c          = testModule("c", dependsOn = Set("b"))
+
+        Modules.topoSort(List(standalone, b, c)) shouldBe
+          Left(ModuleResolutionError.DependencyCycle(Set("b", "c")))
       }
     }
   }
