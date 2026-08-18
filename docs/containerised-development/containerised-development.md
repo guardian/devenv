@@ -74,6 +74,8 @@ To begin using that project again, open the project and use the Services tool to
 
 `postCreateCommand` does not block container connections, so you can start an apparently functional terminal (in the IDE or `docker exec`) but then find that the tooling you expect (eg node) is not installed.  Give it time.
 
+Setup commands have finished when the build output shows "Setup complete - you can now open it in your IDE".
+
 ### Slow start
 
 VSCode's container helper is 71MB.  IntelliJ's is 1.5GB.  This download is not resumable. As a result it is recommended that initial devcontainer work in IntelliJ should only take place on a fast internet connection.
