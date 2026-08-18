@@ -121,7 +121,8 @@ object Config {
         ),
         "postCreateCommand" -> combineCommands(
           config.postCreateCommand,
-          s"/var/log/$postCreateLogName"
+          s"/var/log/$postCreateLogName",
+          appendCompletionMessage = true
         ),
         "postStartCommand" -> combineCommands(
           config.postStartCommand,
@@ -235,11 +236,17 @@ object Config {
     }
   }
 
-  private[devenv] def combineCommands(commands: List[Command], logFile: String): Option[String] =
-    if (commands.isEmpty) None
+  private[devenv] def combineCommands(
+      commands: List[Command],
+      logFile: String,
+      appendCompletionMessage: Boolean = false
+  ): Option[String] =
+    if (commands.isEmpty && !appendCompletionMessage) None
     else {
-      val renderedCommands = commands.map(Command.renderCommandWithLogging).mkString(" && ")
-      Some(s"($renderedCommands) 2>&1 | sudo tee $logFile")
+      val renderedCommands = commands.map(Command.renderCommandWithLogging)
+      val completion       = Option.when(appendCompletionMessage)(Command.renderCompletionMessage)
+      val all              = (renderedCommands ++ completion).mkString(" && ")
+      Some(s"($all) 2>&1 | sudo tee $logFile")
     }
 
   private def envListToJson(envList: List[Env]): Json =

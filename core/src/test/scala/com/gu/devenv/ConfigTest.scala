@@ -209,5 +209,20 @@ class ConfigTest
       commandMaybe.isDefined shouldBe (true)
       commandMaybe.map(command => pattern.matches(command) shouldBe true)
     }
+
+    "should append the completion message when asked, even with no commands" in {
+      val commandMaybe = Config.combineCommands(
+        Nil,
+        "someLogFile",
+        appendCompletionMessage = true
+      )
+
+      commandMaybe.isDefined shouldBe (true)
+      commandMaybe.map(_ should include("Setup complete"))
+    }
+
+    "should be empty with no commands and no completion message" in {
+      Config.combineCommands(Nil, "someLogFile") shouldBe empty
+    }
   }
 }

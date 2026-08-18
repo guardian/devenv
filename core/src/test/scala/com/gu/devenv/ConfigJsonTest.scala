@@ -389,11 +389,28 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         commandJson.map(_ should endWith(s"sudo tee /var/log/${Config.postCreateLogName}"))
       }
 
-      "is omitted when empty" in {
+      "is present with only the completion message when empty" in {
         val config = ProjectConfig(name = "test", postCreateCommand = Nil)
         val json   = Config.configAsJson(config, ResolvedModules.empty)
 
-        json.hcursor.downField("postCreateCommand").focus shouldBe empty
+        val commandJson = json.hcursor.downField("postCreateCommand").as[String]
+        commandJson shouldBe a[Right[_, _]]
+        commandJson.map(_ should include("Setup complete"))
+        commandJson.map(_ should not include ("Starting"))
+      }
+
+      "ends with the setup complete message" in {
+        val config = ProjectConfig(
+          name = "test",
+          postCreateCommand = List(Command("ls", "/create", Some("step")))
+        )
+        val json = Config.configAsJson(config, ResolvedModules.empty)
+
+        val commandJson = json.hcursor.downField("postCreateCommand").as[String]
+        commandJson.map { command =>
+          command should include("you can now open it in your IDE")
+          command.indexOf("Setup complete") should be > command.indexOf("Finished step")
+        }
       }
     }
 
