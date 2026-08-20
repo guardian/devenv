@@ -106,6 +106,26 @@ SSH Agent is commonly used for communication with github and other ssh-based ser
 
 It will work in the IDE, but it is not forwarded to the docker environment when using `docker exec`. 
 
+### Sharing Github auth credentials to stop rate limiting
+
+If you are doing lots of development of your `devcontainer` setup, you may get rate limited by the GitHub API when `mise` requests tooling.
+To get round these rate limits, you can login to GitHub using the `gh auth login` command 
+
+As the `mise` build step happens before you have access to the terminal, you may need to pass a valid `GITHUB_TOKEN` into the container build process.
+This will use the token for authentication and does not require user interaction.
+
+You can do this by updating your `devenv.yaml` with:
+```
+containerEnv:
+  - name: GITHUB_TOKEN
+    value: "${localEnv:GITHUB_TOKEN}"
+```
+
+This will also require you to set a valid token on your host machine first using:
+```
+export GITHUB_TOKEN=$(gh auth token)
+```
+
 ## Absolutely Minimal Bootstrap Process
 
 As an "advanced" option, if you prefer to be strict with regard to source code on disk, but still have the ability to apply your own preferences, see [here](containerised-development-minimal.md)
