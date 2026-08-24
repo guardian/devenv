@@ -210,11 +210,11 @@ class ConfigTest
       commandMaybe.map(command => pattern.matches(command) shouldBe true)
     }
 
-    "should append the completion message when asked, even with no commands" in {
+    "should append trailing commands, even with no configured commands" in {
       val commandMaybe = Config.combineCommands(
         Nil,
         "someLogFile",
-        appendCompletionMessage = true
+        trailingCommands = List(Command.renderCompletionMessage)
       )
 
       commandMaybe.isDefined shouldBe (true)
