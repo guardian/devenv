@@ -122,7 +122,7 @@ object Config {
         "postCreateCommand" -> combineCommands(
           config.postCreateCommand,
           s"/var/log/$postCreateLogName",
-          appendCompletionMessage = true
+          trailingCommands = List(Command.renderCompletionMessage)
         ),
         "postStartCommand" -> combineCommands(
           config.postStartCommand,
@@ -236,16 +236,20 @@ object Config {
     }
   }
 
+  /** Combines configured lifecycle commands into one shell command.
+    *
+    * Trailing commands run after the configured commands without per-command setup logging and
+    * "rendering". This supports lifecycle-level actions such as reporting that setup has finished.
+    */
   private[devenv] def combineCommands(
       commands: List[Command],
       logFile: String,
-      appendCompletionMessage: Boolean = false
+      trailingCommands: List[String] = Nil
   ): Option[String] =
-    if (commands.isEmpty && !appendCompletionMessage) None
+    if (commands.isEmpty && trailingCommands.isEmpty) None
     else {
       val renderedCommands = commands.map(Command.renderCommandWithLogging)
-      val completion       = Option.when(appendCompletionMessage)(Command.renderCompletionMessage)
-      val all              = (renderedCommands ++ completion).mkString(" && ")
+      val all              = (renderedCommands ++ trailingCommands).mkString(" && ")
       Some(s"($all) 2>&1 | sudo tee $logFile")
     }
 
