@@ -1,13 +1,12 @@
 package com.gu.devenv
 
-import fansi.{Bold, Color}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto.*
 import sttp.client4.*
 import sttp.client4.circe.*
 import sttp.client4.httpurlconnection.HttpURLConnectionBackend
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Try}
 
 /** Handles fetching and parsing release information from the devenv GitHub repository.
   *
@@ -65,109 +64,6 @@ object Releases {
       Failure(new Exception(s"Error fetching latest release from GitHub: $err", err))
     }
   }
-
-  def formatUpdateCheckResult(
-      result: Try[UpdateCheckResult],
-      currentVersion: String,
-      architecture: Option[String]
-  ): String =
-    result match {
-      case Success(UpdateCheckResult.UpToDate) =>
-        val header  = Bold.On(Color.Green("✅ Up-to-date"))
-        val divider = Color.Green("━" * 60)
-        val message = Color.Green(s"Devenv ${Bold.On(currentVersion)} is the latest version.")
-        s"""$header
-           |$divider
-           |$message
-           |""".stripMargin
-
-      case Success(UpdateCheckResult.DevMode(latestRelease)) =>
-        val header  = Bold.On(Color.Yellow("✓ Development mode"))
-        val divider = Color.Yellow("━" * 60)
-        val message =
-          Color.Yellow("Devenv is in development mode; cannot check for updates.")
-        val latest =
-          Color.Yellow(s"The latest released version is ${Bold.On(latestRelease.tagName)}")
-        s"""$header
-           |$divider
-           |$message
-           |$latest
-           |""".stripMargin
-
-      case Success(UpdateCheckResult.UpdateAvailable(newerRelease, asset)) =>
-        val header   = Bold.On(Color.Yellow("⬆\uFE0F Update available"))
-        val divider  = Color.Yellow("━" * 60)
-        val message  = Color.Yellow(s"An update is available")
-        val update   = s"$currentVersion → ${Bold.On(newerRelease.tagName)}"
-        val release  = Color.Cyan(newerRelease.htmlUrl)
-        val download = Color.Cyan(asset.browserDownloadUrl)
-        s"""$header
-           |$divider
-           |$message
-           |
-           |  $update
-           |
-           |Release notes and installation instructions:
-           |  $release
-           |
-           |Or download from:
-           |  $download
-           |""".stripMargin
-
-      case Success(UpdateCheckResult.NoCompatibleAsset(newerRelease)) =>
-        val header  = Bold.On(Color.Red("❌ No compatible update"))
-        val divider = Color.Red("━" * 60)
-        val notice  = Color.Yellow(s"An update is available:")
-        val update  = s"$currentVersion → ${Bold.On(newerRelease.tagName)}"
-        val detail  = Color.Red(
-          s"No compatible download was found for: ${Bold.On(architecture.getOrElse("unknown"))}"
-        )
-        val release = Color.Cyan(newerRelease.htmlUrl)
-        s"""$header
-           |$divider
-           |$notice
-           |
-           |  $update
-           |
-           |$detail
-           |
-           |Release notes:
-           |  $release
-           |""".stripMargin
-
-      case Success(UpdateCheckResult.NoArchitectureInfo(newerRelease)) =>
-        val header  = Bold.On(Color.Red("❔ Cannot verify compatibility"))
-        val divider = Color.Red("━" * 60)
-        val notice  = Color.Yellow(s"An update is available:")
-        val update  = s"$currentVersion → ${Bold.On(newerRelease.tagName)}"
-        val detail  = Color.Yellow(
-          s"""CPU architecture information for your current version is not available.
-             |Cannot check for a compatible download.""".stripMargin
-        )
-        val release = Color.Cyan(newerRelease.htmlUrl)
-        s"""$header
-           |$divider
-           |$notice
-           |
-           |  $update
-           |
-           |$detail
-           |
-           |Release notes:
-           |  $release
-           |""".stripMargin
-
-      case Failure(exception) =>
-        val header  = Bold.On(Color.Red("❌ Update check failed"))
-        val divider = Color.Red("━" * 60)
-        val message = Color.Red("An error occurred while checking for updates:")
-        val error   = Color.Red(exception.getMessage)
-        s"""$header
-           |$divider
-           |$message
-           |$error
-           |""".stripMargin
-    }
 
   private def isNewerVersion(
       currentReleaseVersion: String,

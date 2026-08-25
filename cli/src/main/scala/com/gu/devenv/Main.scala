@@ -2,7 +2,7 @@ package com.gu.devenv
 
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.ModuleConfig
-import fansi.{Bold, Color}
+import fansi.Str
 
 import java.nio.file.Paths
 import scala.util.{Failure, Success}
@@ -36,24 +36,35 @@ object Main {
     }
 
   def main(args: Array[String]): Unit = {
-    given OutputFormatter = OutputFormatter.coloured
-    val exitCode          = parseCommand(args.toSeq) match {
+    given formatter: OutputFormatter = OutputFormatter.coloured
+    val exitCode                     = parseCommand(args.toSeq) match {
       case Command.Init     => init()
       case Command.Generate => generate()
       case Command.Check    => check()
       case Command.Update   => update()
       case Command.Version  =>
-        printVersion()
+        printOutput(
+          Output.versionMessage(Version.release, Version.architecture, Version.branch)
+        )
         ExitCode.Success
       case Command.Help =>
-        printPlainUsage()
+        val plainFormatter = OutputFormatter.plain
+        printOutput(
+          Output.usageMessage(Version.release, Version.architecture, Version.branch)(using
+            plainFormatter
+          )
+        )(using plainFormatter)
         ExitCode.Success
       case Command.Unknown(name) =>
-        System.err.println(Color.Red(s"Unknown command: $name"))
-        printUsage()
+        printError(Output.unknownCommandMessage(name))
+        printOutput(
+          Output.usageMessage(Version.release, Version.architecture, Version.branch)
+        )
         ExitCode.InvalidUsage
       case Command.NoCommand =>
-        printUsage()
+        printOutput(
+          Output.usageMessage(Version.release, Version.architecture, Version.branch)
+        )
         ExitCode.InvalidUsage
     }
     if (exitCode != ExitCode.Success) {
@@ -83,7 +94,7 @@ object Main {
     } yield result
     tryResult match {
       case Success(result) =>
-        println(formatter.render(Output.initResultMessage(result)))
+        printOutput(Output.initResultMessage(result))
         ExitCode.Success
       case Failure(exception) =>
         System.err.println(s"Initialization failed: ${exception.getMessage}")
@@ -108,7 +119,7 @@ object Main {
     } yield result
     tryResult match {
       case Success(result) =>
-        println(formatter.render(Output.generateResultMessage(result)))
+        printOutput(Output.generateResultMessage(result))
         if (result.successful) ExitCode.Success
         else ExitCode.Error
       case Failure(exception) =>
@@ -133,7 +144,7 @@ object Main {
     } yield result
     tryResult match {
       case Success(result) =>
-        println(formatter.render(Output.checkResultMessage(result)))
+        printOutput(Output.checkResultMessage(result))
         if (result.successful) ExitCode.Success
         else ExitCode.Error
       case Failure(exception) =>
@@ -143,7 +154,7 @@ object Main {
     }
   }
 
-  private def update(): ExitCode = {
+  private def update()(using formatter: OutputFormatter): ExitCode = {
     val currentVersion = Version.release
     val architecture   = Version.architecture
     val branch         = Version.branch
@@ -158,9 +169,7 @@ object Main {
           latestRelease
         )
       }
-    println(
-      Releases.formatUpdateCheckResult(result, currentVersion, architecture)
-    )
+    printOutput(Output.updateCheckResultMessage(result, currentVersion, architecture))
     result match {
       case Success(updateResult) if updateResult.successful =>
         ExitCode.Success
@@ -169,121 +178,11 @@ object Main {
     }
   }
 
-  /** Renders usage text with optional formatting applied to section titles and command names.
-    *
-    * @param title
-    *   formats a section heading (e.g. bold)
-    * @param cmd
-    *   formats a command name (e.g. bold + cyan)
-    */
-  private def usageText(title: String => String, cmd: String => String): String = {
-    val releaseLineStr = s"  release   ${Version.release}"
-    val archLineStr    = Version.architecture.map(a => s"  arch      $a")
-    val branchLineStr  = Version.branch.map(b => s"  branch    $b")
-    val devModeNoteStr =
-      if (Version.architecture.isEmpty && Version.branch.isEmpty)
-        Some("  (running in development mode)")
-      else
-        None
-    val versionInfoString =
-      List(Some(releaseLineStr), archLineStr, branchLineStr, devModeNoteStr).flatten
-        .mkString("\n")
+  private def printOutput(value: Str)(using formatter: OutputFormatter): Unit =
+    Console.out.println(formatter.render(value))
 
-    s"""${title("Usage:")} devenv <command> [--help]
-       |
-       |A CLI tool for managing devcontainer configurations for your projects.
-       |Generates user-specific and shared devcontainer.json files from
-       |devenv.yaml configuration files, separating team-wide project settings
-       |from personal user preferences.
-       |
-       |${title("Important:")} Run all commands from the root of your project.
-       |The .devcontainer configuration is created and updated in the current
-       |working directory so running elsewhere will place files in the wrong
-       |location.
-       |
-       |Run 'devenv <command> --help' (or -h or help) for help on any command.
-       |
-       |${title("Commands:")}
-       |
-       |  ${cmd("init")}
-       |    Initialises the .devcontainer directory structure for a project.
-       |    Run this once from the root of a repository before using 'generate'.
-       |    Reads:   nothing (uses built-in defaults)
-       |    Writes:  .devcontainer/devenv.yaml        (project config template)
-       |             .devcontainer/.gitignore         (excludes user/ directory)
-       |             .devcontainer/README.md          (usage guidance)
-       |             .devcontainer/shared/            (directory, populated by 'generate')
-       |             .devcontainer/user/              (directory, populated by 'generate')
-       |
-       |  ${cmd("generate")}
-       |    Generates devcontainer.json files from the current devenv configuration.
-       |    Run this after editing devenv.yaml to apply your changes.
-       |    Reads:   .devcontainer/devenv.yaml        (project config, required)
-       |             ~/.config/devenv/devenv.yaml     (user config, optional)
-       |    Writes:  .devcontainer/shared/devcontainer.json  (project-only, check in)
-       |             .devcontainer/user/devcontainer.json    (merged with user prefs)
-       |
-       |  ${cmd("check")}
-       |    Verifies that the saved devcontainer.json files match what 'generate'
-       |    would produce from the current configuration. Exits non-zero if they
-       |    differ. Use in CI to ensure configs are not stale.
-       |    Reads:   .devcontainer/devenv.yaml
-       |             ~/.config/devenv/devenv.yaml     (user config, optional)
-       |             .devcontainer/shared/devcontainer.json
-       |             .devcontainer/user/devcontainer.json
-       |    Writes:  nothing
-       |
-       |  ${cmd("version")}
-       |    Prints the current devenv release version, architecture, and branch.
-       |    Aliases: --version, -v
-       |
-       |  ${cmd("update")}
-       |    Checks GitHub releases for a newer version of devenv and prints
-       |    download instructions if one is available.
-       |
-       |  ${cmd("help")}
-       |    Prints this help text.
-       |    Aliases: --help, -h
-       |    Any command also accepts --help/-h as a second argument.
-       |
-       |${title("Configuration:")}
-       |  Project config:  .devcontainer/devenv.yaml
-       |    Project-specific settings (name, ports, IDE plugins, commands, modules).
-       |    Checked into version control.
-       |
-       |  User config:     ~/.config/devenv/devenv.yaml
-       |    Personal preferences (dotfiles, additional IDE plugins).
-       |    Merged with project config for the user-specific devcontainer.
-       |
-       |${title("Typical workflow:")}
-       |  1. devenv init       -- create initial config file
-       |  2. edit .devcontainer/devenv.yaml
-       |  3. devenv generate   -- produce devcontainer.json files
-       |  4. devenv check      -- verify in CI that files are up to date
-       |
-       |${title("Version:")}
-       |$versionInfoString
-       |""".stripMargin
-  }
-
-  /** Coloured output for human use */
-  private def printUsage(): Unit =
-    println(usageText(s => Bold.On(s).toString, s => Bold.On(Color.Cyan(s)).toString))
-
-  /** Plain text output for agent/tool use */
-  private def printPlainUsage(): Unit =
-    println(usageText(identity, identity))
-
-  private def printVersion(): Unit = {
-    // these properties are set at build time via environment variables
-    // release defaults to "dev" for local development builds
-    val releaseStr = Bold.On(Version.release).toString
-    // architecture and branch have no fallbacks and will be empty when running locally
-    val architectureStr = Version.architecture.fold("")(arch => s" ($arch)")
-    val branchStr       = Version.branch.fold("")(branch => s" [$branch]")
-
-    println(s"$releaseStr$architectureStr$branchStr")
-  }
+  private def printError(value: Str)(using formatter: OutputFormatter): Unit =
+    Console.err.println(formatter.render(value))
 
   /** Exit codes for the devenv CLI tool.
     *
