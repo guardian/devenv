@@ -15,7 +15,9 @@ trait OutputFormatter {
   def render(value: Str): String
 
   final def filename(value: Str): Str       = Color.Cyan(value)
+  final def link(value: Str): Str           = Color.Cyan(value)
   final def command(value: Str): Str        = Bold.On(Color.Cyan(value))
+  final def emphasis(value: Str): Str       = Bold.On(value)
   final def success(value: Str): Str        = Color.Green(value)
   final def neutral(value: Str): Str        = Color.LightGray(value)
   final def warning(value: Str): Str        = Color.Yellow(value)

@@ -5,6 +5,8 @@ import fansi.Str
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
+import scala.util.Success
+
 class OutputFormatterTest extends AnyFreeSpec with Matchers {
 
   "OutputFormatter" - {
@@ -54,6 +56,50 @@ class OutputFormatterTest extends AnyFreeSpec with Matchers {
 
       Str(message).plainText should include("Project not initialized")
       message should include("\u001b[")
+    }
+
+    "renders usage and version details as plain text" in {
+      val formatter = OutputFormatter.plain
+      val usage     = formatter.render(
+        Output.usageMessage(
+          release = "20260825-080000",
+          architecture = Some("linux-x86_64"),
+          branch = Some("main")
+        )(using formatter)
+      )
+      val version = formatter.render(
+        Output.versionMessage(
+          release = "20260825-080000",
+          architecture = Some("linux-x86_64"),
+          branch = Some("main")
+        )(using formatter)
+      )
+
+      usage should include("Usage: devenv <command> [--help]")
+      usage should include("release   20260825-080000")
+      version shouldBe "20260825-080000 (linux-x86_64) [main]"
+    }
+
+    "renders unknown commands as errors" in {
+      val formatter = OutputFormatter.coloured
+      val message   = formatter.render(Output.unknownCommandMessage("wat")(using formatter))
+
+      Str(message).plainText shouldBe "Unknown command: wat"
+      message should include("\u001b[")
+    }
+
+    "renders update results" in {
+      val formatter = OutputFormatter.plain
+      val message   = formatter.render(
+        Output.updateCheckResultMessage(
+          Success(Releases.UpdateCheckResult.UpToDate),
+          currentVersion = "20260825-080000",
+          architecture = Some("linux-x86_64")
+        )(using formatter)
+      )
+
+      message should include("✅ Up-to-date")
+      message should include("Devenv 20260825-080000 is the latest version.")
     }
   }
 }
