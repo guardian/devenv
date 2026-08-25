@@ -36,8 +36,13 @@ object Main {
     }
 
   def main(args: Array[String]): Unit = {
-    given OutputFormatter = OutputFormatter.coloured
-    val exitCode          = parseCommand(args.toSeq) match {
+    given OutputFormatter =
+      OutputFormatter.select(
+        isInteractiveTerminal = System.console() != null,
+        environment = sys.env
+      )
+
+    val exitCode = parseCommand(args.toSeq) match {
       case Command.Init     => init()
       case Command.Generate => generate()
       case Command.Check    => check()

@@ -42,4 +42,10 @@ object OutputFormatter {
   val plain: OutputFormatter = new OutputFormatter {
     override def render(value: Str): String = value.plainText
   }
+  def select(isInteractiveTerminal: Boolean, environment: Map[String, String]): OutputFormatter = {
+    val colourDisabled =
+      environment.get("NO_COLOR").exists(_.nonEmpty) || environment.get("TERM").contains("dumb")
+
+    if (isInteractiveTerminal && !colourDisabled) coloured else plain
+  }
 }

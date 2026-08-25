@@ -4,10 +4,11 @@ import com.gu.devenv.Filesystem.{FileSystemStatus, GitignoreStatus}
 import fansi.Str
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.prop.TableDrivenPropertyChecks
 
 import scala.util.Success
 
-class OutputFormatterTest extends AnyFreeSpec with Matchers {
+class OutputFormatterTest extends AnyFreeSpec with Matchers with TableDrivenPropertyChecks {
 
   "OutputFormatter" - {
     "coloured rendering applies semantic command styling" in {
@@ -22,6 +23,25 @@ class OutputFormatterTest extends AnyFreeSpec with Matchers {
       val formatter = OutputFormatter.plain
 
       formatter.render(formatter.errorHeading("Generation failed")) shouldBe "Generation failed"
+    }
+
+    "selects colour based on the terminal and environment" in {
+      val cases = Table(
+        ("interactive", "environment", "usesColour"),
+        (true, Map.empty[String, String], true),
+        (false, Map.empty[String, String], false),
+        (true, Map("NO_COLOR" -> "1"), false),
+        (true, Map("NO_COLOR" -> ""), true),
+        (true, Map("TERM" -> "dumb"), false),
+        (true, Map("TERM" -> "xterm-256color"), true)
+      )
+
+      forAll(cases) { (interactive, environment, usesColour) =>
+        val formatter = OutputFormatter.select(interactive, environment)
+        val rendered  = formatter.render(formatter.command("devenv check"))
+
+        rendered.contains("\u001b[") shouldBe usesColour
+      }
     }
   }
 
