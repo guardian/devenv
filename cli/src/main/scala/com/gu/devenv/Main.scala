@@ -36,8 +36,13 @@ object Main {
     }
 
   def main(args: Array[String]): Unit = {
-    given formatter: OutputFormatter = OutputFormatter.coloured
-    val exitCode                     = parseCommand(args.toSeq) match {
+    given formatter: OutputFormatter =
+      OutputFormatter.select(
+        isInteractiveTerminal = System.console() != null,
+        environment = sys.env
+      )
+
+    val exitCode = parseCommand(args.toSeq) match {
       case Command.Init     => init()
       case Command.Generate => generate()
       case Command.Check    => check()
@@ -48,12 +53,9 @@ object Main {
         )
         ExitCode.Success
       case Command.Help =>
-        val plainFormatter = OutputFormatter.plain
         printOutput(
-          Output.usageMessage(Version.release, Version.architecture, Version.branch)(using
-            plainFormatter
-          )
-        )(using plainFormatter)
+          Output.usageMessage(Version.release, Version.architecture, Version.branch)
+        )
         ExitCode.Success
       case Command.Unknown(name) =>
         printError(Output.unknownCommandMessage(name))

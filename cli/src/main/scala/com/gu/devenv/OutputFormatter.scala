@@ -57,4 +57,11 @@ object OutputFormatter {
       Str(values.result()*)
     }
   }
+
+  def select(isInteractiveTerminal: Boolean, environment: Map[String, String]): OutputFormatter = {
+    val colourDisabled =
+      environment.get("NO_COLOR").exists(_.nonEmpty) || environment.get("TERM").contains("dumb")
+
+    if (isInteractiveTerminal && !colourDisabled) coloured else plain
+  }
 }
