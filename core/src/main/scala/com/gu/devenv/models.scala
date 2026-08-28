@@ -214,7 +214,7 @@ object Command {
   }
 
   def renderCompletionMessage: String =
-    s"""printf "$green Setup complete - you can now open it in your IDE$reset\\n""""
+    s"""printf "$green Setup complete - you can now open the development container in your IDE$reset\\n""""
 
   def renderCommand(command: Command): String = s"cd ${command.workingDirectory} && ${command.cmd}"
 
