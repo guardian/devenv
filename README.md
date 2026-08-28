@@ -40,6 +40,8 @@ You can then use your IDE (VSCode or IntelliJ) to launch into the `user` configu
 
 The quickest installation process is to add `github:guardian/devenv <version>` to `.tool-versions` and execute `mise install` or your preferred tooling manager.
 
+If using mise, ensure you have a recent-ish version.  Versions from early 2025 do not support github installations.
+
 Available versions can be listed with `mise ls-remote github:guardian/devenv`
 
 ## Manual Installation
