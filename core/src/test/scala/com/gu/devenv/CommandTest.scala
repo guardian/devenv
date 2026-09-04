@@ -150,7 +150,7 @@ class CommandTest extends AnyFreeSpec with Matchers with TryValues {
     "should tell engineers the container is ready" in {
       val rendered = Command.renderCompletionMessage
       rendered should include("Setup complete")
-      rendered should include("you can now open it in your IDE")
+      rendered should include("you can now open the development container in your IDE")
     }
   }
 }

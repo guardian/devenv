@@ -408,7 +408,7 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
 
         val commandJson = json.hcursor.downField("postCreateCommand").as[String]
         commandJson.map { command =>
-          command should include("you can now open it in your IDE")
+          command should include("you can now open the development container in your IDE")
           command.indexOf("Setup complete") should be > command.indexOf("Finished step")
         }
       }
