@@ -1,6 +1,11 @@
 package com.gu.devenv.docker
 
-import com.gu.devenv.docker.verifiers.{DockerInDockerVerifier, GithubCopilotVerifier, MiseVerifier}
+import com.gu.devenv.docker.verifiers.{
+  DockerInDockerVerifier,
+  GithubCopilotVerifier,
+  MiseVerifier,
+  SetupCompletionVerifier
+}
 import com.gu.devenv.docker.testutils.{ContainerTest, DevcontainerTestSupport}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
@@ -42,7 +47,8 @@ class CombinedModulesTest extends AnyFreeSpec with Matchers with DevcontainerTes
           val assertions = List(
             ("mise", MiseVerifier.verify(runner)),
             ("docker-in-docker", DockerInDockerVerifier.verify(runner)),
-            ("github-copilot", GithubCopilotVerifier.verify(runner))
+            ("github-copilot", GithubCopilotVerifier.verify(runner)),
+            ("setup completion", SetupCompletionVerifier.verify(runner))
           )
 
           val failures = assertions.collect { case (name, Left(error)) =>
