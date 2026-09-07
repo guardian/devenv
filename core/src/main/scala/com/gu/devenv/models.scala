@@ -213,6 +213,9 @@ object Command {
     s"""(printf "$blue Starting $l$reset\\n" && ($c && printf "$green Finished $l$reset\\n") || printf "$red Errored! $l$reset\\n")"""
   }
 
+  def renderCompletionMessage: String =
+    s"""printf "$green Setup complete - you can now open the development container in your IDE$reset\\n""""
+
   def renderCommand(command: Command): String = s"cd ${command.workingDirectory} && ${command.cmd}"
 
 }
