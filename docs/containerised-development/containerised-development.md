@@ -74,7 +74,7 @@ To begin using that project again, open the project and use the Services tool to
 
 `postCreateCommand` does not block container connections, so you can start an apparently functional terminal (in the IDE or `docker exec`) but then find that the tooling you expect (eg node) is not installed.  Give it time.
 
-Setup commands have finished when the build output shows "Setup complete - you can now open it in your IDE".
+Setup commands have finished when the build output shows "Setup complete - you can now open the development container in your IDE".
 
 ### Slow start
 
