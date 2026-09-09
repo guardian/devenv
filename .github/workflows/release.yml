@@ -227,19 +227,19 @@ jobs:
           devenv-${{ needs.generate-version.outputs.version }}-linux-amd64
           devenv-${{ needs.generate-version.outputs.version }}-linux-arm64
         body: |
-          ## devenv (Development Build)
+          ## devenv
           
           **Build Date:** ${{ needs.generate-version.outputs.version }}
           
           This release was built from the `${{ github.ref_name }}` branch.
           
-          ### Quick Installation
+          ### Recommended installation
 
-          The quickest installation process is to add `github:guardian/devenv ${{ needs.generate-version.outputs.version }}` to `.tool-versions` and execute `mise install` or your preferred tooling manager.
+          Add `github:guardian/devenv ${{ needs.generate-version.outputs.version }}` to `.tool-versions`, then run `mise install` (or the equivalent command for your preferred tool manager).
 
-          ### Manual Installation
+          ### Manual installation
           
-          The release includes native binaries for macOS and Linux architectures.
+          Choose the appropriate command for your platform to download and install the binary:
           
           **macOS (Apple Silicon):**
           ```bash

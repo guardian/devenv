@@ -115,8 +115,8 @@ object Output {
        |    Aliases: --version, -v
        |
        |  ${formatter.command("update")}
-       |    Checks GitHub releases for a newer version of devenv and prints
-       |    download instructions if one is available.
+       |    Checks GitHub for a newer release of devenv and prints installation
+       |    instructions if one is available.
        |
        |  ${formatter.command("help")}
        |    Prints this help text.
@@ -197,11 +197,16 @@ object Output {
         val update   = s"${Str(currentVersion)} → ${formatter.emphasis(newerRelease.tagName)}"
         val release  = formatter.link(newerRelease.htmlUrl)
         val download = formatter.link(asset.browserDownloadUrl)
+        // format: off
         s"""$header
            |$divider
            |$message
            |
            |  $update
+           |
+           |If you are using ${formatter.filename(".tool-versions")} to provide devenv for your project,
+           |update its version, regenerate the devcontainer files, and raise a PR
+           |with the changes.
            |
            |Release notes and installation instructions:
            |  $release
@@ -209,6 +214,7 @@ object Output {
            |Or download from:
            |  $download
            |""".stripMargin
+      // format: on
 
       case Success(UpdateCheckResult.NoCompatibleAsset(newerRelease)) =>
         val header  = formatter.errorHeading("❌ No compatible update")
