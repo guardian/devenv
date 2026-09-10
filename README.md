@@ -4,9 +4,16 @@
 
 A CLI tool for managing [devcontainer](./docs/containerised-development/containerised-development.md) configurations for your projects.
 
-Managing devcontainer.json files can be tedious and error-prone. The devcontainer specification is very detailed, exposing a lot of options to engineers. It also doesn't provide a way to separate team-wide project settings from personal user preferences, forcing developers to either commit their personal configs or manually maintain separate files. `devenv` solves both of these problems by providing a simple configuration format that lets you define both project-wide and user-specific settings in YAML format. It then generates the appropriate devcontainer.json files for you.
+## Quickstart
 
-For example, this `.devcontainer/devenv.yaml` file in your project:
+- [Onboarding a new project](#onboarding-a-new-project)
+- [Opening your project in a devcontainer](#opening-your-project-in-a-devcontainer)
+
+## About devenv
+
+Writing devcontainer.json by hand is tricky, and the spec has no way to separate team-wide settings from personal preferences. `devenv` lets you define dev container configuration in simple YAML, then generates the devcontainer.json files for you.
+
+For example, with this `.devcontainer/devenv.yaml` file in your project:
 
 ```yaml
 name: "devenv"
@@ -30,21 +37,26 @@ plugins:
     - "com.mallowigi"
 ```
 
-will generate two devcontainer.json files:
+devenv will generate two devcontainer.json files:
 - `.devcontainer/shared/devcontainer.json` - with project settings only (checked into the repository)
-- `.devcontainer/user/devcontainer.json` - project settings merged with your personal preferences (excluded via .gitignore entry)
+- `.devcontainer/user/devcontainer.json` - project settings merged with your personal preferences (excluded via .gitignore)
 
-You can then use your IDE (VSCode or IntelliJ) to launch into the `user` configuration for a fully personalized development environment, or the `shared` configuration for a standard project setup. The latter ensures that cloud-based IDEs like GitHub Codespaces can use the (checked-in) shared configuration to provide a simple and consistent development environment.
+You can then use your IDE (VSCode or IntelliJ) to launch into the `user` configuration for a fully personalised development environment, or the `shared` configuration for a standard project setup.
 
-### Quick Installation
+## Installation
 
-The quickest installation process is to add `github:guardian/devenv <version>` to `.tool-versions` and execute `mise install` or your preferred tooling manager.
+It's best to pin a specific `devenv` version per project so that the checked-in devcontainer configuration stays in sync with both `.devcontainer/devenv.yaml` and the version of `devenv` that generated it.
 
-If using mise, ensure you have a recent-ish version.  Versions from early 2025 do not support github installations.
+### Recommended installation approach
 
-Available versions can be listed with `mise ls-remote github:guardian/devenv`
+Add `github:guardian/devenv <version>` to `.tool-versions` in the root of your project, then run `mise install` (or the equivalent command for your preferred tool manager).
 
-## Manual Installation
+Available versions can be listed with `mise ls-remote github:guardian/devenv`.
+
+### Manual installation
+
+> [!NOTE]
+> This isn't recommended, because your project's generated configuration needs to stay in sync with the version of `devenv` that generated it.
 
 Download the latest binary for your architecture from the [latest release](https://github.com/guardian/devenv/releases/latest) on GitHub and place it somewhere on your `PATH`. Each release includes its install commands, which will look like this:
 
@@ -54,56 +66,6 @@ chmod +x ~/.local/bin/devenv
 ```
 
 > **Note:** `~/.local/bin` is not on `PATH` by default on all systems. If `devenv` isn't found after installation, add it to your shell config (e.g. `export PATH="$HOME/.local/bin:$PATH"` in `~/.zshrc` or `~/.bashrc`), or install to `/usr/local/bin` instead.
-
-## Quickstart
-
-From the root of your project, run:
-
-```bash
-devenv init
-```
-
-This will create a `.devcontainer/devenv.yaml` file with some default settings. Set the project name and any other project options in this file.
-
-You can also create a user config file at `~/.config/devenv/devenv.yaml` to set your personal preferences (dotfiles, additional IDE plugins, etc).
-
-Then run:
-
-```bash
-devenv generate
-```
-
-This will generate two devcontainer.json files:
-- `.devcontainer/shared/devcontainer.json` - Project-wide settings (checked-in)
-- `.devcontainer/user/devcontainer.json` - Merged project and user settings (not checked-in)
-
-You can use these to launch devcontainers in your IDE.
-
-## Build
-
-### JVM Build
-
-```bash
-# Build and run locally
-sbt cli/stage
-cli/target/universal/stage/bin/devenv
-```
-
-### Native Image Build
-
-Build a standalone native executable with GraalVM Native Image. The GraalVM dependency is included in `.tool-versions` so that it can be managed by `mise`. The `build-native-binary.sh` script sets up environment variables for version management and runs the native image build:
-
-```bash
-./scripts/build-native-binary.sh
-```
-
-You can also run the native image build directly with sbt, but this will not configure the versioning environment variables that are used to set the version and architecture in the resulting binary:
-
-```bash
-sbt "cli/GraalVMNativeImage/packageBin"
-```
-
-The resulting binary will be at `cli/target/graalvm-native-image/devenv`.
 
 ## Usage
 
@@ -121,15 +83,26 @@ Commands:
   help      Shows the help text
 ```
 
-Typical workflow:
+### Onboarding a new project
 
-1. Run `devenv init` from the root of a repository to create the initial config file for your project
-2. Edit the generated `.devcontainer/devenv.yaml` to set your project settings (see below for configuration details)
-3. Optionally create a user config at `~/.config/devenv/devenv.yaml` to set your personal preferences (dotfiles, additional IDE plugins)
-4. Run `devenv generate` to create the devcontainer.json files based on your config
-5. Open the project in your IDE (VSCode or IntelliJ) and select the appropriate devcontainer configuration (`user` for your personalised environment, `shared` for the standard project setup)
+The typical workflow for setting up a project to use devenv is the following:
 
-You can also run `devenv check` to verify that the generated devcontainer.json files are up to date with your current config. This is useful locally and in CI, to make sure your project's devcontainer configuration is up to date.
+1. Add `github:guardian/devenv <version>` to `.tool-versions` in the root of your project, then run `mise install` (or the equivalent command for your preferred tool manager)
+2. Run `devenv init` from the root of a repository to create the initial config file for your project
+3. Edit the generated `.devcontainer/devenv.yaml` to set your project settings (see below for configuration details)
+4. Optionally create a user config at `~/.config/devenv/devenv.yaml` to set your personal preferences (dotfiles, additional IDE plugins)
+5. Run `devenv generate` to create the devcontainer.json files based on your config
+6. Raise a PR to commit these changes to your repository
+
+Here's an example PR: https://github.com/guardian/play-googleauth/pull/413
+
+### Opening your project in a devcontainer
+
+This assumes you (or someone else) have already set up the project, as described above.
+
+1. Run `devenv generate` from the root of your project
+2. Open the project in your IDE (VSCode or IntelliJ)
+3. Use your IDE's devcontainer support to open the project using the config at `.devcontainer/user/devcontainer.json`
 
 ## Configuration
 
@@ -137,7 +110,59 @@ For detailed configuration specifications, including all supported fields, modul
 
 ## Development
 
-The [.tool-versions](./.tool-versions) file includes toolchain dependencies that can be managed by [mise](https://mise.jdx.dev/) or your preferred version manager.
+### Contributing
+
+#### Adding a module
+
+See [docs/contributing/adding-a-module.md](docs/contributing/adding-a-module.md)
+for a guide on implementing, testing and documenting a new built-in module.
+
+### Release
+
+The project uses a GitHub action to build and publish date-based releases that contain native binaries for macOS arm64 (m-series processors), Linux amd64 and Linux arm64.
+
+New releases generate work, because teams need to update their `.tool-versions` entry and re-generate their devcontainer.json files. To avoid unnecessary churn, releases are only cut when there are significant changes.
+
+#### Creating a release
+
+> [!NOTE]
+> The release workflow is triggered manually - it will not run automatically on pushes or merges to give full control over when to "cut" a release.
+
+1. Go to the [Actions tab](https://github.com/guardian/devenv/actions/workflows/release.yml) on GitHub
+
+2. Click "Run workflow" and select the branch to build from
+
+3. GitHub Actions will automatically:
+   - Build native binaries for macOS ARM64, Linux AMD64 and Linux ARM64
+   - Sign and notarise the macOS binary with a Developer ID Application certificate
+   - Create a **draft** GitHub Release with date-based versioning (e.g., `20251103-143022`)
+   - Name the binaries as `devenv-{date-version}-{platform}` (e.g., `devenv-20251103-143022-macos-arm64`)
+   - Mark the release as a prerelease, if it is built from a dev branch (not `main`)
+
+4. **Manually verify and publish the release:**
+   - Go to the [Releases page](https://github.com/guardian/devenv/releases) on GitHub
+   - Review the draft release
+   - Add (generated) release notes
+   - Test the binaries if needed
+   - Click "Publish release" when ready
+
+#### Version management
+
+Releases use date-based versioning: `YYYYMMDD-HHMMSS` (e.g., `20251103-143022`)
+
+The version is embedded in the native binary at build time, so users can check their version with:
+
+```bash
+devenv version
+```
+
+They can also check for updates with:
+
+```bash
+devenv update
+```
+
+The update command checks [devenv's GitHub releases](https://github.com/guardian/devenv/releases) and gives the user instructions if a newer version is available.
 
 ### Testing
 
@@ -161,40 +186,11 @@ The project also includes generation tests that validate the real program output
 ./generation-tests/run-tests.sh
 ```
 
-### Contributing
+### Packaging devenv locally
 
-#### Adding a module
+#### Native Image Build
 
-See [docs/contributing/adding-a-module.md](docs/contributing/adding-a-module.md) 
-for a guide on implementing, testing and documenting a new built-in module.
-
-### Release
-
-The project uses a GitHub action to build and publish date-based releases that contain native binaries for macOS arm64 (m-series processors), Linux amd64 and Linux arm64.
-
-#### Creating a release
-
-1. Go to the [Actions tab](https://github.com/guardian/devenv/actions/workflows/release.yml) on GitHub
-
-2. Click "Run workflow" and select the branch to build from
-
-3. GitHub Actions will automatically:
-    - Build native binaries for macOS ARM64 and Linux AMD64
-    - Sign and notarise the macOS binary with a Developer ID Application certificate
-    - Create a **draft** GitHub Release with date-based versioning (e.g., `20251103-143022`)
-    - Name the binaries as `devenv-{date-version}-{platform}` (e.g., `devenv-20251103-143022-macos-arm64`)
-    - Mark the release as a prerelease
-
-4. **Manually verify and publish the release:**
-    - Go to the [Releases page](https://github.com/guardian/devenv/releases) on GitHub
-    - Review the draft release
-    - Add (generated) release notes
-    - Test the binaries if needed
-    - Click "Publish release" when ready
-
-#### Building locally
-
-To build a native binary locally, use the `build-native-binary.sh` script. This is useful for testing the native build on your own machine outside of CI.
+Build a standalone native executable with GraalVM Native Image. The GraalVM dependency is included in `.tool-versions` so that it can be managed by `mise`. The `build-native-binary.sh` script sets up environment variables for version management and runs the native image build:
 
 ```bash
 ./scripts/build-native-binary.sh
@@ -222,22 +218,21 @@ Architectures the script can detect:
 - `linux-arm64` (ARM Linux)
 - `linux-amd64` (x86_64 Linux)
 
-#### Version management
-
-Releases use date-based versioning: `YYYYMMDD-HHMMSS` (e.g., `20251103-143022`)
-
-**Note:** The release workflow is triggered manually - it will not run automatically on pushes or merges to give full control over when to "cut" a release.
-
-The version is embedded in the native binary at build time, so users can check their version with:
+> [!NOTE]
+> You can also run the native image build directly with `sbt`, but this will not configure the environment variables that set the version and architecture in the resulting binary:
 
 ```bash
-devenv version
+sbt "cli/GraalVMNativeImage/packageBin"
 ```
 
-They can also check for updates with:
+The binary will be at `cli/target/graalvm-native-image/devenv`.
+
+#### JVM Build
+
+You can also create an executable JVM package. This is much faster than the native build, so it can be useful for a faster iteration cycle during development.
 
 ```bash
-devenv update
+# Build and run locally
+sbt cli/stage
+cli/target/universal/stage/bin/devenv --help
 ```
-
-The update command checks the GitHub releases for a newer version and prompts the user to download it if available.
