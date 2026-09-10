@@ -25,22 +25,23 @@ checked in to provide a project environment for cloud-based editors.
 
 The project config (`.devcontainer/devenv.yaml`) supports the following fields:
 
-| Field                 | Description                                                                                     | Default |
-|-----------------------|-------------------------------------------------------------------------------------------------|---------|
-| `name`                | Project name, used as the devcontainer name (required)                                          | -       |
-| `modules`             | List of module names to enable (see Modules section)                                            | `[]`    |
-| `forwardPorts`        | Port forwarding config, either as integer (maps same port) or `"hostPort:containerPort"` string | `[]`    |
-| `remoteEnv`           | Environment variables set in the remote/container environment                                   | `[]`    |
-| `containerEnv`        | Environment variables set at container creation time                                            | `[]`    |
-| `plugins`             | IDE plugins to install (`intellij`: list of plugin IDs, `vscode`: list of extension IDs)        | `{}`    |
-| `mounts`              | Volume mounts, either as Docker mount strings or objects with `source`, `target`, and `type`    | `[]`    |
-| `postCreateCommand`   | Commands to run once after container creation                                                   | `[]`    |
-| `postStartCommand`    | Commands to run each time the container starts                                                  | `[]`    |
-| `features`            | Dev Container features to enable (as key-value pairs)                                           | `{}`    |
-| `updateRemoteUserUID` | Whether to update remote user's UID to match host                                               | `true`  |
-| `capAdd`              | Linux capabilities to add to the container (use with caution)                                   | `[]`    |
-| `securityOpt`         | Security options for the container (use with caution)                                           | `[]`    |
-| `runArgs`             | Extra switches for container generation                                                         | `[]`    |
+| Field                 | Description                                                                                     | Default                   |
+|-----------------------|-------------------------------------------------------------------------------------------------|---------------------------|
+| `name`                | Project name, used as the devcontainer name (required)                                          | -                         |
+| `modules`             | List of module names to enable (see Modules section)                                            | `[]`                      |
+| `forwardPorts`        | Port forwarding config, either as integer (maps same port) or `"hostPort:containerPort"` string | `[]`                      |
+| `remoteEnv`           | Environment variables set in the remote/container environment                                   | `[]`                      |
+| `containerEnv`        | Environment variables set at container creation time                                            | `[]`                      |
+| `plugins`             | IDE plugins to install (`intellij`: list of plugin IDs, `vscode`: list of extension IDs)        | `{}`                      |
+| `mounts`              | Volume mounts, either as Docker mount strings or objects with `source`, `target`, and `type`    | `[]`                      |
+| `postCreateCommand`   | Commands to run once after container creation                                                   | `[]`                      |
+| `postStartCommand`    | Commands to run each time the container starts                                                  | `[]`                      |
+| `features`            | Dev Container features to enable (as key-value pairs)                                           | `{}`                      |
+| `updateRemoteUserUID` | Whether to update remote user's UID to match host                                               | `true`                    |
+| `capAdd`              | Linux capabilities to add to the container (use with caution)                                   | `[]`                      |
+| `securityOpt`         | Security options for the container (use with caution)                                           | `[]`                      |
+| `containerSize`       | Sets the container size using a preset or an object. See [Container Size](#container-size).     | User's setting or `large` |
+| `runArgs`             | Extra switches for container generation                                                         | `[]`                      |
 
 ### Example
 
@@ -64,17 +65,21 @@ mounts:
 postCreateCommand:
   - cmd: "npm install"
     workingDirectory: "/workspaces/my-project"
+containerSize:
+  memory: "16g"
+  cpus: 4
+  shmSize: "512m"
 ```
 
 ## User Configuration Spec
 
 The user config (`~/.config/devenv/devenv.yaml`) supports the following (optional) settings:
 
-| Field           | Description                                                                            | Default |
-|-----------------|----------------------------------------------------------------------------------------|---------|
-| `plugins`       | Personal IDE plugins (same structure as project config: `intellij` and `vscode` lists) | []      |
-| `dotfiles`      | Dotfiles repository configuration (see below)                                          | []      |
-| `containerSize` | Flag controlling container generation: large or small                                  | large   |
+| Field           | Description                                                                                                    | Default |
+|-----------------|----------------------------------------------------------------------------------------------------------------|---------|
+| `plugins`       | Personal IDE plugins (same structure as project config: `intellij` and `vscode` lists)                         | []      |
+| `dotfiles`      | Dotfiles repository configuration (see below)                                                                  | []      |
+| `containerSize` | Sets the fallback container size when the project does not specify one. See [Container Size](#container-size). | `large` |
 
 ### Dotfiles Configuration
 
@@ -182,29 +187,62 @@ implement, test and document a new built-in module.
 
 ## Container Size
 
-eg
+The optional `containerSize` field is supported in both the project configuration
+(`.devcontainer/devenv.yaml`) and the user configuration (`~/.config/devenv/devenv.yaml`).
+When present, its value must be `small`, `large`, or an object with all three resource fields.
+
+For a custom size, supply all three fields:
+
+```yaml
+containerSize:
+  memory: "15g"
+  cpus: 2.5
+  shmSize: "512m"
+```
+
+| Field     | Type   | Description                                                           |
+|-----------|--------|-----------------------------------------------------------------------|
+| `memory`  | String | Sets the container memory limit through `--memory`.                   |
+| `cpus`    | Number | Sets the CPU limit through `--cpus`. Fractional values are supported. |
+| `shmSize` | String | Sets the shared-memory size through `--shm-size`.                     |
+
+Memory values use Docker's size format, such as `512m` for mebibytes or `15g` for gibibytes.
+The example produces `--memory=15g --cpus=2.5 --shm-size=512m`.
+
+To use a preset, specify its name:
 
 ```yaml
 containerSize: small
 ```
 
-Developer laptops are typically quite powerful, so a container size of `large` is defaulted. This will
-result in additional runArgs switches:
+The presets produce the following Docker run arguments:
 
-| Switch          | Effect                  |
- |-----------------|-------------------------|
-| --memory=16g    | 16Gb of memory          |
-| --cpus=8        | Eight cores             |
-| --shm-size=512m | 512Mb of shared memory* |
+| Preset  | Run arguments                           |
+|---------|-----------------------------------------|
+| `small` | `--memory=1g --cpus=1`                  |
+| `large` | `--memory=16g --cpus=8 --shm-size=512m` |
 
-*More shared memory is useful for running playwright tests in chrome, for example.
+The `small` preset does not set shared memory explicitly, so Docker uses its default.
+The larger shared-memory allocation in the `large` preset is useful for workloads such as
+Playwright tests running in Chrome.
 
-However, this is not suitable for use with github actions, as the GHA environment cannot support such a large container.
-For this purpose, all tests which start a docker environment pull in a github user profile, which specifies a small
-container (although we keep the shared memory):
+### Container size configuration precedence
 
-| Switch          | Effect                  |
-|-----------------|-------------------------|
-| --memory=1g     | 1Gb of memory           |
-| --cpus=1        | One core                |
-| --shm-size=512m | 512Mb of shared memory* |
+The project size takes precedence over the user size. If the project omits `containerSize`,
+devenv uses the user setting. If both files omit it, devenv uses `large`.
+
+Project authors can commit a resource requirement, such as 15 GB of memory, in the project's
+`devenv.yaml`. Size settings from either configuration file only add run arguments to
+`.devcontainer/user/devcontainer.json`, which is excluded from Git. They do not add resource
+limits to `.devcontainer/shared/devcontainer.json`. This keeps the shared file suitable for
+tools that read it from the repository, such as GitHub Codespaces, which may not support
+large resource allocations.
+
+Explicit project `runArgs` are preserved in both generated files. In the user file, they follow
+the arguments derived from `containerSize`. Devenv does not remove duplicate flags or resolve
+conflicts between them.
+
+> [!NOTE]
+> Escape-hatch configuration is applied last to both generated files. If it supplies `runArgs`,
+> that array replaces the entire generated array, including size arguments and explicit project
+> arguments.

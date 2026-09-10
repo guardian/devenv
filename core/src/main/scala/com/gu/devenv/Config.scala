@@ -1,13 +1,13 @@
 package com.gu.devenv
 
-import com.gu.devenv.ContainerSize.Small
+import com.gu.devenv.ContainerSize.{Custom, Large, Small}
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.ResolvedModules
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto.*
 import io.circe.syntax.*
 import io.circe.yaml.scalayaml.parser
-import io.circe.{Json, JsonObject}
+import io.circe.{Decoder, DecodingFailure, Json, JsonObject}
 
 import java.nio.file.Path
 import scala.util.Try
@@ -56,7 +56,7 @@ object Config {
   def parseProjectConfig(contents: String): Try[ProjectConfig] =
     for {
       json          <- parser.parse(contents).toTry
-      projectConfig <- json.as[ProjectConfig].toTry
+      projectConfig <- decodeConfig[ProjectConfig](json).toTry
     } yield projectConfig
 
   def parseUserConfig(contents: String): Try[UserConfig] =
@@ -65,9 +65,21 @@ object Config {
     } else {
       for {
         json       <- parser.parse(contents).toTry
-        userConfig <- json.as[UserConfig].toTry
+        userConfig <- decodeConfig[UserConfig](json).toTry
       } yield userConfig
     }
+
+  private def decodeConfig[A: Decoder](json: Json): Decoder.Result[A] = {
+    val size = json.hcursor.downField("containerSize")
+    if (size.focus.exists(_.isNull))
+      Left(
+        DecodingFailure(
+          "containerSize must be small, large, or a complete size object",
+          size.history
+        )
+      )
+    else json.as[A]
+  }
 
   private[devenv] val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1")
   private[devenv] val largeContainerRunArgs: List[String] =
@@ -87,9 +99,18 @@ object Config {
       .getOrElse(Nil)
 
     // Large by default.  Devs have beefy laptops
-    val runArgs = maybeUserConfig.flatMap(_.containerSize) match {
-      case Some(Small) => smallContainerRunArgs
-      case _           => largeContainerRunArgs
+    val size = projectConfig.containerSize
+      .orElse(maybeUserConfig.flatMap(_.containerSize))
+      .getOrElse(Large)
+    val runArgs = size match {
+      case Small                         => smallContainerRunArgs
+      case Large                         => largeContainerRunArgs
+      case Custom(memory, cpus, shmSize) =>
+        List(
+          s"--memory=$memory",
+          s"--cpus=${cpus.bigDecimal.toPlainString}",
+          s"--shm-size=$shmSize"
+        )
     }
 
     projectConfig.copy(

@@ -27,7 +27,8 @@ case class ProjectConfig(
     updateRemoteUserUID: Boolean = true,
     capAdd: List[String] = Nil,
     securityOpt: List[String] = Nil,
-    runArgs: List[String] = Nil
+    runArgs: List[String] = Nil,
+    containerSize: Option[ContainerSize] = None
 )
 
 case class UserConfig(
@@ -45,14 +46,28 @@ enum ForwardPort {
 }
 
 object ContainerSize {
-  given Decoder[ContainerSize] = Decoder.decodeString.emap {
-    case "small" => Right(ContainerSize.Small)
-    case "large" => Right(ContainerSize.Large)
-    case s       => Left(s"Unknown container size: $s")
+  given Decoder[ContainerSize] = Decoder.instance { c =>
+    if (c.value.isObject) {
+      for {
+        memory <- c.get[String]("memory")
+        cpus   <- c.downField("cpus").as[Json].flatMap { value =>
+          if (value.isNumber) c.get[BigDecimal]("cpus")
+          else Left(DecodingFailure("cpus must be a number", c.downField("cpus").history))
+        }
+        shmSize <- c.get[String]("shmSize")
+      } yield ContainerSize.Custom(memory, cpus, shmSize)
+    } else {
+      c.as[String].flatMap {
+        case "small" => Right(ContainerSize.Small)
+        case "large" => Right(ContainerSize.Large)
+        case s       => Left(DecodingFailure(s"Unknown container size: $s", c.history))
+      }
+    }
   }
 }
 enum ContainerSize {
   case Small, Large
+  case Custom(memory: String, cpus: BigDecimal, shmSize: String)
 }
 
 object ForwardPort {

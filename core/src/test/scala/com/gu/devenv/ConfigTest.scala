@@ -6,7 +6,7 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.{OptionValues, TryValues}
 
-import scala.util.Success
+import scala.util.{Success, Try}
 
 /** Unit tests for Config object functions (parsing and merging).
   *
@@ -114,7 +114,106 @@ class ConfigTest
     }
   }
 
+  "container size parsing" - {
+    val parsers: List[(String, String => Try[Option[ContainerSize]])] = List(
+      "project" -> (yaml => Config.parseProjectConfig(s"name: test\n$yaml").map(_.containerSize)),
+      "user"    -> (yaml => Config.parseUserConfig(yaml).map(_.containerSize))
+    )
+    val validSizes = List(
+      "omitted"      -> ("", None),
+      "small"        -> ("containerSize: small", Some(ContainerSize.Small)),
+      "large"        -> ("containerSize: large", Some(ContainerSize.Large)),
+      "integer CPUs" -> (
+        "containerSize: { memory: 15g, cpus: 4, shmSize: 512m }",
+        Some(ContainerSize.Custom("15g", BigDecimal(4), "512m"))
+      ),
+      "fractional CPUs" -> (
+        "containerSize: { memory: 4g, cpus: 2.5, shmSize: 256m }",
+        Some(ContainerSize.Custom("4g", BigDecimal("2.5"), "256m"))
+      ),
+      "values left for Docker to validate" -> (
+        """containerSize: { memory: "", cpus: -1, shmSize: invalid }""",
+        Some(ContainerSize.Custom("", BigDecimal(-1), "invalid"))
+      )
+    )
+    val invalidSizes = List(
+      "unknown preset"        -> "medium",
+      "case-sensitive preset" -> "Small",
+      "null"                  -> "null",
+      "empty value"           -> "",
+      "number"                -> "4",
+      "boolean"               -> "true",
+      "array"                 -> "[small]",
+      "empty object"          -> "{}",
+      "missing memory"        -> "{ cpus: 2, shmSize: 512m }",
+      "missing CPUs"          -> "{ memory: 4g, shmSize: 512m }",
+      "missing shared memory" -> "{ memory: 4g, cpus: 2 }",
+      "null memory"           -> "{ memory: null, cpus: 2, shmSize: 512m }",
+      "null CPUs"             -> "{ memory: 4g, cpus: null, shmSize: 512m }",
+      "null shared memory"    -> "{ memory: 4g, cpus: 2, shmSize: null }",
+      "numeric memory"        -> "{ memory: 4, cpus: 2, shmSize: 512m }",
+      "string CPUs"           -> """{ memory: 4g, cpus: "2.5", shmSize: 512m }""",
+      "boolean CPUs"          -> "{ memory: 4g, cpus: true, shmSize: 512m }",
+      "numeric shared memory" -> "{ memory: 4g, cpus: 2, shmSize: 512 }"
+    )
+
+    parsers.foreach { case (source, parse) =>
+      source - {
+        validSizes.foreach { case (label, (yaml, expected)) =>
+          s"accepts $label" in {
+            parse(yaml).success.value shouldBe expected
+          }
+        }
+        invalidSizes.foreach { case (label, yaml) =>
+          s"rejects $label" in {
+            parse(s"containerSize: $yaml").isFailure shouldBe true
+          }
+        }
+      }
+    }
+  }
+
   "mergeConfigs" - {
+    val sizes = List(
+      ContainerSize.Small -> List("--memory=1g", "--cpus=1"),
+      ContainerSize.Large -> List("--memory=16g", "--cpus=8", "--shm-size=512m"),
+      ContainerSize.Custom("15g", BigDecimal("2.5"), "1g") ->
+        List("--memory=15g", "--cpus=2.5", "--shm-size=1g")
+    )
+    val userConfigs = None :: Some(UserConfig.empty) :: sizes.map { case (size, _) =>
+      Some(UserConfig(containerSize = Some(size)))
+    }
+    val explicitArgs = List("--memory=20g", "--label=example")
+
+    sizes.foreach { case (size, expectedArgs) =>
+      s"project size $size takes precedence over every user setting" in
+        userConfigs.foreach { userConfig =>
+          val project = ProjectConfig("test", runArgs = explicitArgs, containerSize = Some(size))
+          Config.mergeConfigs(project, userConfig).runArgs shouldBe expectedArgs ++ explicitArgs
+        }
+
+      s"user size $size is used when the project omits it" in {
+        val project = ProjectConfig("test", runArgs = explicitArgs)
+        val user    = UserConfig(containerSize = Some(size))
+        Config.mergeConfigs(project, Some(user)).runArgs shouldBe expectedArgs ++ explicitArgs
+      }
+    }
+
+    "renders custom CPUs in plain decimal notation" in {
+      val project = ProjectConfig(
+        "test",
+        containerSize = Some(ContainerSize.Custom("4g", BigDecimal("1E+1"), "512m"))
+      )
+      Config.mergeConfigs(project, None).runArgs shouldBe
+        List("--memory=4g", "--cpus=10", "--shm-size=512m")
+    }
+
+    "preserves explicit arguments after the default size flags" in
+      List(None, Some(UserConfig.empty)).foreach { user =>
+        Config.mergeConfigs(ProjectConfig("test", runArgs = explicitArgs), user).runArgs shouldBe
+          List("--memory=16g", "--cpus=8", "--shm-size=512m") ++ explicitArgs
+      }
+
     "merges user config into project config correctly" in {
       val projectConfigYaml =
         scala.io.Source.fromResource("projectConfig.yaml").mkString
