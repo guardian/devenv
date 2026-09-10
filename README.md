@@ -41,7 +41,7 @@ devenv will generate two devcontainer.json files:
 - `.devcontainer/shared/devcontainer.json` - with project settings only (checked into the repository)
 - `.devcontainer/user/devcontainer.json` - project settings merged with your personal preferences (excluded via .gitignore)
 
-You can then use your IDE (VSCode or IntelliJ) to launch into the `user` configuration for a fully personalized development environment, or the `shared` configuration for a standard project setup.
+You can then use your IDE (VSCode or IntelliJ) to launch into the `user` configuration for a fully personalised development environment, or the `shared` configuration for a standard project setup.
 
 ## Installation
 
