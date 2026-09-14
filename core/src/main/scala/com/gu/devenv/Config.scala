@@ -114,17 +114,25 @@ object Config {
     )
 
     val lifecycleShellSetup = modules.modules.flatMap(_.contribution.lifecycleShellSetup)
-    val commands            = JsonObject.fromIterable(
+    val postCreateCommands  = modules.modules.flatMap { module =>
+      val contribution = module.contribution
+      contribution.postCreateCommands match {
+        case Nil      => contribution.lifecycleShellSetup
+        case commands =>
+          commands.init.map(Command.renderCommandWithLogging(_)) :+
+            Command.renderCommandWithLogging(commands.last, contribution.lifecycleShellSetup)
+      }
+    } ++ projectConfig.postCreateCommand.map(Command.renderCommandWithLogging(_))
+    val commands = JsonObject.fromIterable(
       List(
         "onCreateCommand" -> combineCommands(
           config.onCreateCommand,
           s"/var/log/$onCreateLogName"
         ),
-        "postCreateCommand" -> combineCommands(
-          config.postCreateCommand,
+        "postCreateCommand" -> combineRenderedCommands(
+          postCreateCommands,
           s"/var/log/$postCreateLogName",
-          trailingCommands = List(Command.renderCompletionMessage),
-          leadingCommands = lifecycleShellSetup
+          trailingCommands = List(Command.renderCompletionMessage)
         ),
         "postStartCommand" -> combineCommands(
           config.postStartCommand,
@@ -253,11 +261,23 @@ object Config {
       trailingCommands: List[String] = Nil,
       leadingCommands: List[String] = Nil
   ): Option[String] =
+    combineRenderedCommands(
+      commands.map(Command.renderCommandWithLogging(_)),
+      logFile,
+      trailingCommands,
+      leadingCommands
+    )
+
+  private def combineRenderedCommands(
+      commands: List[String],
+      logFile: String,
+      trailingCommands: List[String],
+      leadingCommands: List[String] = Nil
+  ): Option[String] =
     if (commands.isEmpty && trailingCommands.isEmpty) None
     else {
-      val renderedCommands = commands.map(Command.renderCommandWithLogging)
-      val all              = (renderedCommands ++ trailingCommands).mkString(" && ")
-      Some((leadingCommands :+ s"($all) 2>&1 | sudo tee $logFile").mkString(" && "))
+      val all = (leadingCommands ++ commands ++ trailingCommands).mkString(" && ")
+      Some(s"($all) 2>&1 | sudo tee $logFile")
     }
 
   private def envListToJson(envList: List[Env]): Json =

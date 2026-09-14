@@ -200,17 +200,26 @@ object Command {
     }
   }
 
-  private val blue                                       = "\\033[1;34m[setup]"
-  private val green                                      = "\\033[1;32m[setup]"
-  private val red                                        = "\\033[1;31m[setup]"
-  private val reset                                      = "\\033[0m"
-  def renderCommandWithLogging(command: Command): String = {
+  private val blue  = "\\033[1;34m[setup]"
+  private val green = "\\033[1;32m[setup]"
+  private val red   = "\\033[1;31m[setup]"
+  private val reset = "\\033[0m"
+  def renderCommandWithLogging(
+      command: Command,
+      onSuccess: List[String] = Nil
+  ): String = {
     val l = command.logLine
       .map(_.replaceAll("[^a-zA-Z0-9._]", "")) // sanitize
       .filter(_.nonEmpty)
       .getOrElse("unknown")
     val c = renderCommand(command)
-    s"""(printf "$blue Starting $l$reset\\n" && ($c && printf "$green Finished $l$reset\\n") || printf "$red Errored! $l$reset\\n")"""
+    if (onSuccess.isEmpty)
+      s"""(printf "$blue Starting $l$reset\\n" && ($c && printf "$green Finished $l$reset\\n") || printf "$red Errored! $l$reset\\n")"""
+    else {
+      // Braces keep activation in the lifecycle shell; the command's cd stays in a subshell.
+      val activate = onSuccess.mkString(" && ")
+      s"""{ printf "$blue Starting $l$reset\\n" && ($c) && $activate && printf "$green Finished $l$reset\\n" || printf "$red Errored! $l$reset\\n"; }"""
+    }
   }
 
   def renderCompletionMessage: String =

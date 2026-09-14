@@ -41,11 +41,17 @@ it does in the ordered `modules` list in a project's `devenv.yaml`.
 Module contributions are **prepended** to any explicit config from `devenv.yaml` so user-supplied
 values always take precedence.
 
-`lifecycleShellSetup` contains trusted shell expressions, not logged `Command` subshells.
-Use it for environment exports that must reach every command in `postCreateCommand` and
-`postStartCommand`. It runs before any module or project commands, does not run in `onCreateCommand`,
-and does not create an otherwise absent hook. For example, mise exports its shims PATH here because
-activation inside a bundled child script cannot modify the lifecycle shell's environment.
+`lifecycleShellSetup` contains trusted shell expressions that run in the lifecycle shell.
+On creation, they run immediately after the module's final `postCreateCommands` command succeeds,
+before its success log and before subsequent modules or project commands. The command's working
+directory remains isolated in a subshell, but activation changes are inherited by later commands.
+Modules without post-create commands run these expressions directly.
+On subsequent starts, they run before project `postStartCommand` commands. They do not run in
+`onCreateCommand` or create an otherwise absent post-start hook.
+For example, mise installs itself first, then activates its shims here; activation inside its bundled
+child script alone cannot modify the lifecycle shell's environment. Capture activation output with
+a separate, checked assignment before evaluating it, so a failed activation command is not hidden by
+an otherwise successful `eval`.
 
 There are currently three implementation patterns in use, in increasing order of complexity:
 

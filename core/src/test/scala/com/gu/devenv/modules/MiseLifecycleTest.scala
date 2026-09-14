@@ -2,7 +2,7 @@ package com.gu.devenv.modules
 
 import com.gu.devenv.*
 import com.gu.devenv.integration.IntegrationTestHelpers.tempDir
-import com.gu.devenv.modules.Modules.ResolvedModules
+import com.gu.devenv.modules.Modules.{Module, ModuleContribution, ResolvedModules}
 import io.circe.Json
 import org.scalatest.{EitherValues, OptionValues, TryValues}
 import org.scalatest.freespec.AnyFreeSpec
@@ -22,8 +22,20 @@ class MiseLifecycleTest
   private val hooks       = List("postCreateCommand", "postStartCommand")
   private val module      = mise.success.value
   private val resolved    = Modules.resolveModules(List("mise"), List(module)).value
-  private val exportPath  =
-    """export PATH="${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims:$PATH""""
+  private val activation  = module.contribution.lifecycleShellSetup.mkString(" && ")
+  private val setup       = Command.fromResourceScript("miseLifecycleSetup.sh").success.value
+  private val testModule  =
+    module.copy(contribution = module.contribution.copy(postCreateCommands = List(setup)))
+  private val useTool = Command(
+    """printf 'path:%s\n' "$PATH" && devenv-test-tool direct && sh -c 'devenv-test-tool child'""",
+    "\"$HOME/project\"",
+    Some("useTool")
+  )
+  private val commands = List(
+    useTool,
+    Command("false", ".", Some("failure")),
+    Command("printf 'after-failure:%s\\n' \"$PWD\"", ".", Some("after"))
+  )
 
   private def hookCommand(json: Json, hook: String): String =
     io.circe.parser.parse(json.spaces2).value.hcursor.get[String](hook).value
@@ -32,7 +44,9 @@ class MiseLifecycleTest
       command: String,
       home: Path,
       shims: Path,
-      env: Map[String, String]
+      miseBinDir: Path,
+      path: String = initialPath,
+      env: Map[String, String] = Map.empty
   ): String = {
     // Keep the generated pipeline intact, but redirect privileged log writes into the test home.
     val shell =
@@ -43,9 +57,11 @@ class MiseLifecycleTest
     val environment = builder.environment()
     environment.clear()
     (env ++ Map(
-      "HOME"                  -> home.toString,
-      "PATH"                  -> initialPath,
-      "DEVENV_TEST_SHIMS_DIR" -> shims.toString
+      "HOME"                     -> home.toString,
+      "PATH"                     -> path,
+      "DEVENV_TEST_INITIAL_PATH" -> path,
+      "DEVENV_TEST_SHIMS_DIR"    -> shims.toString,
+      "DEVENV_TEST_MISE_BIN_DIR" -> miseBinDir.toString
     )).foreach { case (key, value) => val _ = environment.put(key, value) }
     val process = builder.start()
     val output  = Using(Source.fromInputStream(process.getInputStream))(_.mkString).success.value
@@ -54,26 +70,38 @@ class MiseLifecycleTest
   }
 
   "mise lifecycle rendering" - {
-    hooks.foreach { hook =>
-      s"$hook exports shims before every command only when mise is enabled" in {
-        val command = Command("npm install", "/workspaces/project", Some("install"))
-        val config  = ProjectConfig(
-          name = "test",
-          postCreateCommand = List(command),
-          postStartCommand = List(command)
-        )
-        val enabled  = hookCommand(Config.configAsJson(config, resolved), hook)
-        val disabled = hookCommand(Config.configAsJson(config, ResolvedModules.empty), hook)
+    "activates after mise setup on creation and before project commands on start" in {
+      val config =
+        ProjectConfig("test", postCreateCommand = List(useTool), postStartCommand = List(useTool))
+      val json   = Config.configAsJson(config, resolved)
+      val create = hookCommand(json, "postCreateCommand")
+      val start  = hookCommand(json, "postStartCommand")
 
-        enabled should startWith(s"$exportPath && (")
-        enabled should include(Command.renderCommandWithLogging(command))
-        disabled should not include "export PATH="
+      create should startWith("({ printf")
+      create.indexOf(module.contribution.postCreateCommands.head.cmd) should be < create.indexOf(
+        activation
+      )
+      create.indexOf(activation) should be < create.indexOf(
+        Command.renderCommandWithLogging(useTool)
+      )
+      start should startWith(s"($activation && ")
+      activation should include("mise activate --shims bash")
+      activation should not include "export PATH="
+    }
+
+    hooks.foreach { hook =>
+      s"$hook is unchanged when mise is disabled" in {
+        val config =
+          ProjectConfig("test", postCreateCommand = List(useTool), postStartCommand = List(useTool))
+        val disabled = hookCommand(Config.configAsJson(config, ResolvedModules.empty), hook)
         val trailing =
           if (hook == "postCreateCommand") List(Command.renderCompletionMessage) else Nil
         val logName =
           if (hook == "postCreateCommand") Config.postCreateLogName else Config.postStartLogName
+
+        disabled should not include "mise activate"
         disabled shouldBe Config
-          .combineCommands(List(command), s"/var/log/$logName", trailing)
+          .combineCommands(List(useTool), s"/var/log/$logName", trailing)
           .value
       }
     }
@@ -89,95 +117,172 @@ class MiseLifecycleTest
       disabled.hcursor.downField("postStartCommand").succeeded shouldBe false
     }
 
-    "exports shims in both shared and user configurations" in {
-      val config = ProjectConfig("test", postStartCommand = List(Command("echo started", ".")))
-      val user = UserConfig(dotfiles = Some(Dotfiles("https://example.com/dotfiles", ".", "true")))
+    "activates before dotfiles and project commands in shared and user configurations" in {
+      val config =
+        ProjectConfig("test", postCreateCommand = List(useTool), postStartCommand = List(useTool))
+      val user = UserConfig(dotfiles =
+        Some(Dotfiles("https://example.com/dotfiles", ".", "dotfiles-install"))
+      )
       val (userJson, sharedJson) = Config.generateConfigs(config, Some(user), resolved, None)
 
       List(userJson, sharedJson).foreach { rendered =>
         hooks.foreach { hook =>
-          hookCommand(io.circe.parser.parse(rendered).value, hook) should startWith(exportPath)
+          val command = hookCommand(io.circe.parser.parse(rendered).value, hook)
+          command.indexOf(activation) should be < command.indexOf(useTool.cmd)
         }
       }
+      val userCreate = hookCommand(io.circe.parser.parse(userJson).value, "postCreateCommand")
+      userCreate.indexOf(activation) should be < userCreate.indexOf("git clone")
+      userCreate.indexOf("dotfiles-install") should be < userCreate.indexOf(useTool.cmd)
     }
   }
 
   "generated lifecycle commands in a non-interactive shell" - {
     for {
-      hook     <- hooks
-      enabled  <- List(true, false)
-      location <- List("default", "empty overrides", "XDG_DATA_HOME", "MISE_DATA_DIR")
+      enabled     <- List(true, false)
+      customShims <- List(true, false)
+      miseOnPath  <- List(true, false)
     }
-      s"$hook with mise=$enabled and $location preserves PATH across child bootstrap" in
+      s"mise=$enabled, custom shims=$customShims, mise on PATH=$miseOnPath installs before activating" in
         tempDir.run { dir =>
-          val home         = Files.createDirectory(dir.resolve("container home"))
-          val work         = Files.createDirectory(home.resolve("project"))
-          val (env, shims) = location match {
-            case "XDG_DATA_HOME" =>
-              (
-                Map("XDG_DATA_HOME" -> home.resolve("xdg data").toString),
-                home.resolve("xdg data/mise/shims")
-              )
-            case "MISE_DATA_DIR" =>
-              (
-                Map(
-                  "MISE_DATA_DIR" -> home.resolve("mise data").toString,
-                  "XDG_DATA_HOME" -> home.resolve("unused xdg data").toString
-                ),
-                home.resolve("mise data/shims")
-              )
-            case "empty overrides" =>
-              (
-                Map("MISE_DATA_DIR" -> "", "XDG_DATA_HOME" -> ""),
-                home.resolve(".local/share/mise/shims")
-              )
-            case _ => (Map.empty[String, String], home.resolve(".local/share/mise/shims"))
-          }
-          val setup   = Command.fromResourceScript("miseLifecycleSetup.sh").success.value
-          val useTool = Command(
-            """printf 'path:%s\n' "$PATH" && devenv-test-tool direct && sh -c 'devenv-test-tool child'""",
-            "\"$HOME/project\"",
-            Some("useTool")
-          )
-          val afterFailure = Command("printf 'after-failure:%s\\n' \"$PWD\"", ".", Some("after"))
-          val commands     = List(useTool, Command("false", ".", Some("failure")), afterFailure)
-          val testModule   = module.copy(contribution =
-            module.contribution.copy(
-              postCreateCommands = List(setup)
-            )
+          val home  = Files.createDirectory(dir.resolve("container home"))
+          val work  = Files.createDirectory(home.resolve("project"))
+          val shims =
+            home.resolve(if (customShims) "custom data/tool shims" else ".local/share/mise/shims")
+          val bin       = home.resolve(if (miseOnPath) "system bin" else ".local/bin")
+          val path      = if (miseOnPath) s"$bin:$initialPath" else initialPath
+          val dependent = Module(
+            "dependent",
+            "Uses mise tools",
+            false,
+            ModuleContribution(postCreateCommands =
+              List(Command("devenv-test-tool module", ".", Some("dependent")))
+            ),
+            dependsOn = Set("mise")
           )
           val modules =
-            if (enabled) Modules.resolveModules(List("mise"), List(testModule)).value
+            if (enabled)
+              Modules.resolveModules(List("dependent", "mise"), List(dependent, testModule)).value
             else ResolvedModules.empty
           val config = ProjectConfig(
             "test",
             postCreateCommand = (if (enabled) Nil else List(setup)) ++ commands,
-            postStartCommand = setup :: commands
+            postStartCommand = commands
           )
-          val rendered = hookCommand(Config.configAsJson(config, modules), hook)
+          val json = Config.configAsJson(config, modules)
           Files.exists(shims) shouldBe false
-          val output = runHook(rendered, home, shims, env)
+          Files.exists(bin.resolve("mise")) shouldBe false
 
-          output should include("bootstrap-finished")
-          output should include("Finished miseLifecycleSetup.sh")
-          output should include("Errored! failure")
-          output should include(s"after-failure:$home")
-          output should not include "/child-only"
+          // Every invocation starts with the original PATH, as a fresh lifecycle shell would.
+          val create = runHook(hookCommand(json, "postCreateCommand"), home, shims, bin, path)
+          create should include(s"setup-path:$path")
+          create should include("bootstrap-finished")
+          create should include("Finished miseLifecycleSetup.sh")
+          Files.readString(home.resolve(Config.postCreateLogName)) shouldBe create
           if (enabled) {
-            output should include(s"path:$shims:$initialPath")
-            output should include(s"shim:direct:$work")
-            output should include(s"shim:child:$work")
-            output should include("Finished useTool")
-            output.indexOf("bootstrap-finished") should be < output.indexOf("shim:direct:")
+            create should include(s"shim:module:$home")
+            create.indexOf("bootstrap-finished") should be < create.indexOf("shim:module:")
+            create.indexOf("shim:module:") should be < create.indexOf("shim:direct:")
           } else {
-            output should include(s"path:$initialPath")
-            output should include("Errored! useTool")
-            output should not include "shim:direct:"
-            output should not include "shim:child:"
+            create should not include "shim:module:"
           }
-          val logName =
-            if (hook == "postCreateCommand") Config.postCreateLogName else Config.postStartLogName
-          Files.readString(home.resolve(logName)) shouldBe output
+
+          List(create, runHook(hookCommand(json, "postStartCommand"), home, shims, bin, path))
+            .foreach { output =>
+              output should include("Errored! failure")
+              output should include(s"after-failure:$home")
+              output should not include "/child-only"
+              if (enabled) {
+                output should include(s"path:$shims:$bin:$path")
+                output should include(s"shim:direct:$work")
+                output should include(s"shim:child:$work")
+                output should include("Finished useTool")
+              } else {
+                output should include(s"path:$path")
+                output should include("Errored! useTool")
+                output should not include "shim:direct:"
+                output should not include "shim:child:"
+              }
+            }
+          val startLog = Files.readString(home.resolve(Config.postStartLogName))
+          startLog should not include "bootstrap-finished"
+          if (enabled)
+            Files.readString(
+              home.resolve("activations")
+            ) shouldBe "activation-called\nactivation-called\n"
+          else
+            Files.exists(home.resolve("activations")) shouldBe false
         }
+
+    "does not activate after a failed setup, even if the mise executable was installed" in
+      tempDir.run { home =>
+        val shims   = home.resolve("shims")
+        val bin     = home.resolve(".local/bin")
+        val modules = Modules.resolveModules(List("mise"), List(testModule)).value
+        val json    = Config.configAsJson(
+          ProjectConfig(
+            "test",
+            postCreateCommand = List(Command("printf 'path:%s\\n' \"$PATH\"", "."))
+          ),
+          modules
+        )
+        val output = runHook(
+          hookCommand(json, "postCreateCommand"),
+          home,
+          shims,
+          bin,
+          env = Map("DEVENV_TEST_SETUP_FAIL" -> "1")
+        )
+
+        Files.exists(bin.resolve("mise")) shouldBe true
+        Files.exists(home.resolve("activations")) shouldBe false
+        output should include("setup-failed")
+        output should include("Errored! miseLifecycleSetup.sh")
+        output should not include "Finished miseLifecycleSetup.sh"
+        output should include(s"path:$initialPath")
+      }
+
+    "reports activation failures without evaluating their output in either hook" in
+      tempDir.run { home =>
+        val shims      = home.resolve("shims")
+        val bin        = home.resolve(".local/bin")
+        val modules    = Modules.resolveModules(List("mise"), List(testModule)).value
+        val reportPath = Command("printf 'path:%s\\n' \"$PATH\"", ".")
+        val json       = Config.configAsJson(
+          ProjectConfig(
+            "test",
+            postCreateCommand = List(reportPath),
+            postStartCommand = List(reportPath)
+          ),
+          modules
+        )
+        val env    = Map("DEVENV_TEST_ACTIVATION_FAIL" -> "1")
+        val create = runHook(hookCommand(json, "postCreateCommand"), home, shims, bin, env = env)
+        val start  = runHook(hookCommand(json, "postStartCommand"), home, shims, bin, env = env)
+
+        create should include("Errored! miseLifecycleSetup.sh")
+        create should not include "Finished miseLifecycleSetup.sh"
+        create should include(s"path:$initialPath")
+        start should not include "path:"
+        List(create, start).foreach { output =>
+          output should include("activation-failed")
+          output should not include "/must-not-be-evaluated"
+        }
+        Files.readString(home.resolve(Config.postCreateLogName)) shouldBe create
+        Files.readString(home.resolve(Config.postStartLogName)) shouldBe start
+      }
+
+    "reports missing mise on start rather than guessing a shims PATH" in
+      tempDir.run { home =>
+        val config =
+          ProjectConfig("test", postStartCommand = List(Command("echo should-not-run", ".")))
+        val command = hookCommand(Config.configAsJson(config, resolved), "postStartCommand")
+        val output  = runHook(command, home, home.resolve("shims"), home.resolve(".local/bin"))
+
+        output should include(".local/bin/mise")
+        output should not include "should-not-run"
+        Files.exists(home.resolve("shims")) shouldBe false
+        Files.readString(home.resolve(Config.postStartLogName)) shouldBe output
+      }
   }
 }

@@ -26,7 +26,9 @@ private[modules] def mise: Try[Module] =
     contribution = ModuleContribution(
       postCreateCommands = List(encodedPostCreateScript),
       lifecycleShellSetup = List(
-        """export PATH="${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims:$PATH""""
+        """DEVENV_MISE_ACTIVATION=$(if command -v mise >/dev/null 2>&1; then mise activate --shims bash; else "$HOME/.local/bin/mise" activate --shims bash; fi)""",
+        """eval "$DEVENV_MISE_ACTIVATION"""",
+        "unset DEVENV_MISE_ACTIVATION"
       ),
       // provide IDE support for mise
       plugins = Plugins(
