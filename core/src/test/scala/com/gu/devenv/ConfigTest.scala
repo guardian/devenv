@@ -1,233 +1,27 @@
 package com.gu.devenv
 
-import com.gu.devenv.ContainerSize.Small
-import io.circe.Json
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.{OptionValues, TryValues}
+import org.scalatest.TryValues
 
-import scala.util.{Success, Try}
-
-/** Unit tests for Config object functions (parsing and merging).
+/** Unit tests for configuration merging and command handling.
   *
-  * Note: JSON generation is tested separately in ProjectConfigJsonTest using property-based tests.
-  * End-to-end integration with file system operations is tested in integration/ package.
+  * Decoding is covered by CodecTest, and generated JSON by ConfigJsonTest.
   */
-class ConfigTest
-    extends AnyFreeSpec
-    with Matchers
-    with TryValues
-    with OptionValues
-    with HavingMatchers {
-
-  "parseProjectConfig" - {
-    "parses a complete project config from YAML" in {
-      val exampleConfig =
-        scala.io.Source.fromResource("projectConfig.yaml").mkString
-      val Success(projectConfig) =
-        Config.parseProjectConfig(exampleConfig).success
-
-      projectConfig should have(
-        "name" as "Scala SBT Development Container",
-        "modules" as List("mise"),
-        "forwardPorts" as List(
-          ForwardPort.SamePort(8080),
-          ForwardPort.DifferentPorts(8000, 9000)
-        ),
-        "remoteEnv" as List(
-          Env("SBT_OPTS", "-Xmx2G -XX:+UseG1GC"),
-          Env("JAVA_HOME", "/usr/lib/jvm/java-17-openjdk-amd64")
-        ),
-        "containerEnv" as List(
-          Env("EXAMPLE", "foo"),
-          Env("EXAMPLE+2", "bar")
-        ),
-        "mounts" as List(
-          Mount.ExplicitMount(
-            "${localWorkspaceFolder}/.ivy2",
-            "/home/vscode/.ivy2",
-            "volume"
-          ),
-          Mount.ExplicitMount(
-            "${localWorkspaceFolder}/.sbt",
-            "/home/vscode/.sbt",
-            "volume"
-          )
-        ),
-        "postCreateCommand" as List(
-          Command("sbt update", "/workspaces/project/subdir", Some("postCreateCommand1")),
-          Command("sbt compile", "subdir", Some("postCreateCommand2"))
-        ),
-        "postStartCommand" as List(
-          Command("echo 'Container started successfully'", ".", Some("postStartCommand"))
-        ),
-        "features" as Map(
-          "ghcr.io/devcontainers/features/docker-in-docker:1" -> Json.obj()
-        ),
-        "updateRemoteUserUID" as true
-      )
-    }
-  }
-
-  "parseUserConfig" - {
-    "parses a complete user config from YAML" in {
-      val exampleConfig =
-        scala.io.Source.fromResource("userConfig.yaml").mkString
-      val Success(userConfig) =
-        Config.parseUserConfig(exampleConfig).success
-
-      userConfig should have(
-        "plugins" as Some(
-          Plugins(
-            List("com.github.copilot", "com.github.gtache.lsp"),
-            List("GitHub.copilot")
-          )
-        ),
-        "dotfiles" as Some(
-          Dotfiles(
-            "https://github.com/example/dotfiles.git",
-            "~",
-            "install.sh"
-          )
-        ),
-        "containerSize" as Some(
-          Small
-        )
-      )
-    }
-
-    "parses an empty user config file" in {
-      val emptyConfig         = ""
-      val Success(userConfig) =
-        Config.parseUserConfig(emptyConfig).success
-      userConfig shouldBe UserConfig.empty
-    }
-
-    "parses a user config file with only comments" in {
-      val commentsOnlyConfig = """# This is a comment
-                                 |# Another comment
-                                 |""".stripMargin
-      val Success(userConfig) =
-        Config.parseUserConfig(commentsOnlyConfig).success
-
-      userConfig shouldBe UserConfig.empty
-    }
-  }
-
-  "container size parsing" - {
-    val parsers: List[(String, String => Try[Option[ContainerSize]])] = List(
-      "project" -> (yaml => Config.parseProjectConfig(s"name: test\n$yaml").map(_.containerSize)),
-      "user"    -> (yaml => Config.parseUserConfig(yaml).map(_.containerSize))
-    )
-    val validSizes = List(
-      "omitted"      -> ("", None),
-      "small"        -> ("containerSize: small", Some(ContainerSize.Small)),
-      "large"        -> ("containerSize: large", Some(ContainerSize.Large)),
-      "integer CPUs" -> (
-        "containerSize: { memory: 15g, cpus: 4, shmSize: 512m }",
-        Some(ContainerSize.Custom("15g", BigDecimal(4), "512m"))
-      ),
-      "fractional CPUs" -> (
-        "containerSize: { memory: 4g, cpus: 2.5, shmSize: 256m }",
-        Some(ContainerSize.Custom("4g", BigDecimal("2.5"), "256m"))
-      ),
-      "values left for Docker to validate" -> (
-        """containerSize: { memory: "", cpus: -1, shmSize: invalid }""",
-        Some(ContainerSize.Custom("", BigDecimal(-1), "invalid"))
-      )
-    )
-    val invalidSizes = List(
-      "unknown preset"        -> "medium",
-      "case-sensitive preset" -> "Small",
-      "null"                  -> "null",
-      "empty value"           -> "",
-      "number"                -> "4",
-      "boolean"               -> "true",
-      "array"                 -> "[small]",
-      "empty object"          -> "{}",
-      "missing memory"        -> "{ cpus: 2, shmSize: 512m }",
-      "missing CPUs"          -> "{ memory: 4g, shmSize: 512m }",
-      "missing shared memory" -> "{ memory: 4g, cpus: 2 }",
-      "null memory"           -> "{ memory: null, cpus: 2, shmSize: 512m }",
-      "null CPUs"             -> "{ memory: 4g, cpus: null, shmSize: 512m }",
-      "null shared memory"    -> "{ memory: 4g, cpus: 2, shmSize: null }",
-      "numeric memory"        -> "{ memory: 4, cpus: 2, shmSize: 512m }",
-      "string CPUs"           -> """{ memory: 4g, cpus: "2.5", shmSize: 512m }""",
-      "boolean CPUs"          -> "{ memory: 4g, cpus: true, shmSize: 512m }",
-      "numeric shared memory" -> "{ memory: 4g, cpus: 2, shmSize: 512 }"
-    )
-
-    parsers.foreach { case (source, parse) =>
-      source - {
-        validSizes.foreach { case (label, (yaml, expected)) =>
-          s"accepts $label" in {
-            parse(yaml).success.value shouldBe expected
-          }
-        }
-        invalidSizes.foreach { case (label, yaml) =>
-          s"rejects $label" in {
-            parse(s"containerSize: $yaml").isFailure shouldBe true
-          }
-        }
-      }
-    }
-  }
-
+class ConfigTest extends AnyFreeSpec with Matchers with TryValues with HavingMatchers {
   "mergeConfigs" - {
-    val sizes = List(
-      ContainerSize.Small -> List("--memory=1g", "--cpus=1"),
-      ContainerSize.Large -> List("--memory=16g", "--cpus=8", "--shm-size=512m"),
-      ContainerSize.Custom("15g", BigDecimal("2.5"), "1g") ->
-        List("--memory=15g", "--cpus=2.5", "--shm-size=1g")
-    )
-    val userConfigs = None :: Some(UserConfig.empty) :: sizes.map { case (size, _) =>
-      Some(UserConfig(containerSize = Some(size)))
-    }
-    val explicitArgs = List("--memory=20g", "--label=example")
-
-    sizes.foreach { case (size, expectedArgs) =>
-      s"project size $size takes precedence over every user setting" in
-        userConfigs.foreach { userConfig =>
-          val project = ProjectConfig("test", runArgs = explicitArgs, containerSize = Some(size))
-          Config.mergeConfigs(project, userConfig).runArgs shouldBe expectedArgs ++ explicitArgs
-        }
-
-      s"user size $size is used when the project omits it" in {
-        val project = ProjectConfig("test", runArgs = explicitArgs)
-        val user    = UserConfig(containerSize = Some(size))
-        Config.mergeConfigs(project, Some(user)).runArgs shouldBe expectedArgs ++ explicitArgs
-      }
-    }
-
-    "renders custom CPUs in plain decimal notation" in {
-      val project = ProjectConfig(
-        "test",
-        containerSize = Some(ContainerSize.Custom("4g", BigDecimal("1E+1"), "512m"))
-      )
-      Config.mergeConfigs(project, None).runArgs shouldBe
-        List("--memory=4g", "--cpus=10", "--shm-size=512m")
-    }
-
-    "preserves explicit arguments after the default size flags" in
-      List(None, Some(UserConfig.empty)).foreach { user =>
-        Config.mergeConfigs(ProjectConfig("test", runArgs = explicitArgs), user).runArgs shouldBe
-          List("--memory=16g", "--cpus=8", "--shm-size=512m") ++ explicitArgs
-      }
-
     "merges user config into project config correctly" in {
-      val projectConfigYaml =
-        scala.io.Source.fromResource("projectConfig.yaml").mkString
-      val userConfigYaml =
-        scala.io.Source.fromResource("userConfig.yaml").mkString
-
-      val Success(projectConfig) =
-        Config.parseProjectConfig(projectConfigYaml).success
-      val Success(userConfig) =
-        Config.parseUserConfig(userConfigYaml).success
+      val projectConfig = Config
+        .parseProjectConfig(scala.io.Source.fromResource("projectConfig.yaml").mkString)
+        .success
+        .value
+      val userConfig = Config
+        .parseUserConfig(scala.io.Source.fromResource("userConfig.yaml").mkString)
+        .success
+        .value
 
       val merged = Config.mergeConfigs(projectConfig, Some(userConfig))
 
-      // Plugins should be merged and deduplicated (project plugins + user plugins)
       merged.plugins should have(
         "intellij" as List(
           "org.intellij.scala",
@@ -237,16 +31,12 @@ class ConfigTest
         "vscode" as List("scalameta.metals", "scala-lang.scala", "GitHub.copilot")
       )
 
-      merged.onCreateCommand should have length 1
-      // Dotfiles commands should be prepended to postCreateCommand
-      merged.postCreateCommand should have length 4
-      merged.postCreateCommand.take(2) shouldBe List(
+      merged.onCreateCommand shouldBe projectConfig.onCreateCommand
+      merged.postCreateCommand shouldBe List(
         Command("git clone https://github.com/example/dotfiles.git ~", ".", Some("clone")),
         Command("install.sh", "~", Some("dotfiles"))
-      )
-      merged.postCreateCommand.drop(2) shouldBe projectConfig.postCreateCommand
+      ) ++ projectConfig.postCreateCommand
 
-      // Other fields should remain unchanged from project config
       merged should have(
         "name" as projectConfig.name,
         "forwardPorts" as projectConfig.forwardPorts,
@@ -255,39 +45,19 @@ class ConfigTest
         "mounts" as projectConfig.mounts,
         "postStartCommand" as projectConfig.postStartCommand,
         "features" as projectConfig.features,
-        "updateRemoteUserUID" as projectConfig.updateRemoteUserUID,
-        // Note this is a list inferred from the "small" container size configuration item in the yaml
-        "runArgs" as Config.smallContainerRunArgs
+        "updateRemoteUserUID" as projectConfig.updateRemoteUserUID
       )
     }
 
-    "merges user config with large container into project config correctly" in {
-      Config.mergeConfigs(
-        ProjectConfig("test"),
-        Some(UserConfig(containerSize = Some(ContainerSize.Large)))
-      ) should have(
-        "runArgs" as Config.largeContainerRunArgs
+    "preserves project settings when user config is absent" in {
+      val projectConfig = ProjectConfig(
+        "test",
+        plugins = Plugins(List("org.intellij.scala"), List("scalameta.metals")),
+        postCreateCommand = List(Command("sbt update", "."))
       )
-    }
 
-    "merges user config with defaulted container into project config correctly" in {
-      Config.mergeConfigs(
-        ProjectConfig("test"),
-        Some(UserConfig(containerSize = None))
-      ) should have(
-        "runArgs" as Config.largeContainerRunArgs
-      )
-    }
-
-    "applies large container run args when user config is None" in {
-      val projectConfigYaml =
-        scala.io.Source.fromResource("projectConfig.yaml").mkString
-      val Success(projectConfig) =
-        Config.parseProjectConfig(projectConfigYaml).success
-
-      val merged = Config.mergeConfigs(projectConfig, None)
-
-      merged shouldBe projectConfig.copy(runArgs = Config.largeContainerRunArgs)
+      Config.mergeConfigs(projectConfig, None) shouldBe
+        projectConfig.copy(runArgs = Config.largeContainerRunArgs)
     }
   }
 

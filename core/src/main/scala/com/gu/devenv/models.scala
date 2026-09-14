@@ -27,8 +27,8 @@ case class ProjectConfig(
     updateRemoteUserUID: Boolean = true,
     capAdd: List[String] = Nil,
     securityOpt: List[String] = Nil,
-    runArgs: List[String] = Nil,
-    containerSize: Option[ContainerSize] = None
+    containerSize: Option[ContainerSize] = None,
+    runArgs: List[String] = Nil
 )
 
 case class UserConfig(

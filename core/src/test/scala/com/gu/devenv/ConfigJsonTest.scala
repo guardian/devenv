@@ -8,12 +8,12 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-/** Property-based tests for Config.configAsJson function.
+/** Property-based tests for generated user and shared devcontainer JSON.
   *
   * Tests that ProjectConfig fields correctly map to the devcontainer.json structure using
   * ScalaCheck generators and Circe cursor navigation.
   *
-  * Note: Config parsing/merging is tested in ConfigTest with real fixtures.
+  * Decoding is covered by CodecTest, and configuration merging by ConfigTest.
   */
 class ConfigJsonTest
     extends AnyFreeSpec
@@ -22,19 +22,27 @@ class ConfigJsonTest
     with EitherValues {
   "Config.generateConfigs container sizes" - {
     val genCustomSize: Gen[ContainerSize] = for {
-      memory      <- Gen.choose(1, 64)
-      cpuQuarters <- Gen.choose(1, 64)
-      shmSize     <- Gen.choose(64, 2048)
-    } yield ContainerSize.Custom(s"${memory}g", BigDecimal(cpuQuarters) / 4, s"${shmSize}m")
+      memory <- Gen.choose(1, 64)
+      cpus   <- Gen.oneOf(
+        Gen.choose(1, 64).map(quarters => BigDecimal(quarters) / 4),
+        Gen.const(BigDecimal("1E+1"))
+      )
+      shmSize <- Gen.choose(64, 2048)
+    } yield ContainerSize.Custom(s"${memory}g", cpus, s"${shmSize}m")
     val genSize =
       Gen.oneOf(Gen.const(ContainerSize.Small), Gen.const(ContainerSize.Large), genCustomSize)
     val genOptionalSize = Gen.option(genSize)
     val genUserConfig   = Gen.option(genOptionalSize.map(size => UserConfig(containerSize = size)))
-    val genRunArgs      = Gen.listOf(Gen.alphaNumStr.map(value => s"--label=$value"))
+    val genRunArgs      = Gen.listOf(
+      Gen.oneOf(
+        Gen.alphaNumStr.map(value => s"--label=$value"),
+        Gen.const("--memory=20g")
+      )
+    )
 
     def expectedArgs(size: ContainerSize): List[String] = size match {
-      case ContainerSize.Small => List("--memory=1g", "--cpus=1")
-      case ContainerSize.Large => List("--memory=16g", "--cpus=8", "--shm-size=512m")
+      case ContainerSize.Small                         => Config.smallContainerRunArgs
+      case ContainerSize.Large                         => Config.largeContainerRunArgs
       case ContainerSize.Custom(memory, cpus, shmSize) =>
         List(
           s"--memory=$memory",
@@ -43,19 +51,37 @@ class ConfigJsonTest
         )
     }
 
-    "only user JSON includes the selected size flags" in
+    def userRunArgs(project: ProjectConfig, user: Option[UserConfig]): List[String] = {
+      val (userJson, _) = Config.generateConfigs(project, user, ResolvedModules.empty, None)
+      io.circe.parser.parse(userJson).value.hcursor.get[List[String]]("runArgs").value
+    }
+
+    "project size determines user JSON resource flags regardless of user settings" in
+      forAll(genSize, genUserConfig, genRunArgs) { (size, userConfig, runArgs) =>
+        val project = ProjectConfig("test", containerSize = Some(size), runArgs = runArgs)
+        userRunArgs(project, userConfig) shouldBe expectedArgs(size) ++ runArgs
+      }
+
+    "user size determines user JSON resource flags when the project omits it" in
+      forAll(genSize, genRunArgs) { (size, runArgs) =>
+        val project = ProjectConfig("test", runArgs = runArgs)
+        val user    = UserConfig(containerSize = Some(size))
+        userRunArgs(project, Some(user)) shouldBe expectedArgs(size) ++ runArgs
+      }
+
+    "user JSON defaults to large when neither configuration specifies a size" in
+      forAll(Gen.option(Gen.const(UserConfig.empty)), genRunArgs) { (userConfig, runArgs) =>
+        val project = ProjectConfig("test", runArgs = runArgs)
+        userRunArgs(project, userConfig) shouldBe Config.largeContainerRunArgs ++ runArgs
+      }
+
+    "size settings leave shared JSON unchanged and are not emitted as JSON fields" in
       forAll(genOptionalSize, genUserConfig, genRunArgs) { (projectSize, userConfig, runArgs) =>
         val project        = ProjectConfig("test", runArgs = runArgs, containerSize = projectSize)
         val (user, shared) =
           Config.generateConfigs(project, userConfig, ResolvedModules.empty, None)
-        val userJson     = io.circe.parser.parse(user).value
-        val sharedJson   = io.circe.parser.parse(shared).value
-        val selectedSize =
-          projectSize.orElse(userConfig.flatMap(_.containerSize)).getOrElse(ContainerSize.Large)
-
-        userJson.hcursor.get[List[String]]("runArgs") shouldBe Right(
-          expectedArgs(selectedSize) ++ runArgs
-        )
+        val userJson   = io.circe.parser.parse(user).value
+        val sharedJson = io.circe.parser.parse(shared).value
         sharedJson.hcursor.get[Option[List[String]]]("runArgs") shouldBe Right(
           Option.when(runArgs.nonEmpty)(runArgs)
         )
