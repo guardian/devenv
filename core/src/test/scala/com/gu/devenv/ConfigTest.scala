@@ -224,5 +224,13 @@ class ConfigTest
     "should be empty with no commands and no completion message" in {
       Config.combineCommands(Nil, "someLogFile") shouldBe empty
     }
+
+    "should not create a hook for leading commands alone" in {
+      Config.combineCommands(
+        Nil,
+        "someLogFile",
+        leadingCommands = List("""export PATH="/tools:$PATH"""")
+      ) shouldBe empty
+    }
   }
 }

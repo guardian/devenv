@@ -113,7 +113,8 @@ object Config {
       )
     )
 
-    val commands = JsonObject.fromIterable(
+    val lifecycleShellSetup = modules.modules.flatMap(_.contribution.lifecycleShellSetup)
+    val commands            = JsonObject.fromIterable(
       List(
         "onCreateCommand" -> combineCommands(
           config.onCreateCommand,
@@ -122,11 +123,13 @@ object Config {
         "postCreateCommand" -> combineCommands(
           config.postCreateCommand,
           s"/var/log/$postCreateLogName",
-          trailingCommands = List(Command.renderCompletionMessage)
+          trailingCommands = List(Command.renderCompletionMessage),
+          leadingCommands = lifecycleShellSetup
         ),
         "postStartCommand" -> combineCommands(
           config.postStartCommand,
-          s"/var/log/$postStartLogName"
+          s"/var/log/$postStartLogName",
+          leadingCommands = lifecycleShellSetup
         )
       ).collect { case (key, Some(value)) =>
         key -> Json.fromString(value)
@@ -238,19 +241,23 @@ object Config {
 
   /** Combines configured lifecycle commands into one shell command.
     *
+    * Leading commands run in the outer shell, so exported environment changes reach every
+    * configured command and its children, unlike changes inside per-command subshells.
+    *
     * Trailing commands run after the configured commands without per-command setup logging and
     * "rendering". This supports lifecycle-level actions such as reporting that setup has finished.
     */
   private[devenv] def combineCommands(
       commands: List[Command],
       logFile: String,
-      trailingCommands: List[String] = Nil
+      trailingCommands: List[String] = Nil,
+      leadingCommands: List[String] = Nil
   ): Option[String] =
     if (commands.isEmpty && trailingCommands.isEmpty) None
     else {
       val renderedCommands = commands.map(Command.renderCommandWithLogging)
       val all              = (renderedCommands ++ trailingCommands).mkString(" && ")
-      Some(s"($all) 2>&1 | sudo tee $logFile")
+      Some((leadingCommands :+ s"($all) 2>&1 | sudo tee $logFile").mkString(" && "))
     }
 
   private def envListToJson(envList: List[Env]): Json =

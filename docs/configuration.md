@@ -138,6 +138,11 @@ list.
 ### Available Modules
 
 - **`mise`** - Installs and configures [mise](https://mise.jdx.dev/) for version management of languages and tools.
+  Its shims are automatically prepended to PATH for all `postCreateCommand` and `postStartCommand`
+  commands and their child processes, so commands such as `npm install` need no `mise exec` wrapper.
+  The shims path is resolved inside the container: `$MISE_DATA_DIR/shims` when set, otherwise
+  `${XDG_DATA_HOME:-$HOME/.local/share}/mise/shims`. The existing PATH is preserved.
+  This does not affect `onCreateCommand`.
   Enabled by default.
 - **`github-copilot`** - Sets up [GitHub Copilot](https://github.com/features/copilot) for both IDE and CLI use. Adds
   the Copilot plugins for VS Code and IntelliJ and installs the GitHub CLI (`gh`) and GitHub Copilot CLI (`copilot`) via

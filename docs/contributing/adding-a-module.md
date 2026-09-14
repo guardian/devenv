@@ -34,11 +34,18 @@ it does in the ordered `modules` list in a project's `devenv.yaml`.
 | `remoteEnv`          | `List[Env]`           | Env vars set in the running container environment |
 | `onCreateCommands`   | `List[Command]`       | Scripts run once after container creation         |
 | `postCreateCommands` | `List[Command]`       | Scripts run after each container rebuild          |
+| `lifecycleShellSetup` | `List[String]`       | Outer-shell setup for post-create and post-start commands |
 | `capAdd`             | `List[String]`        | Linux capabilities to add (use with caution)      |
 | `securityOpt`        | `List[String]`        | Docker security options (use with caution)        |
 
 Module contributions are **prepended** to any explicit config from `devenv.yaml` so user-supplied
 values always take precedence.
+
+`lifecycleShellSetup` contains trusted shell expressions, not logged `Command` subshells.
+Use it for environment exports that must reach every command in `postCreateCommand` and
+`postStartCommand`. It runs before any module or project commands, does not run in `onCreateCommand`,
+and does not create an otherwise absent hook. For example, mise exports its shims PATH here because
+activation inside a bundled child script cannot modify the lifecycle shell's environment.
 
 There are currently three implementation patterns in use, in increasing order of complexity:
 

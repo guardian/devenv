@@ -53,6 +53,7 @@ object Modules {
       remoteEnv: List[Env] = Nil,
       onCreateCommands: List[Command] = Nil,
       postCreateCommands: List[Command] = Nil,
+      lifecycleShellSetup: List[String] = Nil,
       capAdd: List[String] = Nil,
       securityOpt: List[String] = Nil
   )

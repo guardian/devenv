@@ -25,6 +25,9 @@ private[modules] def mise: Try[Module] =
     enabledByDefault = true,
     contribution = ModuleContribution(
       postCreateCommands = List(encodedPostCreateScript),
+      lifecycleShellSetup = List(
+        """export PATH="${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims:$PATH""""
+      ),
       // provide IDE support for mise
       plugins = Plugins(
         intellij = List("com.github.l34130.mise"),
