@@ -189,7 +189,8 @@ implement, test and document a new built-in module.
 
 The optional `containerSize` field is supported in both the project configuration
 (`.devcontainer/devenv.yaml`) and the user configuration (`~/.config/devenv/devenv.yaml`).
-When present, its value must be `small`, `large`, or an object with all three resource fields.
+Its value can be `small`, `large`, or an object with all three resource fields.
+A null or empty value is treated as omitted and uses the same fallback.
 
 For a custom size, supply all three fields:
 
@@ -231,7 +232,7 @@ Playwright tests running in Chrome.
 The project size takes precedence over the user size. If the project omits `containerSize`,
 devenv uses the user setting. If both files omit it, devenv uses `large`.
 
-Project authors can commit a resource requirement, such as 15 GB of memory, in the project's
+Project authors can commit a resource requirement, such as 15 GiB of memory, in the project's
 `devenv.yaml`. Size settings from either configuration file only add run arguments to
 `.devcontainer/user/devcontainer.json`, which is excluded from Git. They do not add resource
 limits to `.devcontainer/shared/devcontainer.json`. This keeps the shared file suitable for

@@ -1,14 +1,129 @@
 package com.gu.devenv
 
+import io.circe.Json
+import org.scalatest.TryValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.TryValues
 
 /** Unit tests for configuration merging and command handling.
   *
   * Decoding is covered by CodecTest, and generated JSON by ConfigJsonTest.
   */
 class ConfigTest extends AnyFreeSpec with Matchers with TryValues with HavingMatchers {
+  "parseProjectConfig" - {
+    "parses a basic config file" in {
+      val result = Config
+        .parseProjectConfig(
+          """name: test
+          |""".stripMargin
+        )
+        .success
+        .value
+      result shouldBe ProjectConfig("test")
+    }
+
+    "parses a simple example config file" in {
+      val result = Config
+        .parseProjectConfig(
+          """name: test
+            |modules:
+            |  - mise
+            |""".stripMargin
+        )
+        .success
+        .value
+      result shouldBe ProjectConfig("test", modules = List("mise"))
+    }
+
+    "parses a complete project config from YAML" in {
+      val exampleConfig =
+        scala.io.Source.fromResource("projectConfig.yaml").mkString
+      val projectConfig = Config.parseProjectConfig(exampleConfig).success.value
+
+      projectConfig should have(
+        "name" as "Scala SBT Development Container",
+        "modules" as List("mise"),
+        "forwardPorts" as List(
+          ForwardPort.SamePort(8080),
+          ForwardPort.DifferentPorts(8000, 9000)
+        ),
+        "remoteEnv" as List(
+          Env("SBT_OPTS", "-Xmx2G -XX:+UseG1GC"),
+          Env("JAVA_HOME", "/usr/lib/jvm/java-17-openjdk-amd64")
+        ),
+        "containerEnv" as List(
+          Env("EXAMPLE", "foo"),
+          Env("EXAMPLE+2", "bar")
+        ),
+        "mounts" as List(
+          Mount.ExplicitMount(
+            "${localWorkspaceFolder}/.ivy2",
+            "/home/vscode/.ivy2",
+            "volume"
+          ),
+          Mount.ExplicitMount(
+            "${localWorkspaceFolder}/.sbt",
+            "/home/vscode/.sbt",
+            "volume"
+          )
+        ),
+        "postCreateCommand" as List(
+          Command("sbt update", "/workspaces/project/subdir", Some("postCreateCommand1")),
+          Command("sbt compile", "subdir", Some("postCreateCommand2"))
+        ),
+        "postStartCommand" as List(
+          Command("echo 'Container started successfully'", ".", Some("postStartCommand"))
+        ),
+        "features" as Map(
+          "ghcr.io/devcontainers/features/docker-in-docker:1" -> Json.obj()
+        ),
+        "updateRemoteUserUID" as true
+      )
+    }
+  }
+
+  "parseUserConfig" - {
+    "parses an empty file" in {
+      Config.parseUserConfig("").success.value shouldBe UserConfig.empty
+    }
+
+    "parses a file containing only comments" in {
+      Config
+        .parseUserConfig(
+          """# A comment
+            |# Another comment
+            |""".stripMargin
+        )
+        .success
+        .value shouldBe UserConfig.empty
+    }
+
+    "parses a complete user config from YAML" in {
+      val exampleConfig =
+        scala.io.Source.fromResource("userConfig.yaml").mkString
+      val userConfig = Config.parseUserConfig(exampleConfig).success.value
+
+      userConfig should have(
+        "plugins" as Some(
+          Plugins(
+            List("com.github.copilot", "com.github.gtache.lsp"),
+            List("GitHub.copilot")
+          )
+        ),
+        "dotfiles" as Some(
+          Dotfiles(
+            "https://github.com/example/dotfiles.git",
+            "~",
+            "install.sh"
+          )
+        ),
+        "containerSize" as Some(
+          ContainerSize.Small
+        )
+      )
+    }
+  }
+
   "mergeConfigs" - {
     "merges user config into project config correctly" in {
       val projectConfig = Config
@@ -45,15 +160,20 @@ class ConfigTest extends AnyFreeSpec with Matchers with TryValues with HavingMat
         "mounts" as projectConfig.mounts,
         "postStartCommand" as projectConfig.postStartCommand,
         "features" as projectConfig.features,
-        "updateRemoteUserUID" as projectConfig.updateRemoteUserUID
+        "updateRemoteUserUID" as projectConfig.updateRemoteUserUID,
+        // runArgs gets populated from the merged container size configuration
+        // in this case it falls back to the user config, since no project container size is specified
+        // the logic for determining how container size properties are rendered to JSON is tested in ConfigJsonTest
+        "runArgs" as Config.smallContainerRunArgs
       )
     }
 
-    "preserves project settings when user config is absent" in {
+    "preserves project settings (including resolved container size) when user config is absent" in {
       val projectConfig = ProjectConfig(
         "test",
         plugins = Plugins(List("org.intellij.scala"), List("scalameta.metals")),
-        postCreateCommand = List(Command("sbt update", "."))
+        postCreateCommand = List(Command("sbt update", ".")),
+        containerSize = Some(ContainerSize.Large)
       )
 
       Config.mergeConfigs(projectConfig, None) shouldBe

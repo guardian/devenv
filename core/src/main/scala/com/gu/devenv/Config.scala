@@ -3,18 +3,14 @@ package com.gu.devenv
 import com.gu.devenv.ContainerSize.{Custom, Large, Small}
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.ResolvedModules
-import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.auto.*
 import io.circe.syntax.*
 import io.circe.yaml.scalayaml.parser
-import io.circe.{Decoder, DecodingFailure, Json, JsonObject}
+import io.circe.{Json, JsonObject}
 
 import java.nio.file.Path
 import scala.util.Try
 
 object Config {
-  given Configuration = Configuration.default.withDefaults
-
   private[devenv] val fixedImage      = "mcr.microsoft.com/devcontainers/base:ubuntu26.04"
   private[devenv] val fixedRemoteUser = "vscode"
 
@@ -56,7 +52,7 @@ object Config {
   def parseProjectConfig(contents: String): Try[ProjectConfig] =
     for {
       json          <- parser.parse(contents).toTry
-      projectConfig <- decodeConfig[ProjectConfig](json).toTry
+      projectConfig <- json.as[ProjectConfig].toTry
     } yield projectConfig
 
   def parseUserConfig(contents: String): Try[UserConfig] =
@@ -65,21 +61,9 @@ object Config {
     } else {
       for {
         json       <- parser.parse(contents).toTry
-        userConfig <- decodeConfig[UserConfig](json).toTry
+        userConfig <- json.as[UserConfig].toTry
       } yield userConfig
     }
-
-  private def decodeConfig[A: Decoder](json: Json): Decoder.Result[A] = {
-    val size = json.hcursor.downField("containerSize")
-    if (size.focus.exists(_.isNull))
-      Left(
-        DecodingFailure(
-          "containerSize must be small, large, or a complete size object",
-          size.history
-        )
-      )
-    else json.as[A]
-  }
 
   private[devenv] val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1")
   private[devenv] val largeContainerRunArgs: List[String] =
