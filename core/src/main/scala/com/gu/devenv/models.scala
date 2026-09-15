@@ -4,6 +4,9 @@ import cats.*
 import cats.syntax.all.*
 import com.gu.devenv.Filesystem.{FileSystemStatus, GitignoreStatus}
 import com.gu.devenv.modules.Modules.ModuleResolutionError
+import io.circe.generic.extras.Configuration
+import io.circe.generic.extras.auto.*
+import io.circe.generic.extras.semiauto.deriveConfiguredDecoder
 import io.circe.{Decoder, DecodingFailure, Encoder, Json}
 
 import java.nio.charset.StandardCharsets.UTF_8
@@ -27,8 +30,15 @@ case class ProjectConfig(
     updateRemoteUserUID: Boolean = true,
     capAdd: List[String] = Nil,
     securityOpt: List[String] = Nil,
+    containerSize: Option[ContainerSize] = None,
     runArgs: List[String] = Nil
 )
+object ProjectConfig {
+  given Decoder[ProjectConfig] = {
+    given Configuration = Configuration.default.withDefaults
+    deriveConfiguredDecoder[ProjectConfig]
+  }
+}
 
 case class UserConfig(
     plugins: Option[Plugins] = None,
@@ -37,6 +47,11 @@ case class UserConfig(
 )
 object UserConfig {
   val empty = UserConfig()
+
+  given Decoder[UserConfig] = {
+    given Configuration = Configuration.default.withDefaults
+    deriveConfiguredDecoder[UserConfig]
+  }
 }
 
 enum ForwardPort {
@@ -45,14 +60,57 @@ enum ForwardPort {
 }
 
 object ContainerSize {
-  given Decoder[ContainerSize] = Decoder.decodeString.emap {
-    case "small" => Right(ContainerSize.Small)
-    case "large" => Right(ContainerSize.Large)
-    case s       => Left(s"Unknown container size: $s")
+  given Decoder[ContainerSize] = Decoder.instance { c =>
+    if (c.value.isObject) {
+      for {
+        memory <- c
+          .get[String]("memory")
+          .leftMap(
+            _.withMessage("containerSize.memory is required and must be a string, such as \"4g\"")
+          )
+        cpus <- c
+          .downField("cpus")
+          .as[Json]
+          .flatMap { value =>
+            if (value.isNumber) c.get[BigDecimal]("cpus")
+            else Left(DecodingFailure("cpus must be a number", c.downField("cpus").history))
+          }
+          .leftMap(
+            _.withMessage("containerSize.cpus is required and must be a number, such as 2.5")
+          )
+        shmSize <- c
+          .get[String]("shmSize")
+          .leftMap(
+            _.withMessage(
+              "containerSize.shmSize is required and must be a string, such as \"512m\""
+            )
+          )
+      } yield ContainerSize.Custom(memory, cpus, shmSize)
+    } else if (c.value.isString) {
+      c.as[String].flatMap {
+        case "small" => Right(ContainerSize.Small)
+        case "large" => Right(ContainerSize.Large)
+        case s       =>
+          Left(
+            DecodingFailure(
+              s"Unknown container size: $s. Expected small, large, or an object containing memory, cpus, and shmSize",
+              c.history
+            )
+          )
+      }
+    } else {
+      Left(
+        DecodingFailure(
+          "containerSize must be small, large, or an object containing memory, cpus, and shmSize",
+          c.history
+        )
+      )
+    }
   }
 }
 enum ContainerSize {
   case Small, Large
+  case Custom(memory: String, cpus: BigDecimal, shmSize: String)
 }
 
 object ForwardPort {

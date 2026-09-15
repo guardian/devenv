@@ -1,31 +1,44 @@
 package com.gu.devenv
 
-import com.gu.devenv.ContainerSize.Small
 import io.circe.Json
+import org.scalatest.TryValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.{OptionValues, TryValues}
 
-import scala.util.Success
-
-/** Unit tests for Config object functions (parsing and merging).
+/** Unit tests for configuration merging and command handling.
   *
-  * Note: JSON generation is tested separately in ProjectConfigJsonTest using property-based tests.
-  * End-to-end integration with file system operations is tested in integration/ package.
+  * Decoding is covered by CodecTest, and generated JSON by ConfigJsonTest.
   */
-class ConfigTest
-    extends AnyFreeSpec
-    with Matchers
-    with TryValues
-    with OptionValues
-    with HavingMatchers {
-
+class ConfigTest extends AnyFreeSpec with Matchers with TryValues with HavingMatchers {
   "parseProjectConfig" - {
+    "parses a basic config file" in {
+      val result = Config
+        .parseProjectConfig(
+          """name: test
+          |""".stripMargin
+        )
+        .success
+        .value
+      result shouldBe ProjectConfig("test")
+    }
+
+    "parses a simple example config file" in {
+      val result = Config
+        .parseProjectConfig(
+          """name: test
+            |modules:
+            |  - mise
+            |""".stripMargin
+        )
+        .success
+        .value
+      result shouldBe ProjectConfig("test", modules = List("mise"))
+    }
+
     "parses a complete project config from YAML" in {
       val exampleConfig =
         scala.io.Source.fromResource("projectConfig.yaml").mkString
-      val Success(projectConfig) =
-        Config.parseProjectConfig(exampleConfig).success
+      val projectConfig = Config.parseProjectConfig(exampleConfig).success.value
 
       projectConfig should have(
         "name" as "Scala SBT Development Container",
@@ -70,11 +83,25 @@ class ConfigTest
   }
 
   "parseUserConfig" - {
+    "parses an empty file" in {
+      Config.parseUserConfig("").success.value shouldBe UserConfig.empty
+    }
+
+    "parses a file containing only comments" in {
+      Config
+        .parseUserConfig(
+          """# A comment
+            |# Another comment
+            |""".stripMargin
+        )
+        .success
+        .value shouldBe UserConfig.empty
+    }
+
     "parses a complete user config from YAML" in {
       val exampleConfig =
         scala.io.Source.fromResource("userConfig.yaml").mkString
-      val Success(userConfig) =
-        Config.parseUserConfig(exampleConfig).success
+      val userConfig = Config.parseUserConfig(exampleConfig).success.value
 
       userConfig should have(
         "plugins" as Some(
@@ -91,44 +118,25 @@ class ConfigTest
           )
         ),
         "containerSize" as Some(
-          Small
+          ContainerSize.Small
         )
       )
-    }
-
-    "parses an empty user config file" in {
-      val emptyConfig         = ""
-      val Success(userConfig) =
-        Config.parseUserConfig(emptyConfig).success
-      userConfig shouldBe UserConfig.empty
-    }
-
-    "parses a user config file with only comments" in {
-      val commentsOnlyConfig = """# This is a comment
-                                 |# Another comment
-                                 |""".stripMargin
-      val Success(userConfig) =
-        Config.parseUserConfig(commentsOnlyConfig).success
-
-      userConfig shouldBe UserConfig.empty
     }
   }
 
   "mergeConfigs" - {
     "merges user config into project config correctly" in {
-      val projectConfigYaml =
-        scala.io.Source.fromResource("projectConfig.yaml").mkString
-      val userConfigYaml =
-        scala.io.Source.fromResource("userConfig.yaml").mkString
-
-      val Success(projectConfig) =
-        Config.parseProjectConfig(projectConfigYaml).success
-      val Success(userConfig) =
-        Config.parseUserConfig(userConfigYaml).success
+      val projectConfig = Config
+        .parseProjectConfig(scala.io.Source.fromResource("projectConfig.yaml").mkString)
+        .success
+        .value
+      val userConfig = Config
+        .parseUserConfig(scala.io.Source.fromResource("userConfig.yaml").mkString)
+        .success
+        .value
 
       val merged = Config.mergeConfigs(projectConfig, Some(userConfig))
 
-      // Plugins should be merged and deduplicated (project plugins + user plugins)
       merged.plugins should have(
         "intellij" as List(
           "org.intellij.scala",
@@ -138,16 +146,12 @@ class ConfigTest
         "vscode" as List("scalameta.metals", "scala-lang.scala", "GitHub.copilot")
       )
 
-      merged.onCreateCommand should have length 1
-      // Dotfiles commands should be prepended to postCreateCommand
-      merged.postCreateCommand should have length 4
-      merged.postCreateCommand.take(2) shouldBe List(
+      merged.onCreateCommand shouldBe projectConfig.onCreateCommand
+      merged.postCreateCommand shouldBe List(
         Command("git clone https://github.com/example/dotfiles.git ~", ".", Some("clone")),
         Command("install.sh", "~", Some("dotfiles"))
-      )
-      merged.postCreateCommand.drop(2) shouldBe projectConfig.postCreateCommand
+      ) ++ projectConfig.postCreateCommand
 
-      // Other fields should remain unchanged from project config
       merged should have(
         "name" as projectConfig.name,
         "forwardPorts" as projectConfig.forwardPorts,
@@ -157,38 +161,23 @@ class ConfigTest
         "postStartCommand" as projectConfig.postStartCommand,
         "features" as projectConfig.features,
         "updateRemoteUserUID" as projectConfig.updateRemoteUserUID,
-        // Note this is a list inferred from the "small" container size configuration item in the yaml
+        // runArgs gets populated from the merged container size configuration
+        // in this case it falls back to the user config, since no project container size is specified
+        // the logic for determining how container size properties are rendered to JSON is tested in ConfigJsonTest
         "runArgs" as Config.smallContainerRunArgs
       )
     }
 
-    "merges user config with large container into project config correctly" in {
-      Config.mergeConfigs(
-        ProjectConfig("test"),
-        Some(UserConfig(containerSize = Some(ContainerSize.Large)))
-      ) should have(
-        "runArgs" as Config.largeContainerRunArgs
+    "preserves project settings (including resolved container size) when user config is absent" in {
+      val projectConfig = ProjectConfig(
+        "test",
+        plugins = Plugins(List("org.intellij.scala"), List("scalameta.metals")),
+        postCreateCommand = List(Command("sbt update", ".")),
+        containerSize = Some(ContainerSize.Large)
       )
-    }
 
-    "merges user config with defaulted container into project config correctly" in {
-      Config.mergeConfigs(
-        ProjectConfig("test"),
-        Some(UserConfig(containerSize = None))
-      ) should have(
-        "runArgs" as Config.largeContainerRunArgs
-      )
-    }
-
-    "applies large container run args when user config is None" in {
-      val projectConfigYaml =
-        scala.io.Source.fromResource("projectConfig.yaml").mkString
-      val Success(projectConfig) =
-        Config.parseProjectConfig(projectConfigYaml).success
-
-      val merged = Config.mergeConfigs(projectConfig, None)
-
-      merged shouldBe projectConfig.copy(runArgs = Config.largeContainerRunArgs)
+      Config.mergeConfigs(projectConfig, None) shouldBe
+        projectConfig.copy(runArgs = Config.largeContainerRunArgs)
     }
   }
 

@@ -1,10 +1,8 @@
 package com.gu.devenv
 
-import com.gu.devenv.ContainerSize.Small
+import com.gu.devenv.ContainerSize.{Custom, Large, Small}
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.ResolvedModules
-import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.auto.*
 import io.circe.syntax.*
 import io.circe.yaml.scalayaml.parser
 import io.circe.{Json, JsonObject}
@@ -13,8 +11,6 @@ import java.nio.file.Path
 import scala.util.Try
 
 object Config {
-  given Configuration = Configuration.default.withDefaults
-
   private[devenv] val fixedImage      = "mcr.microsoft.com/devcontainers/base:ubuntu26.04"
   private[devenv] val fixedRemoteUser = "vscode"
 
@@ -87,9 +83,18 @@ object Config {
       .getOrElse(Nil)
 
     // Large by default.  Devs have beefy laptops
-    val runArgs = maybeUserConfig.flatMap(_.containerSize) match {
-      case Some(Small) => smallContainerRunArgs
-      case _           => largeContainerRunArgs
+    val size = projectConfig.containerSize
+      .orElse(maybeUserConfig.flatMap(_.containerSize))
+      .getOrElse(Large)
+    val runArgs = size match {
+      case Small                         => smallContainerRunArgs
+      case Large                         => largeContainerRunArgs
+      case Custom(memory, cpus, shmSize) =>
+        List(
+          s"--memory=$memory",
+          s"--cpus=${cpus.bigDecimal.toPlainString}",
+          s"--shm-size=$shmSize"
+        )
     }
 
     projectConfig.copy(

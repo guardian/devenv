@@ -3,18 +3,23 @@ package com.gu.devenv
 import com.gu.devenv.modules.Modules.ResolvedModules
 import io.circe.Json
 import org.scalacheck.Gen
+import org.scalatest.EitherValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-/** Property-based tests for Config.configAsJson function.
+/** Tests for generated user and shared devcontainer JSON.
   *
   * Tests that ProjectConfig fields correctly map to the devcontainer.json structure using
   * ScalaCheck generators and Circe cursor navigation.
   *
-  * Note: Config parsing/merging is tested in ConfigTest with real fixtures.
+  * Decoding is covered by CodecTest, and configuration merging by ConfigTest.
   */
-class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
+class ConfigJsonTest
+    extends AnyFreeSpec
+    with Matchers
+    with ScalaCheckPropertyChecks
+    with EitherValues {
   "Config.configAsJson" - {
     "fixed fields" - {
       "Image appears in JSON image field" in
@@ -587,6 +592,96 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
         val json   = Config.configAsJson(config, ResolvedModules.empty)
 
         json.hcursor.downField("securityOpt").as[Json] shouldBe a[Left[_, _]]
+      }
+    }
+  }
+
+  /*
+   * Tests for container size configuration and precedence between project and user settings.
+   */
+  "Config.generateConfigs container sizes" - {
+    val blankProjectConfig = ProjectConfig("test")
+    val blankUserConfig    = UserConfig()
+
+    def userRunArgs(project: ProjectConfig, user: Option[UserConfig]): List[String] = {
+      val (userJson, _) = Config.generateConfigs(project, user, ResolvedModules.empty, None)
+      io.circe.parser.parse(userJson).value.hcursor.get[List[String]]("runArgs").value
+    }
+
+    "project size takes precedence over user size" in {
+      val project = blankProjectConfig.copy(containerSize = Some(ContainerSize.Small))
+      val user    = blankUserConfig.copy(containerSize = Some(ContainerSize.Large))
+      userRunArgs(project, Some(user)) shouldBe Config.smallContainerRunArgs
+    }
+
+    "user size is used when the project does not specify a size" in {
+      val user = blankUserConfig.copy(containerSize = Some(ContainerSize.Small))
+      userRunArgs(blankProjectConfig, Some(user)) shouldBe Config.smallContainerRunArgs
+    }
+
+    "defaults to large when no size is specified" in {
+      userRunArgs(blankProjectConfig, None) shouldBe Config.largeContainerRunArgs
+    }
+
+    "custom size generates matching runArgs" in {
+      val project = blankProjectConfig.copy(containerSize =
+        Some(ContainerSize.Custom("4g", BigDecimal("2.5"), "256m"))
+      )
+      userRunArgs(project, None) shouldBe List("--memory=4g", "--cpus=2.5", "--shm-size=256m")
+    }
+
+    "explicit runArgs follow generated resource arguments" in {
+      val project = blankProjectConfig.copy(
+        containerSize = Some(ContainerSize.Small),
+        runArgs = List("--memory=20g", "--label=project")
+      )
+      userRunArgs(project, None) shouldBe
+        List("--memory=1g", "--cpus=1", "--memory=20g", "--label=project")
+    }
+
+    "size settings in generated JSON" - {
+      val project = blankProjectConfig.copy(
+        containerSize = Some(ContainerSize.Small),
+        runArgs = List("--label=project")
+      )
+
+      "shared runArgs contains only the explicit project runArgs" in {
+        val (_, shared) = Config.generateConfigs(project, None, ResolvedModules.empty, None)
+        io.circe.parser.parse(shared).value.hcursor.get[List[String]]("runArgs").value shouldBe
+          List("--label=project")
+      }
+
+      "shared JSON is unchanged by containerSize" in {
+        val (_, shared) = Config.generateConfigs(project, None, ResolvedModules.empty, None)
+        val (_, sharedWithoutSize) = Config.generateConfigs(
+          project.copy(containerSize = None),
+          None,
+          ResolvedModules.empty,
+          None
+        )
+        shared shouldBe sharedWithoutSize
+      }
+    }
+
+    // TODO: this is a bit of a footgun, but it's how it works now so this test documents the behaviour
+    "escape-hatch runArgs completely replace configured arguments" - {
+      val project     = ProjectConfig("test", runArgs = List("--label=project"))
+      val escapeHatch = Json.obj("runArgs" -> Json.arr(Json.fromString("--memory=20g")))
+
+      "in user config" in {
+        val (user, _) =
+          Config.generateConfigs(project, None, ResolvedModules.empty, Some(escapeHatch))
+
+        io.circe.parser.parse(user).value.hcursor.get[List[String]]("runArgs").value shouldBe
+          List("--memory=20g")
+      }
+
+      "in shared config" in {
+        val (_, shared) =
+          Config.generateConfigs(project, None, ResolvedModules.empty, Some(escapeHatch))
+
+        io.circe.parser.parse(shared).value.hcursor.get[List[String]]("runArgs").value shouldBe
+          List("--memory=20g")
       }
     }
   }
