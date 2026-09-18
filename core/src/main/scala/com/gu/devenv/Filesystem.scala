@@ -1,6 +1,6 @@
 package com.gu.devenv
 
-import com.gu.devenv.modules.Modules.Module
+import com.gu.devenv.modules.Modules.{Module, ModuleAdoption}
 
 import java.nio.file.{Files, Path, StandardOpenOption}
 import scala.io.Source
@@ -124,17 +124,10 @@ object Filesystem {
 
   private def devenvContents(modules: List[Module]) = {
     val moduleDescriptions = modules
-      .map { module =>
-        s"# - ${module.name}: ${module.summary}"
-      }
+      .map(moduleDescription)
       .mkString("\n")
     val stubModules = modules
-      .map { module =>
-        if (module.enabledByDefault)
-          s"  - ${module.name}"
-        else
-          s"  # - ${module.name}  # (disabled by default)"
-      }
+      .map(moduleEntry)
       .mkString("\n")
     s"""|# Devenv project configuration
         |# Edit this file to configure your project's devcontainer
@@ -176,6 +169,21 @@ object Filesystem {
         |#     workingDirectory: "."
         |""".stripMargin
   }
+
+  private def moduleDescription(module: Module): String = {
+    val caveat = module.adoption match {
+      case ModuleAdoption.Default | ModuleAdoption.OptIn => ""
+      case ModuleAdoption.Experimental                   => " (experimental)"
+    }
+    s"# - ${module.name}: ${module.summary}$caveat"
+  }
+
+  private def moduleEntry(module: Module): String =
+    module.adoption match {
+      case ModuleAdoption.Default      => s"  - ${module.name}"
+      case ModuleAdoption.OptIn        => s"  # - ${module.name}  # (disabled by default)"
+      case ModuleAdoption.Experimental => s"  # - ${module.name}  # (experimental)"
+    }
 
   enum FileSystemStatus {
     case Created

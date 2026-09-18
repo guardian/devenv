@@ -8,6 +8,12 @@ import scala.annotation.tailrec
 import scala.util.Try
 
 object Modules {
+  enum ModuleAdoption {
+    case Default
+    case OptIn
+    case Experimental
+  }
+
   enum ModuleResolutionError {
     case UnknownModule(name: String)
     case UnknownDependency(module: String, dependency: String)
@@ -33,7 +39,7 @@ object Modules {
   case class Module(
       name: String,
       summary: String,
-      enabledByDefault: Boolean,
+      adoption: ModuleAdoption,
       contribution: ModuleContribution,
       dependsOn: Set[String] = Set.empty
   )
