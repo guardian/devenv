@@ -151,6 +151,10 @@ list.
   volumes to provide persistent ivy and coursier caches. Disabled by default.
 - **`node`** - Adds IDE plugins for Node.js development (IntelliJ only; VS Code has built-in support). Disabled by
   default.
+- **`agentsy`** (**Experimental**) - Clones [Agentsy](https://github.com/guardian/agentsy) from its public `main`
+  branch to `~/agentsy` and links its command at `~/.local/bin/agentsy`. Checkouts with the expected Git remote are
+  updated with a fast-forward-only pull when the container is rebuilt; other existing paths are left unchanged.
+  Disabled by default and shown as experimental in generated configurations.
 
 ### Example
 

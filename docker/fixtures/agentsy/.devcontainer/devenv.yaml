@@ -1,0 +1,4 @@
+name: "agentsy-test"
+
+modules:
+  - agentsy

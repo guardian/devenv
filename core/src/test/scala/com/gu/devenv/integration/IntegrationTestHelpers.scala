@@ -56,6 +56,12 @@ object IntegrationTestHelpers {
        |  - mise
        |""".stripMargin
 
+  val projectConfigWithAgentsy: String =
+    """|name: "Project With Agentsy"
+       |modules:
+       |  - agentsy
+       |""".stripMargin
+
   val projectConfigWithMultipleModules: String =
     """|name: "Project With Multiple Modules"
        |modules:
