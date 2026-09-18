@@ -1,6 +1,6 @@
 package com.gu.devenv.modules
 
-import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
+import com.gu.devenv.modules.Modules.{Module, ModuleAdoption, ModuleContribution}
 import com.gu.devenv.{Command, Env, Mount, Plugins}
 
 import scala.util.Try
@@ -20,7 +20,7 @@ private[modules] def scalaLang(mountKey: String): Try[Module] =
     Module(
       name = "scala",
       summary = "Add IDE plugins and jar caching for Scala development",
-      enabledByDefault = false,
+      adoption = ModuleAdoption.OptIn,
       contribution = ModuleContribution(
         plugins = Plugins(
           intellij = List("org.intellij.scala"),

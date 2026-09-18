@@ -1,7 +1,7 @@
 package com.gu.devenv.modules
 
 import com.gu.devenv.Plugins
-import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
+import com.gu.devenv.modules.Modules.{Module, ModuleAdoption, ModuleContribution}
 
 /** Provides IDE plugin support for Node.js development.
   *
@@ -11,7 +11,7 @@ import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
 private[modules] val nodeLang = Module(
   name = "node",
   summary = "Add IDE plugins for Node.js development",
-  enabledByDefault = false,
+  adoption = ModuleAdoption.OptIn,
   contribution = ModuleContribution(
     plugins = Plugins(
       intellij = List("NodeJS"),

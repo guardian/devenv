@@ -1,6 +1,6 @@
 package com.gu.devenv.modules
 
-import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
+import com.gu.devenv.modules.Modules.{Module, ModuleAdoption, ModuleContribution}
 import com.gu.devenv.{Command, Plugins}
 
 import scala.util.Try
@@ -25,7 +25,7 @@ private[modules] def githubCopilot: Try[Module] =
   } yield Module(
     name = "github-copilot",
     summary = "Sets up GitHub Copilot for IDE and CLI use (requires the mise module)",
-    enabledByDefault = true,
+    adoption = ModuleAdoption.Default,
     contribution = ModuleContribution(
       postCreateCommands = List(encodedPostCreateScript),
       // IDE integration for GitHub Copilot

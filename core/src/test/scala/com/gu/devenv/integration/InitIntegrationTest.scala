@@ -4,6 +4,8 @@ import cats.syntax.all.*
 import com.gu.devenv.Devenv
 import com.gu.devenv.Filesystem.{FileSystemStatus, GitignoreStatus}
 import com.gu.devenv.integration.IntegrationTestHelpers.{tempDir, testModules}
+import com.gu.devenv.modules.Modules
+import com.gu.devenv.modules.Modules.{Module, ModuleAdoption, ModuleContribution}
 import org.scalatest.TryValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
@@ -55,6 +57,44 @@ class InitIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
           val devenvContent = Files.readString(devcontainerDir.resolve("devenv.yaml"))
           devenvContent should include("name: \"CHANGE_ME\"")
           devenvContent should include("modules:")
+        }
+
+      "should render each module adoption" in
+        tempDir.run { rootDir =>
+          val modules = List(
+            Module(
+              "default",
+              "Default module",
+              ModuleAdoption.Default,
+              ModuleContribution()
+            ),
+            Module(
+              "opt-in",
+              "Opt-in module",
+              ModuleAdoption.OptIn,
+              ModuleContribution()
+            ),
+            Module(
+              "experimental",
+              "Experimental module",
+              ModuleAdoption.Experimental,
+              ModuleContribution()
+            )
+          )
+          val devcontainerDir = rootDir.resolve(".devcontainer")
+
+          Modules.resolveModules(List("experimental"), modules).isRight shouldBe true
+          Devenv.init(devcontainerDir, modules).success.value
+
+          val devenvContent = Files.readString(devcontainerDir.resolve("devenv.yaml"))
+          devenvContent should include("# - default: Default module")
+          devenvContent should include("  - default")
+          devenvContent should include("# - opt-in: Opt-in module")
+          devenvContent should include("  # - opt-in  # (disabled by default)")
+          devenvContent should include(
+            "# - experimental: Experimental module (experimental)"
+          )
+          devenvContent should include("  # - experimental  # (experimental)")
         }
     }
 
