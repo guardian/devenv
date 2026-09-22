@@ -1,6 +1,6 @@
 package com.gu.devenv.modules
 
-import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
+import com.gu.devenv.modules.Modules.{Module, ModuleAdoption, ModuleContribution}
 import io.circe.Json
 
 /** Enables Docker-in-Docker functionality within the development container.
@@ -12,7 +12,7 @@ private[modules] val dockerInDocker =
   Module(
     name = "docker-in-docker",
     summary = "Enable running Docker containers within the devcontainer",
-    enabledByDefault = false,
+    adoption = ModuleAdoption.OptIn,
     contribution = ModuleContribution(
       features =
         Map(

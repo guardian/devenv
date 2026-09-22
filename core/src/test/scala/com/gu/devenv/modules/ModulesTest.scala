@@ -3,6 +3,7 @@ package com.gu.devenv.modules
 import com.gu.devenv.*
 import com.gu.devenv.modules.Modules.{
   Module,
+  ModuleAdoption,
   ModuleContribution,
   ModuleResolutionError,
   ResolvedModules
@@ -20,7 +21,7 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     Module(
       name = name,
       summary = s"$name module",
-      enabledByDefault = false,
+      adoption = ModuleAdoption.OptIn,
       contribution = ModuleContribution(),
       dependsOn = dependsOn
     )

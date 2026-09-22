@@ -1,6 +1,6 @@
 package com.gu.devenv.modules
 
-import com.gu.devenv.modules.Modules.{Module, ModuleContribution}
+import com.gu.devenv.modules.Modules.{Module, ModuleAdoption, ModuleContribution}
 import com.gu.devenv.{Command, Plugins}
 
 import scala.util.Try
@@ -22,7 +22,7 @@ private[modules] def mise: Try[Module] =
   } yield Module(
     name = "mise",
     summary = "Install and configure mise for dev tools management (https://mise.jdx.dev/)",
-    enabledByDefault = true,
+    adoption = ModuleAdoption.Default,
     contribution = ModuleContribution(
       postCreateCommands = List(encodedPostCreateScript),
       // provide IDE support for mise

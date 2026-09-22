@@ -270,6 +270,19 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
         }
 
+      "should apply the agentsy module" in
+        (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
+          val devcontainerDir = rootDir.resolve(".devcontainer")
+
+          Devenv.init(devcontainerDir, modules).success.value
+          Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithAgentsy)
+
+          Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
+
+          getBase64StringsDecoded(devcontainerDir, "shared/devcontainer.json")
+            .exists(_.contains("https://github.com/guardian/agentsy.git")) shouldBe true
+        }
+
       "should fail with unknown module" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
