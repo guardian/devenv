@@ -8,4 +8,3 @@ dotfiles:
   repository: "https://github.com/example/dotfiles.git"
   targetPath: "~"
   installCommand: "install.sh"
-containerSize: small

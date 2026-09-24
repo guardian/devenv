@@ -1,7 +1,8 @@
 package com.gu.devenv
 
-import com.gu.devenv.ContainerSize.Small
+import com.gu.devenv.modules.Modules.ResolvedModules
 import io.circe.Json
+import io.circe.parser.parse
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.{OptionValues, TryValues}
@@ -89,9 +90,6 @@ class ConfigTest
             "~",
             "install.sh"
           )
-        ),
-        "containerSize" as Some(
-          Small
         )
       )
     }
@@ -111,6 +109,10 @@ class ConfigTest
         Config.parseUserConfig(commentsOnlyConfig).success
 
       userConfig shouldBe UserConfig.empty
+    }
+
+    "ignores a legacy containerSize setting" in {
+      Config.parseUserConfig("containerSize: small").success.value shouldBe UserConfig.empty
     }
   }
 
@@ -157,30 +159,16 @@ class ConfigTest
         "postStartCommand" as projectConfig.postStartCommand,
         "features" as projectConfig.features,
         "updateRemoteUserUID" as projectConfig.updateRemoteUserUID,
-        // Note this is a list inferred from the "small" container size configuration item in the yaml
-        "runArgs" as Config.smallContainerRunArgs
+        "runArgs" as projectConfig.runArgs
       )
     }
 
-    "merges user config with large container into project config correctly" in {
-      Config.mergeConfigs(
-        ProjectConfig("test"),
-        Some(UserConfig(containerSize = Some(ContainerSize.Large)))
-      ) should have(
-        "runArgs" as Config.largeContainerRunArgs
-      )
+    "preserves explicit project runArgs when merging user config" in {
+      val project = ProjectConfig("test", runArgs = List("--memory=2g"))
+      Config.mergeConfigs(project, Some(UserConfig.empty)).runArgs shouldBe project.runArgs
     }
 
-    "merges user config with defaulted container into project config correctly" in {
-      Config.mergeConfigs(
-        ProjectConfig("test"),
-        Some(UserConfig(containerSize = None))
-      ) should have(
-        "runArgs" as Config.largeContainerRunArgs
-      )
-    }
-
-    "applies large container run args when user config is None" in {
+    "leaves project config unchanged when user config is None" in {
       val projectConfigYaml =
         scala.io.Source.fromResource("projectConfig.yaml").mkString
       val Success(projectConfig) =
@@ -188,7 +176,23 @@ class ConfigTest
 
       val merged = Config.mergeConfigs(projectConfig, None)
 
-      merged shouldBe projectConfig.copy(runArgs = Config.largeContainerRunArgs)
+      merged shouldBe projectConfig
+    }
+
+    "generates explicit project runArgs in both devcontainer files" in {
+      val args                   = List("--memory=2g", "--cpus=2")
+      val (userJson, sharedJson) = Config.generateConfigs(
+        ProjectConfig("test", runArgs = args),
+        Some(UserConfig.empty),
+        ResolvedModules.empty,
+        None
+      )
+
+      for {
+        json <- List(userJson, sharedJson)
+      } parse(json).toOption.value.hcursor.downField("runArgs").as[List[String]] shouldBe Right(
+        args
+      )
     }
   }
 

@@ -14,13 +14,13 @@ import java.nio.file.Files
 class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupport {
   "mise module" - {
     "can set up workspace from fixture" in {
-      val workspace = setupWorkspaceWithSmallContainer("mise")
+      val workspace = setupWorkspace("mise")
       Files.isDirectory(workspace) shouldBe true
       Files.exists(workspace.resolve(".devcontainer/devenv.yaml")) shouldBe true
     }
 
     "devenv generation works" in {
-      val workspace = setupWorkspaceWithSmallContainer("mise")
+      val workspace = setupWorkspace("mise")
       runDevenvGenerate(workspace) match {
         case Left(error) =>
           fail(s"Generation failed: $error")
@@ -31,7 +31,7 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
     }
 
     "should install mise and make tools available" taggedAs ContainerTest in {
-      val workspace = setupWorkspaceWithSmallContainer("mise")
+      val workspace = setupWorkspace("mise")
 
       startContainer(workspace) match {
         case Left(error) =>
@@ -48,7 +48,7 @@ class MiseModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupp
 
     // replace `ignore` with `in` to enable this test for debugging purposes
     "debug" taggedAs ContainerTest ignore {
-      val workspace = setupWorkspaceWithSmallContainer("mise")
+      val workspace = setupWorkspace("mise")
 
       startContainer(workspace) match {
         case Left(error) =>
