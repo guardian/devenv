@@ -25,7 +25,7 @@ val cliJvmOptions = Seq(
 val circeVersion         = "0.14.16"
 val sttpVersion          = "4.0.26"
 val scalatestVersion     = "3.2.20"
-val scalaCheckVersion    = "1.19.0"
+val scalaCheckVersion    = "1.20.0"
 val scalatestPlusVersion = "3.2.20.0"
 
 // empty root project to aggregate all subprojects
