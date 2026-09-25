@@ -1,4 +1,4 @@
-ThisBuild / scalaVersion := "3.3.8" // latest LTS
+ThisBuild / scalaVersion := "3.9.0" // latest LTS
 ThisBuild / organization := "com.gu"
 ThisBuild / scalacOptions ++= Seq(
   "-encoding",
@@ -8,7 +8,7 @@ ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
   "-Wunused:all",
   "-Wvalue-discard",
-  "-Xfatal-warnings"
+  "-Werror"
 )
 
 // Fast startup JVM options for short-lived CLI processes
@@ -25,7 +25,7 @@ val cliJvmOptions = Seq(
 val circeVersion         = "0.14.16"
 val sttpVersion          = "4.0.26"
 val scalatestVersion     = "3.2.20"
-val scalaCheckVersion    = "1.19.0"
+val scalaCheckVersion    = "1.20.0"
 val scalatestPlusVersion = "3.2.20.0"
 
 // empty root project to aggregate all subprojects

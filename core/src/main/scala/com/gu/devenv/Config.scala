@@ -241,7 +241,7 @@ object Config {
 
   private def envListToJson(envList: List[Env]): Json =
     Json.obj(
-      envList.map(env => env.name -> Json.fromString(env.value)): _*
+      envList.map(env => env.name -> Json.fromString(env.value))*
     )
 
   /** Parsing an empty YAML file throws an exception, but an empty YAML file is valid and should

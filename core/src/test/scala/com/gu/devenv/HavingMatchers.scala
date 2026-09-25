@@ -9,7 +9,7 @@ trait HavingMatchers extends Matchers {
     Symbol(propertyName)(propertyValue)
 
   implicit class HavingTestHelperString(propertyName: String) {
-    def as[A](propertyValue: A)(implicit pos: Position): HavePropertyMatcher[AnyRef, Any] =
+    infix def as[A](propertyValue: A)(implicit pos: Position): HavePropertyMatcher[AnyRef, Any] =
       Symbol(propertyName)(propertyValue)
   }
 }
