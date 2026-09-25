@@ -45,9 +45,6 @@ trait DevcontainerTestSupport extends TryValues with BeforeAndAfterEach with Bef
     .success
     .value
 
-  // User config fixture directory with almost empty devenv.yaml
-  protected lazy val userConfigFixtureDir: Path = fixturesDir.resolve("user-config/.config/devenv")
-
   protected var currentWorkspace: Option[Path]            = None
   protected var currentRunner: Option[DevcontainerRunner] = None
 
@@ -77,19 +74,14 @@ trait DevcontainerTestSupport extends TryValues with BeforeAndAfterEach with Bef
     }
   }
 
-  /** Copy a fixture to a temporary directory with the user config and return the path */
-  protected def setupWorkspaceWithSmallContainer(fixtureName: String): Path = {
+  /** Copy a fixture to a temporary workspace and return the path */
+  protected def setupWorkspace(fixtureName: String): Path = {
     val tempDir = Files.createTempDirectory(s"devenv-docker-$fixtureName-")
 
     // Copy in requested config
     val configFixtureDir = fixturesDir.resolve(fixtureName)
     require(Files.isDirectory(configFixtureDir), s"Config fixture not found: $configFixtureDir")
     copyDirectory(configFixtureDir, tempDir)
-
-    // Copy in user config to fix container size
-    val userFixtureDir = fixturesDir.resolve("user-config")
-    require(Files.isDirectory(userFixtureDir), s"User fixture not found: $userFixtureDir")
-    copyDirectory(userFixtureDir, tempDir)
 
     currentWorkspace = Some(tempDir)
     tempDir
@@ -103,7 +95,7 @@ trait DevcontainerTestSupport extends TryValues with BeforeAndAfterEach with Bef
   protected def runDevenvGenerate(workspace: Path): Either[String, GenerateResult.Success] = {
     val devcontainerDir = workspace.resolve(".devcontainer")
     // Pass the directory containing devenv.yaml (Filesystem.resolveUserConfigPaths will append the filename)
-    val userConfigPath = userConfigFixtureDir
+    val userConfigPath = workspace.resolve(".config/devenv")
 
     Devenv.generate(devcontainerDir, userConfigPath, modules) match {
       case scala.util.Success(result: GenerateResult.Success) =>

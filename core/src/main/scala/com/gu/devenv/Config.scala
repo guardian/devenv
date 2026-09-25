@@ -1,6 +1,5 @@
 package com.gu.devenv
 
-import com.gu.devenv.ContainerSize.Small
 import com.gu.devenv.modules.Modules
 import com.gu.devenv.modules.Modules.ResolvedModules
 import io.circe.generic.extras.Configuration
@@ -61,17 +60,13 @@ object Config {
 
   def parseUserConfig(contents: String): Try[UserConfig] =
     if (yamlIsEmpty(contents)) {
-      scala.util.Success(UserConfig(None, None))
+      scala.util.Success(UserConfig.empty)
     } else {
       for {
         json       <- parser.parse(contents).toTry
         userConfig <- json.as[UserConfig].toTry
       } yield userConfig
     }
-
-  private[devenv] val smallContainerRunArgs: List[String] = List("--memory=1g", "--cpus=1")
-  private[devenv] val largeContainerRunArgs: List[String] =
-    List("--memory=16g", "--cpus=8", "--shm-size=512m")
 
   def mergeConfigs(
       projectConfig: ProjectConfig,
@@ -86,18 +81,9 @@ object Config {
       .map(applyDotfiles)
       .getOrElse(Nil)
 
-    // Large by default.  Devs have beefy laptops
-    val runArgs = maybeUserConfig.flatMap(_.containerSize) match {
-      case Some(Small) => smallContainerRunArgs
-      case _           => largeContainerRunArgs
-    }
-
     projectConfig.copy(
       plugins = mergedPlugins,
-      onCreateCommand = projectConfig.onCreateCommand,
-      postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand,
-      postStartCommand = projectConfig.postStartCommand,
-      runArgs = runArgs ++ projectConfig.runArgs
+      postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand
     )
   }
 

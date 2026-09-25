@@ -19,13 +19,13 @@ import java.nio.file.Files
 class CombinedModulesTest extends AnyFreeSpec with Matchers with DevcontainerTestSupport {
   "combined modules" - {
     "can set up workspace from fixture" in {
-      val workspace = setupWorkspaceWithSmallContainer("combined")
+      val workspace = setupWorkspace("combined")
       Files.isDirectory(workspace) shouldBe true
       Files.exists(workspace.resolve(".devcontainer/devenv.yaml")) shouldBe true
     }
 
     "devenv generation works" in {
-      val workspace = setupWorkspaceWithSmallContainer("combined")
+      val workspace = setupWorkspace("combined")
       runDevenvGenerate(workspace) match {
         case Left(error) =>
           fail(s"Generation failed: $error")
@@ -36,7 +36,7 @@ class CombinedModulesTest extends AnyFreeSpec with Matchers with DevcontainerTes
     }
 
     "should work with mise, docker-in-docker and github-copilot together" taggedAs ContainerTest in {
-      val workspace = setupWorkspaceWithSmallContainer("combined")
+      val workspace = setupWorkspace("combined")
 
       startContainer(workspace) match {
         case Left(error) =>

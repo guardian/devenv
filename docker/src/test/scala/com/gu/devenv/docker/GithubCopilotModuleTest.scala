@@ -16,13 +16,13 @@ import java.nio.file.Files
 class GithubCopilotModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupport {
   "github copilot module" - {
     "can set up workspace from fixture" in {
-      val workspace = setupWorkspaceWithSmallContainer("github-copilot")
+      val workspace = setupWorkspace("github-copilot")
       Files.isDirectory(workspace) shouldBe true
       Files.exists(workspace.resolve(".devcontainer/devenv.yaml")) shouldBe true
     }
 
     "devenv generation works" in {
-      val workspace = setupWorkspaceWithSmallContainer("github-copilot")
+      val workspace = setupWorkspace("github-copilot")
       runDevenvGenerate(workspace) match {
         case Left(error) =>
           fail(s"Generation failed: $error")
@@ -33,7 +33,7 @@ class GithubCopilotModuleTest extends AnyFreeSpec with Matchers with Devcontaine
     }
 
     "should install the GitHub CLI and Copilot CLI" taggedAs ContainerTest in {
-      val workspace = setupWorkspaceWithSmallContainer("github-copilot")
+      val workspace = setupWorkspace("github-copilot")
 
       startContainer(workspace) match {
         case Left(error) =>

@@ -32,8 +32,7 @@ case class ProjectConfig(
 
 case class UserConfig(
     plugins: Option[Plugins] = None,
-    dotfiles: Option[Dotfiles] = None,
-    containerSize: Option[ContainerSize] = None
+    dotfiles: Option[Dotfiles] = None
 )
 object UserConfig {
   val empty = UserConfig()
@@ -42,17 +41,6 @@ object UserConfig {
 enum ForwardPort {
   case SamePort(port: Int)
   case DifferentPorts(hostPort: Int, containerPort: Int)
-}
-
-object ContainerSize {
-  given Decoder[ContainerSize] = Decoder.decodeString.emap {
-    case "small" => Right(ContainerSize.Small)
-    case "large" => Right(ContainerSize.Large)
-    case s       => Left(s"Unknown container size: $s")
-  }
-}
-enum ContainerSize {
-  case Small, Large
 }
 
 object ForwardPort {

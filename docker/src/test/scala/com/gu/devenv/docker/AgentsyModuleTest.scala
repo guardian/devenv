@@ -10,13 +10,13 @@ import java.nio.file.Files
 class AgentsyModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupport {
   "agentsy module" - {
     "can set up workspace from fixture" in {
-      val workspace = setupWorkspaceWithSmallContainer("agentsy")
+      val workspace = setupWorkspace("agentsy")
       Files.isDirectory(workspace) shouldBe true
       Files.exists(workspace.resolve(".devcontainer/devenv.yaml")) shouldBe true
     }
 
     "devenv generation works" in {
-      val workspace = setupWorkspaceWithSmallContainer("agentsy")
+      val workspace = setupWorkspace("agentsy")
 
       runDevenvGenerate(workspace) match {
         case Left(error) => fail(s"Generation failed: $error")
@@ -29,7 +29,7 @@ class AgentsyModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestS
     // TODO: Test the rebuild logic that does a fetch and merge
     //       This would require adding support to rebuild devcontainers in DevcontainerTestSupport
     "should install Agentsy and make it available" taggedAs ContainerTest in {
-      val workspace = setupWorkspaceWithSmallContainer("agentsy")
+      val workspace = setupWorkspace("agentsy")
 
       startContainer(workspace) match {
         case Left(error)   => fail(s"Failed to start container: $error")

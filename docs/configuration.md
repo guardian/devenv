@@ -42,6 +42,10 @@ The project config (`.devcontainer/devenv.yaml`) supports the following fields:
 | `securityOpt`         | Security options for the container (use with caution)                                           | `[]`    |
 | `runArgs`             | Extra switches for container generation                                                         | `[]`    |
 
+Containers use the container runtime's default resource allocation unless the project explicitly sets resource
+limits through `runArgs` or the escape hatch. With Docker Desktop, containers share the CPU and memory allocated
+to Docker Desktop in its Resources settings.
+
 ### Example
 
 ```yaml
@@ -74,7 +78,6 @@ The user config (`~/.config/devenv/devenv.yaml`) supports the following (optiona
 |-----------------|----------------------------------------------------------------------------------------|---------|
 | `plugins`       | Personal IDE plugins (same structure as project config: `intellij` and `vscode` lists) | []      |
 | `dotfiles`      | Dotfiles repository configuration (see below)                                          | []      |
-| `containerSize` | Flag controlling container generation: large or small                                  | large   |
 
 ### Dotfiles Configuration
 
@@ -183,32 +186,3 @@ modules:
 
 See the [Adding a Module](contributing/adding-a-module.md) guide for a full walkthrough of how to
 implement, test and document a new built-in module.
-
-## Container Size
-
-eg
-
-```yaml
-containerSize: small
-```
-
-Developer laptops are typically quite powerful, so a container size of `large` is defaulted. This will
-result in additional runArgs switches:
-
-| Switch          | Effect                  |
- |-----------------|-------------------------|
-| --memory=16g    | 16Gb of memory          |
-| --cpus=8        | Eight cores             |
-| --shm-size=512m | 512Mb of shared memory* |
-
-*More shared memory is useful for running playwright tests in chrome, for example.
-
-However, this is not suitable for use with github actions, as the GHA environment cannot support such a large container.
-For this purpose, all tests which start a docker environment pull in a github user profile, which specifies a small
-container (although we keep the shared memory):
-
-| Switch          | Effect                  |
-|-----------------|-------------------------|
-| --memory=1g     | 1Gb of memory           |
-| --cpus=1        | One core                |
-| --shm-size=512m | 512Mb of shared memory* |
