@@ -42,9 +42,14 @@ The project config (`.devcontainer/devenv.yaml`) supports the following fields:
 | `securityOpt`         | Security options for the container (use with caution)                                           | `[]`    |
 | `runArgs`             | Extra switches for container generation                                                         | `[]`    |
 
-Containers use the container runtime's default resource allocation unless the project explicitly sets resource
-limits through `runArgs` or the escape hatch. With Docker Desktop, containers share the CPU and memory allocated
-to Docker Desktop in its Resources settings.
+Containers get 512MB of shared memory (`/dev/shm`) by default, because Docker's own default of 64MB is too small for
+tools such as headless browsers. Devenv does this by adding `--shm-size=512m` to the generated `runArgs`. A project can
+choose a different size by adding its own `--shm-size` switch to `runArgs`, in which case devenv leaves the project's
+`runArgs` unchanged. Setting `runArgs` in the escape hatch replaces the whole list, including the default.
+
+Apart from shared memory, containers use the container runtime's default resource allocation unless the project
+explicitly sets resource limits through `runArgs` or the escape hatch. With Docker Desktop, containers share the CPU
+and memory allocated to Docker Desktop in its Resources settings.
 
 ### Example
 

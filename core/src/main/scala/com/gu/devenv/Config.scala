@@ -150,11 +150,19 @@ object Config {
       withCapAdd.add("securityOpt", config.securityOpt.asJson)
     } else withCapAdd
 
-    val withRunArgs = if (config.runArgs.nonEmpty) {
-      withSecurityOpt.add("runArgs", config.runArgs.asJson)
-    } else withSecurityOpt
+    val withRunArgs = withSecurityOpt.add("runArgs", withDefaultShmSize(config.runArgs).asJson)
 
     commands.deepMerge(withRunArgs).asJson
+  }
+
+  private[devenv] val defaultShmSize = "512m"
+
+  /** Adds a default `--shm-size` run argument unless the project already sets one. Docker's own
+    * default of 64MB is too small for tools such as headless browsers.
+    */
+  private[devenv] def withDefaultShmSize(runArgs: List[String]): List[String] = {
+    val hasShmSize = runArgs.exists(arg => arg == "--shm-size" || arg.startsWith("--shm-size="))
+    if (hasShmSize) runArgs else runArgs :+ s"--shm-size=$defaultShmSize"
   }
 
   def generateConfigs(
