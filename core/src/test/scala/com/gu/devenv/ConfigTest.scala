@@ -191,7 +191,38 @@ class ConfigTest
       for {
         json <- List(userJson, sharedJson)
       } parse(json).toOption.value.hcursor.downField("runArgs").as[List[String]] shouldBe Right(
-        args
+        args :+ "--shm-size=512m"
+      )
+    }
+
+    "defaults shm size in both devcontainer files" in {
+      val (userJson, sharedJson) = Config.generateConfigs(
+        ProjectConfig("test"),
+        Some(UserConfig.empty),
+        ResolvedModules.empty,
+        None
+      )
+
+      for {
+        json <- List(userJson, sharedJson)
+      } parse(json).toOption.value.hcursor.downField("runArgs").as[List[String]] shouldBe Right(
+        List("--shm-size=512m")
+      )
+    }
+
+    "lets the escape hatch override the shm size in both devcontainer files" in {
+      val escapeHatch            = Json.obj("runArgs" -> Json.arr(Json.fromString("--shm-size=4g")))
+      val (userJson, sharedJson) = Config.generateConfigs(
+        ProjectConfig("test", runArgs = List("--shm-size=1g")),
+        Some(UserConfig.empty),
+        ResolvedModules.empty,
+        Some(escapeHatch)
+      )
+
+      for {
+        json <- List(userJson, sharedJson)
+      } parse(json).toOption.value.hcursor.downField("runArgs").as[List[String]] shouldBe Right(
+        List("--shm-size=4g")
       )
     }
   }

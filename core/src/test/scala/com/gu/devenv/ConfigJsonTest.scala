@@ -558,14 +558,32 @@ class ConfigJsonTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCh
           val json   = Config.configAsJson(config, ResolvedModules.empty)
 
           val runArgsJson = json.hcursor.downField("runArgs").as[List[String]]
-          runArgsJson shouldBe Right(runArgs)
+          runArgsJson shouldBe Right(runArgs :+ "--shm-size=512m")
         }
 
-      "is omitted when empty" in {
+      "contains only the default shm size when empty" in {
         val config = ProjectConfig(name = "test", runArgs = Nil)
         val json   = Config.configAsJson(config, ResolvedModules.empty)
 
-        json.hcursor.downField("runArgs").focus.isEmpty shouldBe true
+        json.hcursor.downField("runArgs").as[List[String]] shouldBe Right(
+          List("--shm-size=512m")
+        )
+      }
+
+      "keeps a project-level shm size in the --shm-size=<size> form" in {
+        val runArgs = List("--memory=2g", "--shm-size=2g")
+        val config  = ProjectConfig(name = "test", runArgs = runArgs)
+        val json    = Config.configAsJson(config, ResolvedModules.empty)
+
+        json.hcursor.downField("runArgs").as[List[String]] shouldBe Right(runArgs)
+      }
+
+      "keeps a project-level shm size in the --shm-size <size> form" in {
+        val runArgs = List("--shm-size", "1g")
+        val config  = ProjectConfig(name = "test", runArgs = runArgs)
+        val json    = Config.configAsJson(config, ResolvedModules.empty)
+
+        json.hcursor.downField("runArgs").as[List[String]] shouldBe Right(runArgs)
       }
     }
 
