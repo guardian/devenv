@@ -166,7 +166,7 @@ The update command checks [devenv's GitHub releases](https://github.com/guardian
 
 #### Rolling out a release
 
-Once a release is published, repositories across the organisation need to update their pinned version and regenerate their configuration. [`rollout/`](rollout/README.md) contains an automated process that uses GitHub Copilot CLI to raise and track these PRs. Any upgrade steps that teams need to take should be described in the release notes, because the rollout reads them when it updates each repository.
+Once a release is published, repositories across the organisation need to update their pinned version and regenerate their configuration. [`rollout/`](rollout/README.md) contains an automated process that uses GitHub Copilot CLI to raise and track these PRs, and it can be started with `scripts/rollout-release.sh`. Any upgrade steps that teams need to take should be described in the release notes, because the rollout reads them when it updates each repository.
 
 ### Testing
 
