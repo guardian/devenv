@@ -4,11 +4,11 @@ This directory contains an automated process that updates repositories in the `g
 
 `rollout.sh` is a harness bash script that wraps GitHub Copilot CLI. It checks prerequisites, prepares a working directory and starts a Copilot CLI supervisor session in autopilot mode, using the prompt in `supervisor.prompt.md`. The supervisor manages the project board and delegates the work on each repository to the custom agents in `.github/agents`:
 
-| Agent                | Model           | Purpose                                                                                              |
-|----------------------|-----------------|------------------------------------------------------------------------------------------------------|
-| `devenv-discovery`   | Claude Sonnet 5 | Finds repositories that pin a devenv version older than the target.                                  |
-| `devenv-repo-change` | Claude Opus 5.5 | Updates the pin, applies any migrations, runs `devenv generate` and `devenv check`, and raises a PR. |
-| `devenv-pr-check`    | GPT-6 Sol       | Independently checks that each PR contains the expected change and nothing else.                     |
+| Agent                | Model             | Purpose                                                                                              |
+|----------------------|-------------------|------------------------------------------------------------------------------------------------------|
+| `devenv-discovery`   | Claude Sonnet 5.5 | Finds repositories that pin a devenv version older than the target.                                  |
+| `devenv-repo-change` | Claude Opus 5.5   | Updates the pin, applies any migrations, runs `devenv generate` and `devenv check`, and raises a PR. |
+| `devenv-pr-check`    | GPT-6 Sol         | Independently checks that each PR contains the expected change and nothing else.                     |
 
 The supervisor itself runs on Claude Opus 5.5.
 
