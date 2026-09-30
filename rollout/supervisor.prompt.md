@@ -25,7 +25,7 @@ You are the supervisor for rolling out devenv release `{{VERSION}}` to repositor
 
 ## The project board
 
-The board is a GitHub Project with the title `{{BOARD_TITLE}}`. GitHub Projects belong to an organisation, so it is owned by `{{ORG}}`, and it is linked to the `{{ORG}}/devenv` repository so that it appears on that repository's Projects tab. Only projects linked to `{{ORG}}/devenv` count when you look for an existing board. Each in-scope repository has one draft item whose title is the repository's full name, for example `{{ORG}}/agentsy`. The board has these fields:
+The board is a GitHub Project with the title `{{BOARD_TITLE}}`. GitHub Projects belong to an organisation, so it is owned by `{{ORG}}`, and it is linked to the `{{ORG}}/devenv` repository so that it appears on that repository's Projects tab. Only projects linked to `{{ORG}}/devenv` count when you look for an existing board. Each in-scope repository has one draft item whose title is the repository's full name, for example `{{ORG}}/agentsy`. The title is how an item is matched to its repository, so never change it. GitHub Projects has a built-in `Repository` field, but it only applies to issues and PRs, so draft items leave it empty. Do not try to create a custom field with that name. The board has these fields:
 
 - `Status`, a single-select field with exactly these options, in this order:
   1. `Discovered`: in scope, and not yet started.
@@ -35,7 +35,6 @@ The board is a GitHub Project with the title `{{BOARD_TITLE}}`. GitHub Projects 
   5. `PR approved`: approved, and waiting to be merged.
   6. `PR merged (complete)`: finished.
   7. `Error`: something went wrong, and the item body explains what.
-- `Repository` (text): the repository's full name.
 - `Current version` (text): the version pinned on the default branch when it was discovered.
 - `PR` (text): the URL of the PR, once one exists.
 
@@ -70,7 +69,6 @@ gh project edit $PROJECT_NUMBER --owner {{ORG}} \
   --readme "devenv-rollout-target: {{VERSION}}
 
 This board tracks the automated rollout of devenv {{VERSION}}. It is managed by the rollout process in {{ORG}}/devenv (see rollout/README.md)."
-gh project field-create $PROJECT_NUMBER --owner {{ORG}} --name "Repository" --data-type TEXT
 gh project field-create $PROJECT_NUMBER --owner {{ORG}} --name "Current version" --data-type TEXT
 gh project field-create $PROJECT_NUMBER --owner {{ORG}} --name "PR" --data-type TEXT
 gh project field-list $PROJECT_NUMBER --owner {{ORG}} --format json   # gives the ID of the built-in Status field
@@ -177,8 +175,8 @@ Check its results before adding anything to the board:
 
 Then add items:
 
-- For each remaining in-scope repository, create an item in `Discovered`. Set `Repository` and `Current version`, and write the body as `Pinned in <file>`.
-- For each repository whose pin could not be determined, create an item in `Error`. Set `Repository`, and write the body as the reason the discovery agent gave, followed by a note that a person needs to check how devenv is pinned in this repository.
+- For each remaining in-scope repository, create an item in `Discovered`. Set `Current version`, and write the body as `Pinned in <file>`.
+- For each repository whose pin could not be determined, create an item in `Error`. Write the body as the reason the discovery agent gave, followed by a note that a person needs to check how devenv is pinned in this repository.
 
 ### 4. PR management
 
