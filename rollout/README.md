@@ -25,6 +25,8 @@ The supervisor itself runs on Claude Opus 5.5.
 rollout/rollout.sh --version 20260721-123412 [--rediscover] [--repos agentsy,amigo] [--concurrency 4] [--dry-run]
 ```
 
+`scripts/rollout-release.sh` runs the same script and takes the same options.
+
 - `--version`: the target release tag. It must be a published production release, not a draft or a prerelease.
 - `--rediscover`: re-run discovery on an existing board, so that repositories that have come into scope since the last run are added.
 - `--repos`: a comma-separated allowlist of repositories. Only these repositories are considered.
