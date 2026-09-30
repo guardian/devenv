@@ -1,7 +1,7 @@
 ---
 name: devenv-discovery
 description: Finds repositories in the guardian organisation that pin a devenv version older than a given target release. Used by the devenv rollout supervisor.
-model: claude-sonnet-5
+model: claude-sonnet-5.5
 ---
 
 # devenv discovery
