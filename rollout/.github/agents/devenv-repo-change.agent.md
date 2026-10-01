@@ -55,9 +55,9 @@ You will be given:
 
 10. **Commit and push.** Commit with a message such as `Update devenv to <target>`, and add a body when migrations were applied. Then push with `git push -u origin devenv/update-<target>`.
 
-11. **Labels.** Look in `.github/workflows` for a workflow that makes PRs carry a label, such as a call to `guardian/.github/.github/workflows/require-label.yaml`. If you find one, read the workflow it calls to find out which labels are accepted, and choose the one that best fits a maintenance update. If you cannot work out which label fits, create the PR without one and mention this in your report.
+11. **Label.** Every PR in the rollout carries the organisation-wide `maintenance` label, which exists in every `guardian` repository. Do not look for other labels or check which labels a repository's workflows require. If `gh pr create` fails because the label does not exist, create the PR without it and mention this in your report.
 
-12. **Raise the PR.** Title the PR `Update devenv to <target>`. Write the description to a file and pass it with `gh pr create --base <default branch> --head devenv/update-<target> --title ... --body-file ... [--label ...]`. The description has two parts, separated by a horizontal rule (`---`).
+12. **Raise the PR.** Title the PR `Update devenv to <target>`. Write the description to a file and pass it with `gh pr create --base <default branch> --head devenv/update-<target> --title ... --body-file ... --label maintenance`. The description has two parts, separated by a horizontal rule (`---`).
     - The first part is for the owning team.
       - Start with a description of what changed in devenv between the current version and the target, drawn from the release notes, and describe any migrations you applied to this repository. If the release notes say nothing beyond installation instructions, state that the update brings the repository up to the latest release and link to the release page, `https://github.com/guardian/devenv/releases/tag/<target>`.
       - Then explain what the team needs to do. They should review and approve the PR, after which it is merged automatically once its checks pass. After it is merged, anyone using the devcontainer needs to pull the change, run `devenv generate`, and rebuild their devcontainer for the change to take effect.
