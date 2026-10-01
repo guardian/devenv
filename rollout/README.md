@@ -55,4 +55,6 @@ A new board is created with a table view, because the CLI cannot change a projec
 
 Before starting Copilot, the harness installs the target devenv release with mise and puts it first on `PATH`, so the agents always generate configuration with the target version. It also fetches the writing style instructions from `guardian/agentsy` into `rollout/work/.github/instructions`, where Copilot loads them for every agent. All commit messages, PR descriptions and comments follow that guide.
 
+The change agent will not raise a new PR for a repository that already has a closed or merged PR from the branch `devenv/update-<version>`, because a closed PR usually means the owning team decided against the change. To retest the process on a repository, close the test PR, delete its branch and the board, and put `TEST ` at the start of the closed PR's title. Closed PRs with that prefix are ignored.
+
 Upgrade guidance comes from the bodies of the GitHub releases between each repository's current version and the target. Any migration steps a release needs should be described in its release notes.

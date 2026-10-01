@@ -30,9 +30,10 @@ You will be given:
 
 1. **Read the release notes.** List the releases with `gh release list --repo guardian/devenv --limit 200 --json tagName,isDraft,isPrerelease`. Then read the body of every release that is not a draft or a prerelease, and whose tag is newer than the current version and no newer than the target, using `gh release view <tag> --repo guardian/devenv --json body`. Note any upgrade steps, configuration changes or behaviour changes. Also note anything from the supervisor's release-specific guidance. The bodies may contain no upgrade guidance, and that is normal.
 
-2. **Check for earlier work.** The branch name is `devenv/update-<target>`. Run `gh pr list --repo <repo> --head devenv/update-<target> --state all --json url,state`.
+2. **Check for earlier work.** The branch name is `devenv/update-<target>`. Run `gh pr list --repo <repo> --head devenv/update-<target> --state all --json url,state,title`.
+   - Ignore any closed PR whose title starts with `TEST `. These PRs were closed while the rollout process itself was being tested, so they do not count as earlier work. This applies only to closed PRs. An open or merged PR always counts, whatever its title.
    - If there is an open PR, report it as the result without making further changes.
-   - If there is a merged or closed PR, or the branch exists on the remote without a PR, stop and report a failure that describes what you found.
+   - If there is a merged PR or any other closed PR, or the branch exists on the remote without a PR, stop and report a failure that describes what you found.
 
 3. **Clone.** If the clone directory already exists, delete it. Then run `gh repo clone <repo> <dir>` and create the branch `devenv/update-<target>` from the default branch.
 
