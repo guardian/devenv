@@ -66,7 +66,7 @@ jobs:
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Setup Java and sbt
-      uses: guardian/setup-scala@v1
+      uses: guardian/setup-scala@v2
 
     - uses: graalvm/setup-graalvm@5298d94fb55a4f185c602eeac5de1b553882abe2 # v1.6.4
       with:
