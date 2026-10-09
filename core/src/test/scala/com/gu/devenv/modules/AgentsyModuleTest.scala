@@ -14,6 +14,7 @@ class AgentsyModuleTest extends AnyFreeSpec with Matchers with TryValues {
       module.adoption shouldBe ModuleAdoption.Experimental
       module.contribution.onCreateCommands shouldBe empty
       module.contribution.postCreateCommands should have size 1
+      module.dependsOn shouldBe Set("mise", "github-copilot")
     }
   }
 

@@ -97,7 +97,7 @@ the `installCommand` is executed from there.
 | `repository`     | Full GitHub repository URL (eg. `https://github.com/username/dotfiles`) |
 | `targetPath`     | Path where dotfiles will be cloned in the container                     |
 | `installCommand` | Script to run for installation (executed from `targetPath`)             |
-
+  
 ### Example
 
 ```yaml
@@ -162,6 +162,8 @@ list.
 - **`agentsy`** (**Experimental**) - Clones [Agentsy](https://github.com/guardian/agentsy) from its public `main`
   branch to `~/agentsy` and links its command at `~/.local/bin/agentsy`. Checkouts with the expected Git remote are
   updated with a fast-forward-only pull when the container is rebuilt; other existing paths are left unchanged.
+  Also adds the `guardian/agentsy` Copilot CLI plugin marketplace and installs the `simplify-goal` plugin as an 
+  experiment in managing global plugins.
   Disabled by default and shown as experimental in generated configurations.
 
 ### Example

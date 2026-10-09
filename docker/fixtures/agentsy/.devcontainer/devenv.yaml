@@ -1,4 +1,6 @@
 name: "agentsy-test"
 
 modules:
+  - mise
+  - github-copilot
   - agentsy

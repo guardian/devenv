@@ -59,6 +59,8 @@ object IntegrationTestHelpers {
   val projectConfigWithAgentsy: String =
     """|name: "Project With Agentsy"
        |modules:
+       |  - mise
+       |  - github-copilot
        |  - agentsy
        |""".stripMargin
 

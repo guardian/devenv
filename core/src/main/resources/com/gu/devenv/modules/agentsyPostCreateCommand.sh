@@ -8,6 +8,10 @@ readonly AGENTSY_DIR="$HOME/agentsy"
 readonly AGENTSY_BIN_DIR="$HOME/.local/bin"
 readonly AGENTSY_LINK="$AGENTSY_BIN_DIR/agentsy"
 readonly AGENTSY_ENTRYPOINT="$AGENTSY_DIR/agentsy"
+readonly AGENTSY_MARKETPLACE="guardian/agentsy"
+readonly AGENTSY_GLOBAL_PLUGINS=(
+  "simplify-goal"
+)
 
 ok()    { printf "\033[1;32m[...] %s\033[0m\n" "$*"; }
 warn()  { printf "\033[1;33m[...] %s\033[0m\n" "$*"; }
@@ -39,3 +43,23 @@ ln -sfn "$AGENTSY_ENTRYPOINT" "$AGENTSY_LINK"
 
 "$AGENTSY_LINK" list >/dev/null
 ok "Agentsy is available at $AGENTSY_LINK."
+
+# As long as mise and copilot are installed as dependencies of this module,
+# this will bring copilot onto the path.
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate --shims bash)"
+else
+  warn "mise is not on PATH; skipping plugin installation."
+fi
+
+if command -v copilot >/dev/null 2>&1; then
+  log "Adding the $AGENTSY_MARKETPLACE plugin marketplace."
+  copilot plugin marketplace add "$AGENTSY_MARKETPLACE" ||
+    warn "Unable to add the $AGENTSY_MARKETPLACE marketplace."
+  for plugin in "${AGENTSY_GLOBAL_PLUGINS[@]}"; do
+    log "Installing plugin $plugin."
+    copilot plugin install "$plugin"@agentsy || warn "Unable to install plugin $plugin."
+  done
+else
+  warn "copilot is not on PATH; skipping plugin installation."
+fi

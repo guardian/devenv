@@ -8,3 +8,4 @@ modules:
   - mise
   - scala
   - github-copilot
+  - agentsy

@@ -20,5 +20,6 @@ private[modules] def agentsy: Try[Module] =
     adoption = ModuleAdoption.Experimental,
     contribution = ModuleContribution(
       postCreateCommands = List(postCreateScript)
-    )
+    ),
+    dependsOn = Set("mise", "github-copilot")
   )
