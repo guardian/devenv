@@ -12,18 +12,18 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      uses: actions/checkout@v7.0.1
 
     - name: Setup Java and sbt
-      uses: guardian/setup-scala@c9f10cca1674ecb2ae7ee739786ef9f0cdb9d07c # v2.0.0
+      uses: guardian/setup-scala@v2.0.0
 
     # Required by the docker tests
     - name: Set up Docker
-      uses: docker/setup-docker-action@2bf61fb9464cc67f0cbdeabed6aa0380accd1c70 # v5.5.0
+      uses: docker/setup-docker-action@v5.5.0
 
     # The docker tests use `npx` to execute the devcontainers-cli package
     - name: Set up node
-      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      uses: actions/setup-node@v7.0.0
       with:
         node-version-file: .tool-versions
 
@@ -43,7 +43,7 @@ jobs:
         echo "package_name=$(basename $PACKAGE_FILE)" >> $GITHUB_OUTPUT
 
     - name: Upload package artifact
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: devenv-package
         path: ${{ steps.find-package.outputs.package_file }}
