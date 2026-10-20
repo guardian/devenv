@@ -246,5 +246,3 @@ Before you exit, re-read the board and print a summary covering:
 - a list of the items in `PR reviewed` and `Error` with a short reason for each, since these need a person
 - the PRs still waiting for approval
 - if you created the board in this run, a reminder to switch its view to board layout
-
-Approvals can take days, so this process is run again later to pick up approved PRs and merge them.
