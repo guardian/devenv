@@ -42,6 +42,9 @@ cli/target/graalvm-native-image/
 *.tmp
 .cache
 
+# Rollout working directory
+rollout/work/
+
 # E2E test artifacts
 test-sandbox/e2e/**/devcontainer.json
 test-sandbox/e2e/**/.devcontainer/user/

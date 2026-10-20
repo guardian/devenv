@@ -164,6 +164,10 @@ devenv update
 
 The update command checks [devenv's GitHub releases](https://github.com/guardian/devenv/releases) and gives the user instructions if a newer version is available.
 
+#### Rolling out a release
+
+Once a release is published, repositories across the organisation need to update their pinned version and regenerate their configuration. [`rollout/`](rollout/README.md) contains an automated process that uses GitHub Copilot CLI to raise and track these PRs, and it can be started with `scripts/rollout-release.sh`. Any upgrade steps that teams need to take should be described in the release notes, because the rollout reads them when it updates each repository.
+
 ### Testing
 
 #### Unit and Integration Tests
