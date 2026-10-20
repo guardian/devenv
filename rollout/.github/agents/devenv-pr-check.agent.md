@@ -27,7 +27,7 @@ Use your own clone in a directory next to the change agent's clone, with `-check
 - Any configuration changes that the release notes between the previous version and the target require. Read these by listing releases with `gh release list --repo guardian/devenv --limit 200 --json tagName,isDraft,isPrerelease` and viewing each production release in that range with `gh release view <tag> --repo guardian/devenv --json body`.
 - Nothing else. In particular, nothing under `.devcontainer/user/` should be committed. `devenv generate` writes a personal configuration file there, and git should ignore it. The PR should also contain no unrelated formatting changes and no dependency upgrades.
 
-The PR should target the default branch from the branch `devenv/update-<target>`. Its description should cover what changed in devenv and what the team needs to do (approve the PR, then pull the change, run `devenv generate` and rebuild their devcontainers after it merges). After a horizontal rule, it should explain the automated process that created it.
+The PR should target the default branch from the branch `devenv/update-<target>`. Its description should cover what changed in devenv and what the team needs to do (review the PR and approve or merge it, then pull the change, run `devenv generate` and rebuild their devcontainers after it merges). It may say that the PR could be merged automatically after approval, but it should not promise an automatic merge. After a horizontal rule, it should explain the automated process that created it.
 
 ## Steps
 
