@@ -45,11 +45,11 @@ The board for a release is titled `devenv rollout <version>`. GitHub Projects ar
 - **In progress**: a subagent is updating the repository.
 - **PR raised**: the PR is open and waiting for the owning team.
 - **PR reviewed**: someone has reviewed or commented on the PR, or the automated PR check found a problem, so a person needs to look at it.
-- **PR approved**: the PR is approved and will be merged once it merges cleanly and all of its checks pass.
+- **PR approved**: the PR is approved and will be merged once GitHub reports that it can be merged.
 - **PR merged (complete)**: the repository is on the new release.
 - **Error**: something went wrong, and the item body describes the problem. Problems with the process itself appear as `Process error: ...` items.
 
-When the board already exists, a run carries on from where the last one stopped. Approvals can take days, so run the script again later with the same version to move approved PRs through to merge. The supervisor never merges a PR that is not approved, has conflicts, or has failing or pending checks, and it never uses admin overrides.
+When the board already exists, a run carries on from where the last one stopped. Approvals can take days, so run the script again later with the same version to move approved PRs through to merge. The supervisor merges an approved PR only when GitHub's `mergeStateStatus` says it can be merged under the repository's branch protection, and it never uses admin overrides. When a repository requires branches to be up to date, the supervisor updates the PR's branch with `gh pr update-branch` and merges it on a later run, once its checks have passed again.
 
 A new board is created with a table view, because the CLI cannot change a project's layout. Switch its view to a board grouped by `Status` once, in the GitHub UI.
 
