@@ -165,6 +165,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
     --deny-tool 'shell(gh pr comment)'
     --deny-tool 'shell(gh pr review)'
     --deny-tool 'shell(gh pr edit)'
+    --deny-tool 'shell(gh pr update-branch)'
   )
 fi
 

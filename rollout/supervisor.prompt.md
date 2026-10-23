@@ -18,7 +18,7 @@ You are the supervisor for rolling out devenv release `{{VERSION}}` to repositor
 - Focus on performing the update rather than working around problems. When something fails, spend a little time finding out why, then record a clear description on a card in the Error column and move on. Do not retry the same failing operation more than once.
 - Never downgrade a repository. A repository whose pinned version is equal to or newer than `{{VERSION}}` is out of scope. Release tags have the form `YYYYMMDD-HHMMSS`, so plain string comparison orders them correctly.
 - `{{ORG}}/devenv` is always out of scope. It has a `.devcontainer/devenv.yaml` but deliberately has no devenv pin, because it generates its own configuration from its own source. Never put it on the board as a repository card, whether in `Discovered` or `Error`. Never start a change or PR check agent for it, and never pin devenv in it. This applies even if it is on the allowlist. The board is linked to this repository, but that has nothing to do with whether it is in scope.
-- Never merge a PR unless it is approved, merges cleanly and has passed all of its status checks. A PR is approved only when a person has submitted an approving review and no reviewer has an outstanding request for changes. Never use `gh pr merge --admin`, never bypass branch protection, and never force-push.
+- Never merge a PR unless it is approved and GitHub reports that it is ready to merge, as described in the merging phase. A PR is approved only when a person has submitted an approving review and no reviewer has an outstanding request for changes. Never use `gh pr merge --admin`, never bypass branch protection, and never force-push.
 - Use the `gh` CLI for all GitHub operations.
 - All commit messages, PR descriptions, PR comments and card text must follow the writing style instructions that have been loaded into this session.
 - In a dry run (`{{DRY_RUN}}` is `true`), nothing outside this machine may change apart from the dry-run project board. Subagents must not push branches, create PRs, comment on PRs or merge anything. The PR management and merge phases are skipped.
@@ -198,10 +198,16 @@ Skip this phase in a dry run.
 
 For each item in `PR approved`, check the PR with `gh pr view <PR> --json state,reviewDecision,reviews,mergeable,mergeStateStatus,statusCheckRollup`.
 
-- Merge only when the PR is approved, `mergeable` is `MERGEABLE`, `mergeStateStatus` is `CLEAN`, and every entry in `statusCheckRollup` has finished with a conclusion of `SUCCESS`, `NEUTRAL` or `SKIPPED`.
-- To merge, run `gh repo view <repo> --json squashMergeAllowed,mergeCommitAllowed`. Use `gh pr merge <PR> --squash` when squash merges are allowed, and `gh pr merge <PR> --merge` otherwise. After merging, move the item to `PR merged (complete)`.
-- If checks are still running or have not started, leave the item in `PR approved`.
-- If a check failed, the PR has conflicts, or the merge was refused, move the item to `Error` and note the failing checks or the reason given.
+If the PR has already been merged, move the item to `PR merged (complete)`. If it was closed without merging, move the item to `Error`, noting that the PR was closed. If it is no longer approved, as defined in the ground rules, move the item back to `PR reviewed` and note why. Otherwise, act on `mergeStateStatus`, which is GitHub's own view of whether the PR can be merged under the repository's branch protection:
+
+- `CLEAN` or `HAS_HOOKS`: merge the PR. Run `gh repo view <repo> --json squashMergeAllowed,mergeCommitAllowed`, then use `gh pr merge <PR> --squash` when squash merges are allowed and `gh pr merge <PR> --merge` otherwise. After merging, move the item to `PR merged (complete)`. If the merge is refused, move the item to `Error` and note the reason given.
+- `UNKNOWN`: GitHub has not finished working out whether the PR can be merged. Leave the item in `PR approved`.
+- `BEHIND`: the repository requires branches to be up to date with the base branch before merging. Run `gh pr update-branch <PR>` to merge the base branch into the PR's branch, append a note to the body, and leave the item in `PR approved`. The checks will run again, and a later run merges the PR. If the update fails, for example because of a conflict, move the item to `Error` and note the reason.
+- `DIRTY`: the PR has conflicts. Move the item to `Error`.
+- `BLOCKED` or `UNSTABLE`: if any check is still running or has not started, leave the item in `PR approved`. Otherwise, move the item to `Error` and note the failing checks, or for `BLOCKED` with no failing checks, that branch protection is blocking the merge.
+- Any other value: move the item to `Error` and note the value.
+
+`statusCheckRollup` lists every run of each check, including runs that a later run of the same check has replaced, such as a label check that failed before the PR's label was added. GitHub ignores the replaced runs, and so should you. When deciding whether checks are still running or noting failing checks, use only the most recent run of each check.
 
 ### 6. Changes
 
@@ -237,7 +243,7 @@ Some problems belong to the process itself rather than to one repository, such a
 
 ### 8. Finishing
 
-The run is complete when there are no items left in `Discovered` and no agents are running. There should also be no items in `PR approved`, apart from those waiting on checks that are still running. In a dry run, items left in `In progress` with a dry-run report count as complete.
+The run is complete when there are no items left in `Discovered` and no agents are running. There should also be no items in `PR approved`, apart from those waiting on checks or on GitHub, and those whose branches were just updated. In a dry run, items left in `In progress` with a dry-run report count as complete.
 
 Before you exit, re-read the board and print a summary covering:
 
