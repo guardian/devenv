@@ -76,6 +76,9 @@ object Config {
     val mergedPlugins =
       applyPlugins(projectConfig.plugins, maybeUserConfig.flatMap(_.plugins))
 
+    val mergedMounts =
+      applyMounts(projectConfig.mounts, maybeUserConfig.map(_.mounts))
+
     val dotfilesCommands = maybeUserConfig
       .flatMap(_.dotfiles)
       .map(applyDotfiles)
@@ -83,7 +86,8 @@ object Config {
 
     projectConfig.copy(
       plugins = mergedPlugins,
-      postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand
+      postCreateCommand = dotfilesCommands ++ projectConfig.postCreateCommand,
+      mounts = mergedMounts
     )
   }
 
@@ -269,6 +273,9 @@ object Config {
       intellij = (projectPlugins.intellij ++ userPlugins.fold(Nil)(_.intellij)).distinct,
       vscode = (projectPlugins.vscode ++ userPlugins.fold(Nil)(_.vscode)).distinct
     )
+
+  private def applyMounts(mounts: List[Mount], maybeMounts: Option[List[Mount]]): List[Mount] =
+    mounts ++ maybeMounts.getOrElse(Nil)
 
   private def applyDotfiles(dotfiles: Dotfiles): List[Command] = {
     val cloneCommand = Command(

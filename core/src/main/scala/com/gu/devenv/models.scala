@@ -32,7 +32,8 @@ case class ProjectConfig(
 
 case class UserConfig(
     plugins: Option[Plugins] = None,
-    dotfiles: Option[Dotfiles] = None
+    dotfiles: Option[Dotfiles] = None,
+    mounts: List[Mount] = Nil
 )
 object UserConfig {
   val empty = UserConfig()

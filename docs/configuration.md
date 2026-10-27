@@ -79,10 +79,13 @@ postCreateCommand:
 
 The user config (`~/.config/devenv/devenv.yaml`) supports the following (optional) settings:
 
-| Field           | Description                                                                            | Default |
-|-----------------|----------------------------------------------------------------------------------------|---------|
-| `plugins`       | Personal IDE plugins (same structure as project config: `intellij` and `vscode` lists) | []      |
-| `dotfiles`      | Dotfiles repository configuration (see below)                                          | []      |
+| Field           | Description                                                                                                                   | Default |
+|-----------------|-------------------------------------------------------------------------------------------------------------------------------|---------|
+| `plugins`       | Personal IDE plugins (same structure as project config: `intellij` and `vscode` lists)                                        | []      |
+| `dotfiles`      | Dotfiles repository configuration (see below)                                                                                 | []      |
+| `mounts`*       | Personal volume mounts (same structure as project config: Docker mount strings or objects with `source`, `target` and `type`) | []      |
+
+\* Note that file mounts can be dangerous! When you use this option, any files or directories will be made available in every devcontainer you launch. Avoid using this option where there are alternatives, and never mount files containing secrets.
 
 ### Dotfiles Configuration
 
