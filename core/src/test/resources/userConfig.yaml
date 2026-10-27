@@ -4,6 +4,11 @@ plugins:
     - "com.github.gtache.lsp"
   vscode:
     - "GitHub.copilot"
+mounts:
+  - source: "${localWorkspaceFolder}/.coursier"
+    target: "/home/vscode/.cache/coursier"
+    type: "volume"
+  - "${localWorkspaceFolder}/.npmrc:/home/vscode/.npmrc"
 dotfiles:
   repository: "https://github.com/example/dotfiles.git"
   targetPath: "~"
