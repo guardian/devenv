@@ -147,9 +147,14 @@ list.
 
 - **`mise`** - Installs and configures [mise](https://mise.jdx.dev/) for version management of languages and tools.
   Enabled by default.
-- **`github-copilot`** - Sets up [GitHub Copilot](https://github.com/features/copilot) for both IDE and CLI use. Adds
-  the Copilot plugins for VS Code and IntelliJ and installs the GitHub CLI (`gh`) and GitHub Copilot CLI (`copilot`) via
-  mise. Enabled by default. Requires the `mise` module.
+- **`github-copilot`** - Sets up [GitHub Copilot](https://github.com/features/copilot) and supporting tooling for both IDE and CLI use. 
+  Enabled by default. 
+  Requires the `mise` module.
+    - Adds the Copilot plugins for VS Code and IntelliJ and 
+    - Installs the GitHub CLI (`gh`) and GitHub Copilot CLI (`copilot`) via mise
+    - Clones [Agentsy](https://github.com/guardian/agentsy) from its public `main` branch to `~/agentsy` and links its command at 
+      `~/.local/bin/agentsy`. Checkouts with the expected Git remote are updated with a fast-forward-only pull when the 
+      container is rebuilt; other existing paths are left unchanged.
 - **`docker-in-docker`** - Enables running Docker containers within the devcontainer. Uses an isolated Docker daemon (
   not host socket) with minimal capabilities for better security. Disabled by default.
     - Image storage is ephemeral (lost on container rebuild)
@@ -159,10 +164,6 @@ list.
   volumes to provide persistent ivy and coursier caches. Disabled by default.
 - **`node`** - Adds IDE plugins for Node.js development (IntelliJ only; VS Code has built-in support). Disabled by
   default.
-- **`agentsy`** (**Experimental**) - Clones [Agentsy](https://github.com/guardian/agentsy) from its public `main`
-  branch to `~/agentsy` and links its command at `~/.local/bin/agentsy`. Checkouts with the expected Git remote are
-  updated with a fast-forward-only pull when the container is rebuilt; other existing paths are left unchanged.
-  Disabled by default and shown as experimental in generated configurations.
 
 ### Example
 
@@ -170,7 +171,7 @@ list.
 # In .devcontainer/devenv.yaml
 modules:
   - mise
-  - github-copilot  # Sets up GitHub Copilot (IDE + CLI)
+  - github-copilot  # Sets up GitHub Copilot (IDE + CLI) and supporting tooling
   - scala  # Enable Scala IDE plugins
   # - node  # Enable Node.js IDE plugins (if needed)
   # - docker-in-docker  # Enable Docker-in-Docker (if needed)

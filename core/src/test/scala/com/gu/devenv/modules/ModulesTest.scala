@@ -9,8 +9,8 @@ import com.gu.devenv.modules.Modules.{
   ResolvedModules
 }
 import io.circe.Json
-
 import org.scalacheck.Gen
+import org.scalatest.TryValues.convertTryToSuccessOrFailure
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
@@ -541,6 +541,20 @@ class ModulesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
         Modules.topoSort(List(standalone, b, c)) shouldBe
           Left(ModuleResolutionError.DependencyCycle(Set("b", "c")))
       }
+    }
+  }
+
+  "Modules.builtInModules" - {
+    "should register only the supported modules" in {
+      val modules = Modules.builtInModules(Modules.ModuleConfig("test-mount-key")).success.value
+
+      modules.map(_.name) should contain theSameElementsAs List(
+        "mise",
+        "docker-in-docker",
+        "scala",
+        "node",
+        "github-copilot"
+      )
     }
   }
 }
