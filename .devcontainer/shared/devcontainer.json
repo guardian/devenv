@@ -21,6 +21,13 @@
   ],
   "image" : "mcr.microsoft.com/devcontainers/base:ubuntu26.04",
   "remoteUser" : "vscode",
+  "features" : {
+    "ghcr.io/devcontainers/features/docker-in-docker:3" : {
+      "version" : "latest",
+      "moby" : false,
+      "dockerDashComposeVersion" : "v2"
+    }
+  },
   "mounts" : [
     {
       "source" : "devenv-coursier-cache-volume",
@@ -37,6 +44,12 @@
     "DEVENV_IVY_CACHE_MOUNT_DIR" : "/mnt/ivy-cache",
     "DEVENV_COURSIER_CACHE_MOUNT_DIR" : "/mnt/coursier-cache"
   },
+  "capAdd" : [
+    "SYS_ADMIN"
+  ],
+  "securityOpt" : [
+    "seccomp=unconfined"
+  ],
   "runArgs" : [
     "--shm-size=512m"
   ],
