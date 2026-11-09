@@ -5,14 +5,14 @@ import scala.sys.process.*
 object CommandRunner {
 
   /** Runs a shell command and captures stdout, stderr, and exit code */
-  def run(command: String): CommandResult = {
+  def run(command: String, extraEnv: (String, String)*): CommandResult = {
     val stdout        = new StringBuilder
     val stderr        = new StringBuilder
     val processLogger = ProcessLogger(
       line => stdout.append(line).append("\n"): Unit,
       line => stderr.append(line).append("\n"): Unit
     )
-    val exitCode = command.!(processLogger)
+    val exitCode = Process(command, None, extraEnv*).!(processLogger)
     CommandResult(exitCode, stdout.toString.trim, stderr.toString.trim)
   }
 }

@@ -1,6 +1,7 @@
 package com.gu.devenv.docker.testutils
 
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
+import scala.util.{Try, Using}
 
 /** Runs devcontainer CLI commands and manages container lifecycle.
   *
@@ -16,6 +17,11 @@ class DevcontainerRunner(workspaceDir: Path) {
     workspaceDir.resolve(".devcontainer/shared/devcontainer.json").toAbsolutePath.toString
   private val devcontainer = "npx --yes @devcontainers/cli"
 
+  // The devcontainer CLI writes fixed-name scratch files (e.g. updateUID.Dockerfile-<version>) to
+  // os.tmpdir(). Concurrent test suites sharing a tmp dir race on these, so isolate each runner.
+  private val tmpDir = Files.createTempDirectory("devcontainercli-tmp-")
+  private val env    = "TMPDIR" -> tmpDir.toAbsolutePath.toString
+
   // Disable Git root mounting since test workspaces are temporary directories without Git.
   // Without this, the devcontainer CLI defaults to --mount-workspace-git-root=true which
   // causes incomplete workspace mounting on CI environments (e.g., GHA).
@@ -23,12 +29,16 @@ class DevcontainerRunner(workspaceDir: Path) {
 
   /** Builds the devcontainer image */
   def build(): CommandResult =
-    CommandRunner.run(s"$devcontainer build --workspace-folder $workspacePath --config $configPath")
+    CommandRunner.run(
+      s"$devcontainer build --workspace-folder $workspacePath --config $configPath",
+      env
+    )
 
   /** Starts the devcontainer and returns its ID */
   def up(): Either[String, Unit] = {
     val result = CommandRunner.run(
-      s"$devcontainer up --workspace-folder $workspacePath --config $configPath $noGitRoot"
+      s"$devcontainer up --workspace-folder $workspacePath --config $configPath $noGitRoot",
+      env
     )
     if (result.succeeded) {
       Right(())
@@ -43,7 +53,8 @@ class DevcontainerRunner(workspaceDir: Path) {
     */
   def exec(command: String): CommandResult =
     CommandRunner.run(
-      s"""$devcontainer exec --workspace-folder $workspacePath --config $configPath $noGitRoot -- bash -c '$command'"""
+      s"""$devcontainer exec --workspace-folder $workspacePath --config $configPath $noGitRoot -- bash -c '$command'""",
+      env
     )
 
   /** Stops and removes the devcontainer
@@ -51,6 +62,7 @@ class DevcontainerRunner(workspaceDir: Path) {
     * TODO: parameterize the mise data volume, use isolated volumes in test, clean those up here
     */
   def down(): CommandResult = {
+    deleteTmpDir()
     // The devcontainer CLI doesn't have a down command, so we find and stop the container
     val findResult = CommandRunner.run(
       s"""docker ps -q --filter "label=devcontainer.local_folder=$workspacePath""""
@@ -65,4 +77,10 @@ class DevcontainerRunner(workspaceDir: Path) {
     }
   }
 
+  private def deleteTmpDir(): Unit =
+    if (Files.exists(tmpDir)) {
+      Using.resource(Files.walk(tmpDir)) { paths =>
+        paths.sorted(java.util.Comparator.reverseOrder()).forEach(p => Try(Files.delete(p)): Unit)
+      }
+    }
 }
