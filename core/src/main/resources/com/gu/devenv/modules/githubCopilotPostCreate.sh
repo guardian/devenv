@@ -11,8 +11,6 @@ install_agentsy() {
   local -r repository="https://github.com/guardian/agentsy.git"
   local -r branch="main"
   local -r agentsy_dir="$HOME/agentsy"
-  local -r bin_dir="$HOME/.local/bin"
-  local -r link="$bin_dir/agentsy"
   local -r entrypoint="$agentsy_dir/agentsy"
   local origin
 
@@ -31,12 +29,10 @@ install_agentsy() {
     git clone --branch "$branch" --depth 1 "$repository" "$agentsy_dir" || return
   fi
 
-  mkdir -p "$bin_dir" || return
-  log "Adding Agentsy to $bin_dir."
-  ln -sfn "$entrypoint" "$link" || return
-
-  "$link" list >/dev/null || return
-  ok "Copilot supporting tooling is ready."
+  log "Installing Agentsy."
+  # Need to prefix with `mise exec ---` so that we can use copilot inside the following command
+  mise exec -- "$entrypoint" install >/dev/null || return
+  ok "Agentsy installed."
 }
 
 # Adds `gh` (GitHub CLI) and `copilot` (GitHub Copilot CLI) to the user's PATH via mise.
@@ -47,7 +43,10 @@ if command -v mise >/dev/null 2>&1; then
   log "Installing GitHub Copilot CLI"
   mise use copilot@latest --global
 
-  install_agentsy
+  install_agentsy || {
+    error "Failed to install Agentsy."
+    exit 1
+  }
 
 else
   error "mise is required; skipping tool installation and checks."
