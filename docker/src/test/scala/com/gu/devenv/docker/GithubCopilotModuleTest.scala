@@ -9,9 +9,9 @@ import java.nio.file.Files
 
 /** Docker integration tests for the github copilot module.
   *
-  * Verifies that the GitHub CLI and GitHub Copilot CLI are installed and available. The module
-  * relies on mise to install these tools, so the fixture enables both the mise and github-copilot
-  * modules.
+  * Verifies that the GitHub CLI, GitHub Copilot CLI and supporting tooling are installed. The
+  * module relies on mise to install these tools, so the fixture enables both the mise and
+  * github-copilot modules.
   */
 class GithubCopilotModuleTest extends AnyFreeSpec with Matchers with DevcontainerTestSupport {
   "github copilot module" - {
@@ -32,7 +32,7 @@ class GithubCopilotModuleTest extends AnyFreeSpec with Matchers with Devcontaine
       }
     }
 
-    "should install the GitHub CLI and Copilot CLI" taggedAs ContainerTest in {
+    "should install the GitHub CLI, Copilot CLI and supporting tooling" taggedAs ContainerTest in {
       val workspace = setupWorkspace("github-copilot")
 
       startContainer(workspace) match {

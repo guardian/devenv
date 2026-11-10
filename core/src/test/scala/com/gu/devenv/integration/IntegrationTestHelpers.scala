@@ -56,10 +56,11 @@ object IntegrationTestHelpers {
        |  - mise
        |""".stripMargin
 
-  val projectConfigWithAgentsy: String =
-    """|name: "Project With Agentsy"
+  val projectConfigWithGithubCopilot: String =
+    """|name: "Project With GitHub Copilot"
        |modules:
-       |  - agentsy
+       |  - mise
+       |  - github-copilot
        |""".stripMargin
 
   val projectConfigWithMultipleModules: String =

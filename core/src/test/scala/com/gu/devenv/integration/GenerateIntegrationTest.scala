@@ -270,12 +270,12 @@ class GenerateIntegrationTest extends AnyFreeSpec with Matchers with TryValues {
 
         }
 
-      "should apply the agentsy module" in
+      "should apply the github-copilot module" in
         (tempDir, tempDir, testModules).tupled.run { (rootDir, userConfigDir, modules) =>
           val devcontainerDir = rootDir.resolve(".devcontainer")
 
           Devenv.init(devcontainerDir, modules).success.value
-          Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithAgentsy)
+          Files.writeString(devcontainerDir.resolve("devenv.yaml"), projectConfigWithGithubCopilot)
 
           Devenv.generate(devcontainerDir, userConfigDir, modules).success.value
 

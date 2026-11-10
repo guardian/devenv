@@ -28,14 +28,12 @@ object Modules {
       miseModule          <- mise
       scalaModule         <- scalaLang(moduleConfig.mountKey)
       githubCopilotModule <- githubCopilot
-      agentsyModule       <- agentsy
     } yield List(
       miseModule,
       dockerInDocker,
       scalaModule,
       nodeLang,
-      githubCopilotModule,
-      agentsyModule
+      githubCopilotModule
     )
 
   case class Module(
