@@ -66,9 +66,9 @@ jobs:
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Setup Java and sbt
-      uses: guardian/setup-scala@v2
+      uses: guardian/setup-scala@56ec952f11409b28f4f7ae8d442e4d6deb87fc68 # v2.0.1
 
-    - uses: graalvm/setup-graalvm@27b360dbb857524eaf0b4c4cef364d38e5b4f173 # v1.6.7
+    - uses: graalvm/setup-graalvm@f70bc8032f90a104502824a54bcb94b6f01715bc # v1.6.8
       with:
         java-version: '21'
         distribution: 'graalvm'
@@ -218,7 +218,7 @@ jobs:
         path: .
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+      uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
       with:
         tag_name: ${{ needs.generate-version.outputs.version }}
         name: devenv ${{ needs.generate-version.outputs.version }}

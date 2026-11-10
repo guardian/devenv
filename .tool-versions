@@ -1,4 +1,4 @@
-java corretto-21
+java corretto-25
 sbt 1
 graalvm 25
 aqua:aws/aws-cli 2
