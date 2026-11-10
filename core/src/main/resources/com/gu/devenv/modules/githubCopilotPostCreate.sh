@@ -20,6 +20,7 @@ install_agentsy() {
       log "Updating Agentsy."
       mise exec -- "$entrypoint" update ||
         warn "Unable to update Agentsy. Continuing with the existing checkout."
+      return 0
     else
       warn "$agentsy_dir does not have the expected Git remote. Leaving it unchanged."
       return 0
