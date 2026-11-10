@@ -68,9 +68,20 @@ jobs:
     - name: Setup Java and sbt
       uses: guardian/setup-scala@56ec952f11409b28f4f7ae8d442e4d6deb87fc68 # v2.0.1
 
+    - name: Read GraalVM version from tool-versions
+      id: graalvm-version
+      shell: bash
+      run: |
+        VERSION=$(awk '$1 == "graalvm" { print $2 }' .tool-versions)
+        if [[ ! "$VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+          echo "::error::Expected a single numeric GraalVM version in .tool-versions"
+          exit 1
+        fi
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
     - uses: graalvm/setup-graalvm@f70bc8032f90a104502824a54bcb94b6f01715bc # v1.6.8
       with:
-        java-version: '21'
+        java-version: ${{ steps.graalvm-version.outputs.version }}
         distribution: 'graalvm'
         github-token: ${{ secrets.GITHUB_TOKEN }}
         native-image-job-reports: 'true'
