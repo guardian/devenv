@@ -152,8 +152,8 @@ list.
   Requires the `mise` module.
     - Adds the Copilot plugins for VS Code and IntelliJ and 
     - Installs the GitHub CLI (`gh`) and GitHub Copilot CLI (`copilot`) via mise
-    - Clones [Agentsy](https://github.com/guardian/agentsy) from its public `main` branch to `~/agentsy` and links its command at 
-      `~/.local/bin/agentsy`. Checkouts with the expected Git remote are updated with a fast-forward-only pull when the 
+    - Clones [Agentsy](https://github.com/guardian/agentsy) from its public `main` branch to `~/agentsy` and installs its CLI tool. 
+      Checkouts with the expected Git remote are updated with a fast-forward-only pull when the 
       container is rebuilt; other existing paths are left unchanged.
 - **`docker-in-docker`** - Enables running Docker containers within the devcontainer. Uses an isolated Docker daemon (
   not host socket) with minimal capabilities for better security. Disabled by default.
