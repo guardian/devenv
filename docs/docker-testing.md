@@ -6,6 +6,11 @@ The docker test suite validates devenv's module system by creating real Docker c
 
 Docker must be running on your machine before executing docker tests. The test suite checks Docker availability during initialization and will fail if Docker is unavailable.
 
+This repository's devcontainer enables the `docker-in-docker` module so these tests can
+run inside it. Rebuild the devcontainer after updating its configuration, then check
+`docker info` before running `sbt docker/test`. Regenerating the configuration alone
+does not install Docker in an already-running container.
+
 ## Running Tests
 
 These tests can be quite slow to run since they involve building and starting Docker containers. You can choose to run all tests, specific module tests, or skip the slow container tests.
