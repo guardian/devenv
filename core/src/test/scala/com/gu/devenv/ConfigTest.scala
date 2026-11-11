@@ -84,6 +84,14 @@ class ConfigTest
             List("GitHub.copilot")
           )
         ),
+        "mounts" as List(
+          Mount.ExplicitMount(
+            "${localWorkspaceFolder}/.coursier",
+            "/home/vscode/.cache/coursier",
+            "volume"
+          ),
+          Mount.ShortMount("${localWorkspaceFolder}/.npmrc:/home/vscode/.npmrc")
+        ),
         "dotfiles" as Some(
           Dotfiles(
             "https://github.com/example/dotfiles.git",
@@ -139,6 +147,9 @@ class ConfigTest
         ),
         "vscode" as List("scalameta.metals", "scala-lang.scala", "GitHub.copilot")
       )
+      merged.mounts shouldBe (
+        projectConfig.mounts ++ userConfig.mounts
+      )
 
       merged.onCreateCommand should have length 1
       // Dotfiles commands should be prepended to postCreateCommand
@@ -155,7 +166,6 @@ class ConfigTest
         "forwardPorts" as projectConfig.forwardPorts,
         "remoteEnv" as projectConfig.remoteEnv,
         "containerEnv" as projectConfig.containerEnv,
-        "mounts" as projectConfig.mounts,
         "postStartCommand" as projectConfig.postStartCommand,
         "features" as projectConfig.features,
         "updateRemoteUserUID" as projectConfig.updateRemoteUserUID,
