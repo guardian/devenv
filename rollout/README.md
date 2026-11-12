@@ -51,6 +51,20 @@ The board for a release is titled `devenv rollout <version>`. GitHub Projects ar
 
 When the board already exists, a run carries on from where the last one stopped. Approvals can take days, so run the script again later with the same version to move approved PRs through to merge. The supervisor merges an approved PR only when GitHub's `mergeStateStatus` says it can be merged under the repository's branch protection, and it never uses admin overrides. When a repository requires branches to be up to date, the supervisor updates the PR's branch with `gh pr update-branch` and merges it on a later run, once its checks have passed again.
 
+### Retrying repositories
+
+After updating `.github/agents/devenv-repo-change.agent.md` in this directory, move the repository cards you want to retry from `Error` or `PR reviewed` to `Discovered`, keeping their PR links and notes. Then run the script with the same release version and an allowlist:
+
+```bash
+rollout/rollout.sh --version <same-release-tag> --repos repo-a,repo-b
+```
+
+The change agent checks out an existing open PR's branch, applies the current instructions, and pushes any new commits to that branch. It updates the same PR rather than creating another, and the PR check agent checks it again. Closed or merged PRs are not retried.
+
+Use `Discovered`, not `In progress`: reconciliation moves interrupted cards with open PRs straight to `PR raised` without running the change agent. `--rediscover` does not retry existing cards. The allowlist applies to every phase, but approved PRs within it can still be merged during the run.
+
+### Board and environment
+
 A new board is created with a table view, because the CLI cannot change a project's layout. Switch its view to a board grouped by `Status` once, in the GitHub UI.
 
 Before starting Copilot, the harness installs the target devenv release with mise and puts it first on `PATH`, so the agents always generate configuration with the target version. It also fetches the writing style instructions from `guardian/agentsy` into `rollout/work/.github/instructions`, where Copilot loads them for every agent. All commit messages, PR descriptions and comments follow that guide.

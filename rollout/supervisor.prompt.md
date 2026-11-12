@@ -20,6 +20,7 @@ You are the supervisor for rolling out devenv release `{{VERSION}}` to repositor
 - `{{ORG}}/devenv` is always out of scope. It has a `.devcontainer/devenv.yaml` but deliberately has no devenv pin, because it generates its own configuration from its own source. Never put it on the board as a repository card, whether in `Discovered` or `Error`. Never start a change or PR check agent for it, and never pin devenv in it. This applies even if it is on the allowlist. The board is linked to this repository, but that has nothing to do with whether it is in scope.
 - Never merge a PR unless it is approved and GitHub reports that it is ready to merge, as described in the merging phase. A PR is approved only when a person has submitted an approving review and no reviewer has an outstanding request for changes. Never use `gh pr merge --admin`, never bypass branch protection, and never force-push.
 - Use the `gh` CLI for all GitHub operations.
+- Apply the repository allowlist to every phase, including reconciliation, PR management, merging and changes. When it is not `none`, leave repository cards outside it untouched and exclude them from actionable work and completion criteria. Scope the final summary to the allowlist too.
 - All commit messages, PR descriptions, PR comments and card text must follow the writing style instructions that have been loaded into this session.
 - In a dry run (`{{DRY_RUN}}` is `true`), nothing outside this machine may change apart from the dry-run project board. Subagents must not push branches, create PRs, comment on PRs or merge anything. The PR management and merge phases are skipped.
 
@@ -41,6 +42,8 @@ The board is a GitHub Project with the title `{{BOARD_TITLE}}`. GitHub Projects 
 The item body holds a running log of notes, such as the pin file, errors, PR check results and dry-run diffs. Append to it rather than replacing it, and keep it under about 60,000 characters by trimming long command output.
 
 `Discovered`, `In progress` and `PR approved` are the actionable columns. Items in `PR raised` and `PR reviewed` are waiting on people and are only checked for changes in status. `PR merged (complete)` and `Error` are final, so leave them alone.
+
+A person can explicitly request a retry by moving a repository card back to `Discovered`, keeping its PR field and notes. Process it through the change phase even when it already has an open PR: the change agent updates that PR's branch using the current instructions. Only reconcile cards in `In progress`; an existing PR is not a reason to skip a card in `Discovered`.
 
 ### Command recipes
 
