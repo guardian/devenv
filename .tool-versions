@@ -1,5 +1,4 @@
-java corretto-25
+java corretto-25 oracle-graalvm-25.0.5.1
 sbt 1
-graalvm 25
 aqua:aws/aws-cli 2
 node 24
