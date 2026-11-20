@@ -4,8 +4,22 @@ import scala.sys.process.*
 
 object CommandRunner {
 
+  private def onPath(executable: String): Boolean =
+    sys.env
+      .getOrElse("PATH", "")
+      .split(java.io.File.pathSeparator)
+      .exists(dir => java.io.File(dir, executable).canExecute)
+
+  /** sbt may be started without mise's tools on the PATH (e.g. from an IDE), so resolve tools such
+    * as npx via mise when they are not directly available.
+    */
+  private def withTools(command: String): String =
+    if (command.startsWith("npx ") && !onPath("npx") && onPath("mise")) s"mise exec -- $command"
+    else command
+
   /** Runs a shell command and captures stdout, stderr, and exit code */
-  def run(command: String): CommandResult = {
+  def run(rawCommand: String): CommandResult = {
+    val command       = withTools(rawCommand)
     val stdout        = new StringBuilder
     val stderr        = new StringBuilder
     val processLogger = ProcessLogger(
