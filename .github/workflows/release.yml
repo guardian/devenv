@@ -71,7 +71,7 @@ jobs:
     - uses: graalvm/setup-graalvm@60e76998d25690099182b796e99b8804da582d90 # v1.6.10
       with:
         # Mise currently lags behind this version: 'mise ls-remote graalvm gives 25.0.2 as latest'
-        java-version: '25.0.5.1'
+        java-version: '25.0.5'
         distribution: 'graalvm'
         github-token: ${{ secrets.GITHUB_TOKEN }}
         native-image-job-reports: 'true'
