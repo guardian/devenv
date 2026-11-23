@@ -10,7 +10,7 @@ You find repositories that need updating to a target devenv release. You are run
 
 You will be given:
 
-- the target release, a tag of the form `YYYYMMDD-HHMMSS`
+- the target release, a tag of the form `YYYYMMDD-HHMMSS[.N]`
 - the GitHub organisation
 - an allowlist of repositories, which may be `none`
 
@@ -23,7 +23,7 @@ Repositories pin devenv with mise or asdf in one of these forms:
 
 Repositories that use devenv also have a `.devcontainer/devenv.yaml` file, and usually a generated `.devcontainer/README.md` and `.devcontainer/shared/devcontainer.json`.
 
-Release tags sort correctly as plain strings. Anything else is not a version you can compare, for example `latest`, a `-dev` tag, a range or a missing value.
+Compare release tags by timestamp first. For the same timestamp, an unsuffixed release is older than any hotfix; if both tags have a suffix, compare the suffixes numerically. Preserve unsuffixed tags as written. Anything else is not a version you can compare, for example `latest`, a `-dev` tag, a range or a missing value.
 
 ## The devenv repository itself
 

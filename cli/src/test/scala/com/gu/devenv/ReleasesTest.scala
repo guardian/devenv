@@ -121,6 +121,19 @@ class ReleasesTest extends AnyFreeSpec with Matchers with ScalaCheckPropertyChec
         }
       }
 
+      "recognises compatible assets for hotfix releases" in {
+        val hotfixVersion = s"${testRelease.tagName}.10"
+        val asset  = testRelease.assets.head.copy(name = s"devenv-$hotfixVersion-linux-x86_64")
+        val hotfix = testRelease.copy(tagName = hotfixVersion, assets = List(asset))
+
+        checkForUpdate(
+          currentReleaseVersion = testRelease.tagName,
+          architectureOpt = Some("linux-x86_64"),
+          branch = Some("main"),
+          latestRelease = hotfix
+        ) shouldBe UpdateCheckResult.UpdateAvailable(hotfix, asset)
+      }
+
       "returns NoArchitectureInfo when newer version exists but architecture is None" in {
         val result = checkForUpdate(
           currentReleaseVersion = "20250101-120000",

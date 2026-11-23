@@ -22,7 +22,7 @@ object Releases {
     s"https://api.github.com/repos/$OWNER/$REPO/releases/latest"
 
   // extracts the release name and architecture from devenv's asset name
-  private val ReleaseNameParts = """devenv-(\d{8}-\d{6}(?:-dev)?)-(\w+-\w+)""".r
+  private val ReleaseNameParts = """devenv-(\d{8}-\d{6}(?:\.[1-9]\d*)?(?:-dev)?)-(\w+-\w+)""".r
 
   // this backend works with graalvm
   private val httpBackend = HttpURLConnectionBackend()

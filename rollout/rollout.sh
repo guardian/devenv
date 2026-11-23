@@ -62,8 +62,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -n "$VERSION" ]] || { usage >&2; die "--version is required"; }
-[[ "$VERSION" =~ ^[0-9]{8}-[0-9]{6}$ ]] \
-  || die "--version must be a production release tag of the form YYYYMMDD-HHMMSS, got '$VERSION'"
+[[ "$VERSION" =~ ^[0-9]{8}-[0-9]{6}(\.[1-9][0-9]*)?$ ]] \
+  || die "--version must be a production release tag of the form YYYYMMDD-HHMMSS[.N], got '$VERSION'"
 [[ "$CONCURRENCY" =~ ^[1-9][0-9]*$ ]] || die "--concurrency must be a positive integer"
 [[ "$MAX_CONTINUES" =~ ^[1-9][0-9]*$ ]] || die "--max-continues must be a positive integer"
 
