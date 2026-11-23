@@ -130,7 +130,7 @@ New releases generate work, because teams need to update their `.tool-versions` 
 
 1. Go to the [Actions tab](https://github.com/guardian/devenv/actions/workflows/release.yml) on GitHub
 
-2. Click "Run workflow" and select the branch to build from. Leave **Hotfix suffix** blank for a regular release. To cut a hotfix, select the default branch and enter a suffix from `1` to `9`.
+2. Click "Run workflow" and select the branch to build from. To cut a hotfix, select `main` and tick **Create a hotfix for the latest production release**. Leave it unticked for a regular release.
 
 3. GitHub Actions will automatically:
    - Build native binaries for macOS ARM64, Linux AMD64 and Linux ARM64
@@ -148,7 +148,9 @@ New releases generate work, because teams need to update their `.tool-versions` 
 
 #### Version management
 
-Regular releases use date-based versioning: `YYYYMMDD-HHMMSS` (e.g., `20251103-143022`). Hotfixes keep the timestamp of the latest published production release and use the suffix you enter (e.g., `2` produces `20251103-143022.2`). The workflow rejects a suffix if that release already exists, even as a draft.
+Regular releases use date-based versioning: `YYYYMMDD-HHMMSS` (e.g., `20251103-143022`). Hotfixes keep the timestamp of the latest published production release. The first uses `.1` (e.g., `20251103-143022.1`), and each subsequent hotfix increments the highest suffix for that timestamp. Draft hotfixes reserve their suffix.
+
+To preview a version without building or creating a release, run `./scripts/generate-release-version.sh` for a regular release or `HOTFIX=true ./scripts/generate-release-version.sh` for a hotfix. Hotfix previews require `gh` authenticated with push access to the repository (to see drafts) and `jq`. Set `REF_NAME` to preview a different branch.
 
 The version is embedded in the native binary at build time, so users can check their version with:
 
