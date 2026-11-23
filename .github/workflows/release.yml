@@ -68,19 +68,13 @@ jobs:
     - name: Setup Java and sbt
       uses: guardian/setup-scala@56ec952f11409b28f4f7ae8d442e4d6deb87fc68 # v2.0.1
 
-    - uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+    - uses: graalvm/setup-graalvm@60e76998d25690099182b796e99b8804da582d90 # v1.6.10
       with:
-        install: false
-        cache: false
-
-    - name: Install pinned Oracle GraalVM
-      shell: bash
-      run: |
-        mise install java
-        NATIVE_IMAGE=$(mise which native-image)
-        GRAALVM_BIN=$(dirname "$NATIVE_IMAGE")
-        echo "$GRAALVM_BIN" >> "$GITHUB_PATH"
-        echo "JAVA_HOME=$(dirname "$GRAALVM_BIN")" >> "$GITHUB_ENV"
+        # Mise currently lags behind this version: 'mise ls-remote graalvm gives 25.0.2 as latest'
+        java-version: '25.0.5.1'
+        distribution: 'graalvm'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        native-image-job-reports: 'true'
 
     - name: Build native image
       run: sbt "cli/GraalVMNativeImage/packageBin"
